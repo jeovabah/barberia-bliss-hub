@@ -6,6 +6,7 @@ import Services from "../components/Services";
 import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
 import Footer from "../components/Footer";
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   useEffect(() => {
@@ -20,6 +21,7 @@ const Index = () => {
       <BarberProfile />
       <BookingForm />
       <Footer />
+      <Toaster />
     </div>
   );
 };

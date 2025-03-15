@@ -1,12 +1,8 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { Scissors, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Adding framer-motion for animations
-<lov-add-dependency>framer-motion@latest</lov-add-dependency>
 
 const services = [
   {
