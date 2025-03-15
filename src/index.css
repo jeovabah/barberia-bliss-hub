@@ -65,6 +65,10 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .text-shadow-sm {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* Add SF Pro Display font */

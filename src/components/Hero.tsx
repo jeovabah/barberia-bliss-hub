@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { CalendarDays, Scissors } from "lucide-react";
 
 const Hero = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -9,10 +10,24 @@ const Hero = () => {
     setIsLoaded(true);
   }, []);
 
+  const scrollToBooking = () => {
+    const bookingSection = document.getElementById('booking');
+    if (bookingSection) {
+      bookingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const scrollToServices = () => {
+    const servicesSection = document.getElementById('services');
+    if (servicesSection) {
+      servicesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="h-screen relative overflow-hidden flex items-center" id="home">
       {/* Hero Background */}
-      <div className="absolute inset-0 bg-black/20 z-10"></div>
+      <div className="absolute inset-0 bg-black/30 z-10"></div>
       <div 
         className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070')] bg-cover bg-center"
         style={{ 
@@ -29,7 +44,7 @@ const Hero = () => {
             Experiência Premium de Barbearia
           </span>
           
-          <h1 className={`heading-xl mb-6 text-white transition-all duration-700 delay-100 ${isLoaded ? 'opacity-100' : 'opacity-0 -translate-y-4'}`}>
+          <h1 className={`heading-xl mb-6 text-white text-shadow-sm transition-all duration-700 delay-100 ${isLoaded ? 'opacity-100' : 'opacity-0 -translate-y-4'}`}>
             Eleve Seu <br />
             <span className="italic text-amber-300">Estilo Pessoal</span>
           </h1>
@@ -39,10 +54,22 @@ const Hero = () => {
           </p>
           
           <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-700 delay-300 ${isLoaded ? 'opacity-100' : 'opacity-0 -translate-y-4'}`}>
-            <Button size="lg" className="bg-amber-500 text-white hover:bg-amber-600 rounded-full px-8">
+            <Button 
+              size="lg" 
+              onClick={scrollToBooking}
+              className="bg-amber-500 hover:bg-amber-600 text-amber-950 hover:text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 rounded-full group"
+            >
+              <CalendarDays className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               Agendar Horário
             </Button>
-            <Button variant="outline" size="lg" className="text-white border-white hover:bg-white/10 rounded-full px-8">
+            
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={scrollToServices}
+              className="border-white text-white hover:bg-white/20 hover:border-amber-300 hover:text-amber-300 font-medium rounded-full transition-all duration-300 group"
+            >
+              <Scissors className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
               Explorar Serviços
             </Button>
           </div>
