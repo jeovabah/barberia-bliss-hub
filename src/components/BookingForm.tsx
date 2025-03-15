@@ -44,6 +44,8 @@ const BookingForm = () => {
   });
   const [etapa, setEtapa] = useState(1);
   const [carregando, setCarregando] = useState(false);
+  const [calendarioAberto, setCalendarioAberto] = useState(false);
+  const [horariosAberto, setHorariosAberto] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,7 +89,12 @@ const BookingForm = () => {
   };
 
   const formatarData = (date: Date) => {
-    return format(date, "d 'de' MMMM, yyyy", { locale: ptBR });
+    try {
+      return format(date, "d 'de' MMMM, yyyy", { locale: ptBR });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data inválida";
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -195,7 +202,7 @@ const BookingForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Selecione a Data</Label>
-                <Popover>
+                <Popover open={calendarioAberto} onOpenChange={setCalendarioAberto}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -208,18 +215,22 @@ const BookingForm = () => {
                       {data ? formatarData(data) : "Selecione uma data"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={data}
-                      onSelect={setData}
+                      onSelect={(date) => {
+                        setData(date);
+                        if (date) {
+                          setCalendarioAberto(false);
+                        }
+                      }}
                       locale={ptBR}
                       initialFocus
                       disabled={(date) => 
                         date < new Date() || 
                         date > new Date(new Date().setMonth(new Date().getMonth() + 2))
                       }
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -227,7 +238,7 @@ const BookingForm = () => {
               
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Selecione o Horário</Label>
-                <Popover>
+                <Popover open={horariosAberto} onOpenChange={setHorariosAberto}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -241,7 +252,7 @@ const BookingForm = () => {
                       {horarioSelecionado || "Selecione um horário"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3">
+                  <PopoverContent className="w-auto p-3" align="start">
                     <div className="grid grid-cols-3 gap-2">
                       {horarios.map((horario) => (
                         <Button
@@ -253,7 +264,7 @@ const BookingForm = () => {
                           )}
                           onClick={() => {
                             setHorarioSelecionado(horario);
-                            document.querySelector('[data-radix-popper-content-wrapper]')?.remove();
+                            setHorariosAberto(false);
                           }}
                         >
                           {horario}
