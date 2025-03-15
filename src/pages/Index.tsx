@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   useEffect(() => {
-    document.title = "BarberBliss | Premium Barbershop Experience";
+    document.title = "BarberBliss | Experiência Premium de Barbearia";
   }, []);
 
   return (

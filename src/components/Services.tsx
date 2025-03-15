@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
@@ -7,33 +8,33 @@ import { Button } from "@/components/ui/button";
 const services = [
   {
     id: 1,
-    title: "Classic Haircut",
-    description: "Precision cut tailored to your face shape and style preferences.",
-    price: "$35",
+    title: "Corte Clássico",
+    description: "Corte preciso adaptado ao formato do seu rosto e preferências de estilo.",
+    price: "R$70",
     duration: "45 min",
     image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=2070"
   },
   {
     id: 2,
-    title: "Beard Trim & Shaping",
-    description: "Expert sculpting and detailing to perfect your facial hair.",
-    price: "$25",
+    title: "Aparar & Modelar Barba",
+    description: "Esculpir e detalhar com expertise para aperfeiçoar seus pelos faciais.",
+    price: "R$50",
     duration: "30 min",
     image: "https://images.unsplash.com/photo-1622296089780-290d715192af?q=80&w=1974"
   },
   {
     id: 3,
-    title: "Premium Shave",
-    description: "Traditional hot towel treatment with straight razor precision.",
-    price: "$45",
+    title: "Barbear Premium",
+    description: "Tratamento tradicional com toalha quente e precisão de navalha.",
+    price: "R$90",
     duration: "45 min",
     image: "https://images.unsplash.com/photo-1493256338651-d82f7272f427?q=80&w=2070"
   },
   {
     id: 4,
-    title: "Complete Grooming",
-    description: "Full-service package including haircut, beard styling, and facial.",
-    price: "$85",
+    title: "Tratamento Completo",
+    description: "Pacote completo incluindo corte de cabelo, modelagem de barba e tratamento facial.",
+    price: "R$170",
     duration: "90 min",
     image: "https://images.unsplash.com/photo-1599351431613-18ef1fdd27e1?q=80&w=1974"
   }
@@ -44,7 +45,7 @@ const ServiceCard = ({ service, index }: { service: any, index: number }) => {
   
   return (
     <motion.div
-      className="group relative bg-white rounded-2xl overflow-hidden h-[400px] shadow-sm"
+      className="group relative bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -79,11 +80,11 @@ const ServiceCard = ({ service, index }: { service: any, index: number }) => {
         <Button 
           size="sm" 
           className={cn(
-            "w-full bg-white text-black hover:bg-white/90 transition-all duration-300 transform",
+            "w-full bg-amber-500 text-white hover:bg-amber-600 transition-all duration-300 transform",
             isHovered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           )}
         >
-          Book Service
+          Agendar Serviço
         </Button>
       </div>
     </motion.div>
@@ -95,12 +96,12 @@ const Services = () => {
     <section className="py-24 px-4" id="services">
       <div className="container mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs uppercase tracking-widest mb-2 inline-block">
-            Our Specialities
+          <span className="text-xs uppercase tracking-widest mb-2 inline-block text-amber-600">
+            Nossas Especialidades
           </span>
-          <h2 className="heading-lg mb-4">Expert Grooming Services</h2>
+          <h2 className="heading-lg mb-4 text-amber-950">Serviços de Barbearia Especializados</h2>
           <p className="text-muted-foreground">
-            Premium services tailored to enhance your personal style with precision and care.
+            Serviços premium personalizados para realçar seu estilo pessoal com precisão e cuidado.
           </p>
         </div>
         

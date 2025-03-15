@@ -15,44 +15,44 @@ type Barber = {
 const barbers: Barber[] = [
   {
     id: 1,
-    name: "Alex Johnson",
-    role: "Master Barber",
-    bio: "With over 15 years of experience, Alex brings precision and artistry to every haircut.",
-    experience: "15+ years",
-    specialties: ["Classic Cuts", "Beard Styling", "Hot Towel Shaves"],
+    name: "Alexandre Silva",
+    role: "Barbeiro Master",
+    bio: "Com mais de 15 anos de experiência, Alexandre traz precisão e arte para cada corte de cabelo.",
+    experience: "15+ anos",
+    specialties: ["Cortes Clássicos", "Estilização de Barba", "Barbear com Toalha Quente"],
     image: "https://images.unsplash.com/photo-1567894340315-735d7c361db0?q=80&w=1974"
   },
   {
     id: 2,
-    name: "Michael Rodriguez",
-    role: "Style Specialist",
-    bio: "Michael specializes in contemporary styles and precision fades that enhance your features.",
-    experience: "8 years",
-    specialties: ["Fades", "Modern Styles", "Textured Cuts"],
+    name: "Miguel Rodriguez",
+    role: "Especialista em Estilo",
+    bio: "Miguel é especializado em estilos contemporâneos e degradês de precisão que destacam suas características.",
+    experience: "8 anos",
+    specialties: ["Degradês", "Estilos Modernos", "Cortes Texturizados"],
     image: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=1974"
   },
   {
     id: 3,
-    name: "David Chen",
-    role: "Grooming Expert",
-    bio: "David combines traditional techniques with modern aesthetics for a timeless look.",
-    experience: "12 years",
-    specialties: ["Scissor Work", "Hair Design", "Luxury Shaves"],
+    name: "Daniel Costa",
+    role: "Experiente em Cuidados",
+    bio: "Daniel combina técnicas tradicionais com estética moderna para um visual atemporal.",
+    experience: "12 anos",
+    specialties: ["Trabalho com Tesoura", "Design de Cabelo", "Barbear de Luxo"],
     image: "https://images.unsplash.com/photo-1557053815-9e5f9c2a0e46?q=80&w=1974"
   }
 ];
 
 const BarberProfile = () => {
   return (
-    <section className="py-24 px-4 bg-gray-50" id="barbers">
+    <section className="py-24 px-4 bg-amber-50" id="barbers">
       <div className="container mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs uppercase tracking-widest mb-2 inline-block">
-            Our Team
+          <span className="text-xs uppercase tracking-widest mb-2 inline-block text-amber-600">
+            Nossa Equipe
           </span>
-          <h2 className="heading-lg mb-4">Master Barbers</h2>
+          <h2 className="heading-lg mb-4 text-amber-950">Barbeiros Especialistas</h2>
           <p className="text-muted-foreground">
-            Meet our team of expert barbers dedicated to perfecting your style with skill and precision.
+            Conheça nossa equipe de barbeiros especializados dedicados a aperfeiçoar seu estilo com habilidade e precisão.
           </p>
         </div>
         
@@ -60,7 +60,7 @@ const BarberProfile = () => {
           {barbers.map((barber, index) => (
             <motion.div 
               key={barber.id}
-              className="bg-white rounded-2xl p-6 shadow-sm flex flex-col"
+              className="bg-white rounded-2xl p-6 shadow-md flex flex-col"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -75,24 +75,24 @@ const BarberProfile = () => {
                 />
               </div>
               
-              <h3 className="text-xl font-bold mb-1">{barber.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{barber.role}</p>
+              <h3 className="text-xl font-bold mb-1 text-amber-950">{barber.name}</h3>
+              <p className="text-sm text-amber-600 mb-4">{barber.role}</p>
               
-              <p className="text-sm mb-4">{barber.bio}</p>
+              <p className="text-sm mb-4 text-amber-950/80">{barber.bio}</p>
               
               <div className="mt-auto">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium">Experience:</span>
+                  <span className="text-xs font-medium text-amber-950">Experiência:</span>
                   <span className="text-xs text-muted-foreground">{barber.experience}</span>
                 </div>
                 
                 <div>
-                  <span className="text-xs font-medium block mb-2">Specialties:</span>
+                  <span className="text-xs font-medium block mb-2 text-amber-950">Especialidades:</span>
                   <div className="flex flex-wrap gap-2">
                     {barber.specialties.map((specialty) => (
                       <span 
                         key={specialty} 
-                        className="text-xs bg-gray-100 px-2 py-1 rounded-full flex items-center gap-1"
+                        className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full flex items-center gap-1"
                       >
                         <Scissors className="w-3 h-3" />
                         {specialty}
