@@ -227,6 +227,7 @@ const BookingForm = () => {
                       }}
                       locale={ptBR}
                       initialFocus
+                      className="p-3 pointer-events-auto"
                       disabled={(date) => 
                         date < new Date() || 
                         date > new Date(new Date().setMonth(new Date().getMonth() + 2))
@@ -252,7 +253,7 @@ const BookingForm = () => {
                       {horarioSelecionado || "Selecione um horário"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3" align="start">
+                  <PopoverContent className="w-auto p-3 pointer-events-auto" align="start">
                     <div className="grid grid-cols-3 gap-2">
                       {horarios.map((horario) => (
                         <Button
@@ -260,7 +261,7 @@ const BookingForm = () => {
                           variant="outline"
                           className={cn(
                             "text-xs h-9",
-                            horarioSelecionado === horario && "bg-amber-500 text-white hover:bg-amber-600 border-amber-500"
+                            horarioSelecionado === horario ? "bg-amber-500 text-white hover:bg-amber-600 border-amber-500" : ""
                           )}
                           onClick={() => {
                             setHorarioSelecionado(horario);

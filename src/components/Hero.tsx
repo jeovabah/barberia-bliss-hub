@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { CalendarDays, Scissors } from "lucide-react";
+import { CalendarDays, Scissors, MessageCircle } from "lucide-react";
 
 const Hero = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -11,7 +11,7 @@ const Hero = () => {
   }, []);
 
   const scrollToBooking = () => {
-    const bookingSection = document.getElementById('booking');
+    const bookingSection = document.getElementById('book-now');
     if (bookingSection) {
       bookingSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -27,7 +27,7 @@ const Hero = () => {
   return (
     <section className="h-screen relative overflow-hidden flex items-center" id="home">
       {/* Hero Background */}
-      <div className="absolute inset-0 bg-black/30 z-10"></div>
+      <div className="absolute inset-0 bg-black/40 z-10"></div>
       <div 
         className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070')] bg-cover bg-center"
         style={{ 
@@ -57,7 +57,7 @@ const Hero = () => {
             <Button 
               size="lg" 
               onClick={scrollToBooking}
-              className="bg-amber-500 hover:bg-amber-600 text-amber-950 hover:text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 rounded-full group"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 rounded-full group"
             >
               <CalendarDays className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               Agendar Horário
@@ -67,13 +67,24 @@ const Hero = () => {
               variant="outline" 
               size="lg" 
               onClick={scrollToServices}
-              className="border-white text-white hover:bg-white/20 hover:border-amber-300 hover:text-amber-300 font-medium rounded-full transition-all duration-300 group"
+              className="border-amber-400 bg-amber-400/10 text-amber-100 hover:bg-amber-500/30 hover:border-amber-300 hover:text-white font-medium rounded-full transition-all duration-300 group backdrop-blur-sm"
             >
               <Scissors className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
               Explorar Serviços
             </Button>
           </div>
         </div>
+      </div>
+      
+      {/* Chat Bubble Scheduling Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={scrollToBooking}
+          className="w-16 h-16 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        >
+          <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+          <span className="sr-only">Agendar</span>
+        </Button>
       </div>
       
       {/* Scroll Indicator */}
