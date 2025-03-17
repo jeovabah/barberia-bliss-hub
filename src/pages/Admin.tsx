@@ -27,10 +27,16 @@ const Admin = () => {
     const savedHomepage = localStorage.getItem("homepageContent");
     if (savedHomepage) {
       try {
-        setHomepageContent(JSON.parse(savedHomepage));
+        const parsedContent = JSON.parse(savedHomepage);
+        setHomepageContent(parsedContent);
       } catch (e) {
         console.error("Error parsing homepage content:", e);
+        // Se houver erro, inicializa com objeto vazio
+        setHomepageContent({ root: { children: [] } });
       }
+    } else {
+      // Se não houver conteúdo salvo, inicializa com objeto vazio
+      setHomepageContent({ root: { children: [] } });
     }
     
     const savedComponents = localStorage.getItem("puckContent");
@@ -39,6 +45,7 @@ const Admin = () => {
         setComponentContent(JSON.parse(savedComponents));
       } catch (e) {
         console.error("Error parsing component content:", e);
+        setComponentContent({ root: { children: [] } });
       }
     }
     
@@ -68,13 +75,19 @@ const Admin = () => {
   };
   
   const handleHomepageContentChange = (data: any) => {
-    setHomepageContent(data);
-    localStorage.setItem("homepageContent", JSON.stringify(data));
-    toast({
-      title: "Página inicial atualizada",
-      description: "As alterações na página inicial foram salvas com sucesso.",
-      variant: "default",
-    });
+    // Verifica se o conteúdo tem componentes reais antes de salvar
+    if (data && data.root && data.root.children && data.root.children.length > 0) {
+      setHomepageContent(data);
+      localStorage.setItem("homepageContent", JSON.stringify(data));
+      toast({
+        title: "Página inicial atualizada",
+        description: "As alterações na página inicial foram salvas com sucesso.",
+        variant: "default",
+      });
+    } else {
+      // Se o conteúdo estiver vazio, remove do localStorage para mostrar o layout padrão
+      resetHomepageContent();
+    }
     
     // Redirect to homepage to see changes
     navigate("/");
