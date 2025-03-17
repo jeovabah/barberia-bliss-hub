@@ -47,6 +47,9 @@ const CompanyPage = () => {
     if (!company) return;
     
     try {
+      // Clear any local storage cache
+      localStorage.removeItem('puckData');
+      
       // Fetch puck content for this company
       const { data: puckContent, error: puckError } = await supabase
         .from('puck_content')

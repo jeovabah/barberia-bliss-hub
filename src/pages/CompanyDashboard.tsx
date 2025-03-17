@@ -39,8 +39,11 @@ const CompanyDashboard = () => {
 
       setHasCheckedAuth(true);
 
+      // Get user email from session - don't query auth.users table directly
+      const userEmail = session.user.email;
+      
       // Special case for admin
-      if (session.user.email === 'admin@barberbliss.com') {
+      if (userEmail === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
       }
@@ -114,9 +117,12 @@ const CompanyDashboard = () => {
           });
         } else if (puckContent) {
           console.log("Puck content loaded from database:", puckContent);
+          // Make sure we clean any localStorage data to prevent loops
+          localStorage.removeItem('puckData');
           setPuckData(puckContent.content);
         } else {
           console.log("No puck content found in database");
+          localStorage.removeItem('puckData');
           setPuckData(null);
         }
       }
@@ -145,6 +151,9 @@ const CompanyDashboard = () => {
 
     try {
       setLoading(true);
+      // Remove from localStorage first to prevent any loops
+      localStorage.removeItem('puckData');
+      
       // Check if puck content exists for this company
       const { data: existingData, error: checkError } = await supabase
         .from('puck_content')
@@ -218,22 +227,13 @@ const CompanyDashboard = () => {
   const handleSignOut = async () => {
     try {
       setLoading(true);
-      // First clear local storage to ensure we don't get into a loop
+      // First clear all local storage
       localStorage.removeItem('sb-fxdliwfsmavtagwnrjon-auth-token');
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('puckData');
       
       // Then attempt to sign out through the API
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Error signing out:", error);
-        toast({
-          title: "Erro ao sair",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      await supabase.auth.signOut();
       
       // Always navigate to auth regardless of API result
       navigate('/auth');
