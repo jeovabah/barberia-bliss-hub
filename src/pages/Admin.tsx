@@ -7,12 +7,20 @@ import AdminDashboard from "@/components/AdminDashboard";
 import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "@/lib/puck-config";
+import { toast } from "@/components/ui/use-toast";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("adminAuthenticated") === "true"
   );
-  const [puckData, setPuckData] = useState(() => {
+  
+  // Store separate content for homepage and about page
+  const [homepageContent, setHomepageContent] = useState(() => {
+    const savedData = localStorage.getItem("homepageContent");
+    return savedData ? JSON.parse(savedData) : { root: { children: [] } };
+  });
+  
+  const [componentContent, setComponentContent] = useState(() => {
     const savedData = localStorage.getItem("puckContent");
     return savedData ? JSON.parse(savedData) : { root: { children: [] } };
   });
@@ -29,9 +37,24 @@ const Admin = () => {
     setIsAuthenticated(false);
   };
 
-  const handlePuckChange = (data: any) => {
-    setPuckData(data);
+  const handleComponentContentChange = (data: any) => {
+    setComponentContent(data);
     localStorage.setItem("puckContent", JSON.stringify(data));
+    toast({
+      title: "Conteúdo atualizado",
+      description: "As alterações foram salvas com sucesso.",
+      variant: "default",
+    });
+  };
+  
+  const handleHomepageContentChange = (data: any) => {
+    setHomepageContent(data);
+    localStorage.setItem("homepageContent", JSON.stringify(data));
+    toast({
+      title: "Página inicial atualizada",
+      description: "As alterações na página inicial foram salvas com sucesso.",
+      variant: "default",
+    });
   };
 
   if (!isAuthenticated) {
@@ -51,11 +74,12 @@ const Admin = () => {
       </div>
       
       <Tabs defaultValue="agendamentos" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
+        <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
           <TabsTrigger value="servicos">Serviços</TabsTrigger>
           <TabsTrigger value="barbeiros">Barbeiros</TabsTrigger>
-          <TabsTrigger value="editor">Editor Visual</TabsTrigger>
+          <TabsTrigger value="homepage">Editar Homepage</TabsTrigger>
+          <TabsTrigger value="editor">Editor de Componentes</TabsTrigger>
         </TabsList>
         
         <TabsContent value="agendamentos">
@@ -86,18 +110,36 @@ const Admin = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="editor" className="min-h-[600px]">
+        <TabsContent value="homepage" className="min-h-[600px]">
           <Card>
             <CardHeader>
-              <CardTitle>Editor Visual</CardTitle>
-              <CardDescription>Modifique o conteúdo da página principal.</CardDescription>
+              <CardTitle>Editor da Página Inicial</CardTitle>
+              <CardDescription>Modifique completamente a página inicial do site.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[600px]">
                 <Puck
                   config={config}
-                  data={puckData}
-                  onPublish={handlePuckChange}
+                  data={homepageContent}
+                  onPublish={handleHomepageContentChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="editor" className="min-h-[600px]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Editor de Componentes</CardTitle>
+              <CardDescription>Crie componentes reutilizáveis para o site.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[600px]">
+                <Puck
+                  config={config}
+                  data={componentContent}
+                  onPublish={handleComponentContentChange}
                 />
               </div>
             </CardContent>
