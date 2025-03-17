@@ -209,8 +209,8 @@ const ServicesGrid = ({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service) => (
-            <div key={service.id} className="bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md relative">
+          {services && services.map((service) => (
+            <div key={service.id || `service-${service.title}`} className="bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md relative">
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10"></div>
               <div 
                 className="absolute inset-0 bg-cover bg-center"
