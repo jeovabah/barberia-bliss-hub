@@ -42,7 +42,45 @@ const PageEditor: React.FC<EditorProps> = ({
         try {
           const parsedData = JSON.parse(savedPuckData);
           console.log("Puck data parsed successfully:", parsedData);
-          setPuckData(parsedData);
+          
+          // Check if the parsed data has the correct structure
+          if (parsedData && typeof parsedData === 'object') {
+            if (Array.isArray(parsedData.content)) {
+              // Data structure is already correct
+              setPuckData(parsedData);
+            } else if (parsedData.content && typeof parsedData.content === 'object') {
+              // Need to transform the data structure to match Puck's expectations
+              const transformedData: Data = {
+                root: {
+                  props: {}
+                },
+                content: []
+              };
+              
+              // Convert content object to array if needed
+              if (parsedData.content.root && parsedData.content.root.children && 
+                  Array.isArray(parsedData.content.root.children)) {
+                transformedData.content = parsedData.content.root.children;
+              } else if (parsedData.content.children && Array.isArray(parsedData.content.children)) {
+                transformedData.content = parsedData.content.children;
+              } else {
+                // If we can't extract components, create default data
+                console.log("Cannot extract components from saved data, creating default");
+                createDefaultPuckData();
+                return;
+              }
+              
+              setPuckData(transformedData);
+              localStorage.setItem('puckData', JSON.stringify(transformedData));
+            } else {
+              // Invalid structure, create default
+              console.log("Invalid Puck data structure, creating default");
+              createDefaultPuckData();
+            }
+          } else {
+            console.log("Parsed data is not a valid object, creating default");
+            createDefaultPuckData();
+          }
         } catch (e) {
           console.error("Error parsing Puck data:", e);
           createDefaultPuckData();
@@ -122,10 +160,10 @@ const PageEditor: React.FC<EditorProps> = ({
   const handleSave = () => {
     console.log("Saving changes, current data:", puckData);
     
-    if (!puckData || !puckData.content) {
+    if (!puckData || !puckData.content || !Array.isArray(puckData.content)) {
       toast({
         title: "Error saving",
-        description: "Invalid data. Try reloading the page.",
+        description: "Invalid data structure. Try reloading the page.",
         variant: "destructive",
       });
       return;
@@ -244,7 +282,7 @@ const PageEditor: React.FC<EditorProps> = ({
         <div className="mt-6">
           <h3 className="font-medium mb-2">Preview:</h3>
           <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
-            {puckData ? (
+            {puckData && Array.isArray(puckData.content) ? (
               <PuckRenderer data={puckData} />
             ) : (
               <p className="text-muted-foreground text-center py-10">No content to preview.</p>

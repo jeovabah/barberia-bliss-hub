@@ -773,7 +773,7 @@ export const config: Config = {
 
 // Component for rendering Puck content on the front-end
 export const PuckRenderer = ({ data }: { data: any }) => {
-  if (!data || !data.content) {
+  if (!data || !data.content || !Array.isArray(data.content)) {
     return null;
   }
   

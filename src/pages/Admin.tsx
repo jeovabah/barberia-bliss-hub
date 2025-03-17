@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +40,7 @@ const Admin = () => {
         try {
           const puckData = JSON.parse(puckDataString);
           
-          if (puckData && puckData.content) {
+          if (puckData && puckData.content && Array.isArray(puckData.content)) {
             const sectionsFromPuck: SectionType[] = puckData.content
               .map((child: any) => {
                 switch(child.type) {
@@ -61,6 +62,47 @@ const Admin = () => {
               console.log("Puck data doesn't contain valid sections, loading from homepageSections");
               loadFromHomepageSections(defaultSections);
             }
+          } else if (puckData && puckData.content && typeof puckData.content === 'object') {
+            // Try to extract from nested structure
+            let sectionsArray = null;
+            
+            if (puckData.content.root && puckData.content.root.children && 
+                Array.isArray(puckData.content.root.children)) {
+              sectionsArray = puckData.content.root.children;
+            } else if (puckData.content.children && Array.isArray(puckData.content.children)) {
+              sectionsArray = puckData.content.children;
+            }
+            
+            if (sectionsArray) {
+              const sectionsFromPuck: SectionType[] = sectionsArray
+                .map((child: any) => {
+                  switch(child.type) {
+                    case 'HeroSection': return 'hero';
+                    case 'ServicesGrid': return 'services';
+                    case 'BarbersTeam': return 'barbers';
+                    case 'BookingSection': return 'booking';
+                    default: return null;
+                  }
+                })
+                .filter(Boolean) as SectionType[];
+                
+              if (sectionsFromPuck.length > 0) {
+                console.log("Using sections from nested Puck data:", sectionsFromPuck);
+                setHomepageSections(sectionsFromPuck);
+                localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
+                
+                // Also fix the Puck data structure in localStorage
+                const fixedData = {
+                  root: { props: {} },
+                  content: sectionsArray
+                };
+                localStorage.setItem('puckData', JSON.stringify(fixedData));
+                return;
+              }
+            }
+            
+            console.log("Invalid Puck data structure, loading from homepageSections");
+            loadFromHomepageSections(defaultSections);
           } else {
             console.log("Invalid Puck data structure, loading from homepageSections");
             loadFromHomepageSections(defaultSections);
