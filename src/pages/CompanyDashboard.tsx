@@ -26,10 +26,11 @@ const CompanyDashboard = () => {
 
   const fetchProfile = async () => {
     try {
+      // Obtenha a sessão atual do usuário
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Only navigate if we haven't already checked auth
+        // Apenas navegue se ainda não verificamos a autenticação
         if (!hasCheckedAuth) {
           setHasCheckedAuth(true);
           navigate('/auth');
@@ -39,15 +40,16 @@ const CompanyDashboard = () => {
 
       setHasCheckedAuth(true);
 
-      // Get user email from session - don't query auth.users table directly
+      // Obtenha o email do usuário da sessão - não consulte diretamente a tabela auth.users
       const userEmail = session.user.email;
       
-      // Special case for admin
+      // Caso especial para admin
       if (userEmail === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
       }
 
+      // Buscar perfil do usuário da tabela profiles
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -55,7 +57,7 @@ const CompanyDashboard = () => {
         .single();
 
       if (profileError) {
-        console.error("Error fetching profile:", profileError);
+        console.error("Erro ao buscar perfil:", profileError);
         toast({
           title: "Erro ao carregar perfil",
           description: "Não foi possível carregar os dados do seu perfil.",
@@ -65,7 +67,7 @@ const CompanyDashboard = () => {
         return;
       }
 
-      // If user is admin by user_type, redirect to admin panel
+      // Se o usuário for administrador por user_type, redirecione para o painel de administração
       if (profileData.user_type === 'admin') {
         navigate('/admin');
         return;
@@ -73,7 +75,7 @@ const CompanyDashboard = () => {
 
       setProfile(profileData);
 
-      // Company users must have a company_id
+      // Usuários da empresa devem ter um company_id
       if (!profileData.company_id) {
         toast({
           title: "Sem empresa associada",
@@ -84,7 +86,7 @@ const CompanyDashboard = () => {
         return;
       }
 
-      // Fetch company data
+      // Buscar dados da empresa
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
@@ -92,7 +94,7 @@ const CompanyDashboard = () => {
         .single();
 
       if (companyError) {
-        console.error("Error fetching company:", companyError);
+        console.error("Erro ao buscar empresa:", companyError);
         toast({
           title: "Erro ao carregar empresa",
           description: "Não foi possível carregar os dados da sua empresa.",
@@ -101,7 +103,7 @@ const CompanyDashboard = () => {
       } else {
         setCompany(companyData);
         
-        // Fetch Puck content
+        // Buscar conteúdo Puck
         const { data: puckContent, error: puckError } = await supabase
           .from('puck_content')
           .select('*')
@@ -109,25 +111,25 @@ const CompanyDashboard = () => {
           .maybeSingle();
 
         if (puckError) {
-          console.error("Error fetching puck content:", puckError);
+          console.error("Erro ao buscar conteúdo puck:", puckError);
           toast({
             title: "Erro ao carregar conteúdo da página",
             description: "Não foi possível carregar o conteúdo da sua página.",
             variant: "destructive"
           });
         } else if (puckContent) {
-          console.log("Puck content loaded from database:", puckContent);
-          // Make sure we clean any localStorage data to prevent loops
+          console.log("Conteúdo Puck carregado do banco de dados:", puckContent);
+          // Certifique-se de limpar qualquer dado do localStorage para evitar loops
           localStorage.removeItem('puckData');
           setPuckData(puckContent.content);
         } else {
-          console.log("No puck content found in database");
+          console.log("Nenhum conteúdo puck encontrado no banco de dados");
           localStorage.removeItem('puckData');
           setPuckData(null);
         }
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Erro inesperado:", error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.",

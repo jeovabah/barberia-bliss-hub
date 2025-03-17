@@ -47,12 +47,12 @@ const CompanyPage = () => {
     if (!company) return;
     
     try {
-      // Clear any local storage cache
+      // Limpar qualquer cache do localStorage
       localStorage.removeItem('puckData');
       
       console.log("Fetching Puck content for company:", company.id);
       
-      // Fetch puck content for this company
+      // Buscar conteúdo puck para esta empresa
       const { data: puckContent, error: puckError } = await supabase
         .from('puck_content')
         .select('content')
@@ -61,18 +61,19 @@ const CompanyPage = () => {
       
       if (puckError) {
         console.error("Error fetching puck content:", puckError);
-        // No puck content, will use default sections
+        console.log("Detailed error:", puckError.message, puckError.details);
+        // Sem conteúdo puck, usará seções padrão
         setUsePuck(false);
       } else if (puckContent && puckContent.content) {
         console.log("Found Puck content in database:", puckContent);
-        // Process puck data
+        // Processar dados puck
         try {
-          // Check if content is already an object or if it needs parsing
+          // Verificar se o conteúdo já é um objeto ou se precisa ser analisado
           const parsedContent = typeof puckContent.content === 'string' 
             ? JSON.parse(puckContent.content) 
             : puckContent.content;
           
-          // Ensure the content has the expected structure
+          // Garantir que o conteúdo tenha a estrutura esperada
           const normalizedData = {
             root: parsedContent.root || { props: {} },
             content: Array.isArray(parsedContent.content) 
