@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminLoginProps {
   onLogin: (success: boolean) => void;
@@ -16,29 +17,41 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simple mock authentication
-    setTimeout(() => {
-      // In a real app, you would validate against a backend
-      if (username === "admin@barberbliss.com" && password === "admin123") {
+    try {
+      // Use Supabase authentication instead of mock
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password: password,
+      });
+
+      if (error) {
+        toast({
+          title: "Falha no login",
+          description: error.message,
+          variant: "destructive",
+        });
+        onLogin(false);
+      } else if (data.user) {
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo.",
         });
         onLogin(true);
-      } else {
-        toast({
-          title: "Falha no login",
-          description: "Usuário ou senha incorretos.",
-          variant: "destructive",
-        });
-        onLogin(false);
       }
+    } catch (error: any) {
+      toast({
+        title: "Erro inesperado",
+        description: error.message || "Ocorreu um erro durante o login.",
+        variant: "destructive",
+      });
+      onLogin(false);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

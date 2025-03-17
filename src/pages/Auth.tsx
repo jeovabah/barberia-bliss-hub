@@ -23,7 +23,7 @@ const Auth = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setUser(data.session.user);
-        redirectBasedOnUserType(data.session.user.id);
+        redirectBasedOnUserRole(data.session.user.email);
       }
     };
     
@@ -34,7 +34,7 @@ const Auth = () => {
       async (event, session) => {
         if (session) {
           setUser(session.user);
-          redirectBasedOnUserType(session.user.id);
+          redirectBasedOnUserRole(session.user.email);
         } else {
           setUser(null);
         }
@@ -46,42 +46,33 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const redirectBasedOnUserType = async (userId: string) => {
+  const redirectBasedOnUserRole = async (email: string | undefined) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_type, company_id')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user profile:", error);
+      if (email === 'admin@barberbliss.com') {
+        navigate('/admin');
         return;
       }
 
-      if (data.user_type === 'admin') {
-        navigate('/admin');
-      } else if (data.user_type === 'company') {
-        if (data.company_id) {
-          // Fetch the company slug
-          const { data: companyData, error: companyError } = await supabase
-            .from('companies')
-            .select('slug')
-            .eq('id', data.company_id)
-            .single();
+      // For non-admin users, check their company association
+      const { data: companies, error: companyError } = await supabase
+        .from('companies')
+        .select('id, slug')
+        .single();
 
-          if (companyError) {
-            console.error("Error fetching company:", companyError);
-            navigate('/company-dashboard');
-          } else {
-            navigate('/company-dashboard');
-          }
-        } else {
-          navigate('/company-dashboard');
-        }
+      if (companyError) {
+        console.error("Error fetching company:", companyError);
+        navigate('/company-dashboard');
+        return;
+      }
+
+      if (companies?.slug) {
+        navigate(`/${companies.slug}`);
+      } else {
+        navigate('/company-dashboard');
       }
     } catch (error) {
       console.error("Error in redirect:", error);
+      navigate('/company-dashboard');
     }
   };
 
@@ -123,7 +114,6 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Pass emailConfirm: false to disable email verification
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -142,7 +132,6 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
-        // With email verification disabled, user should be logged in immediately
         toast({
           title: "Conta criada com sucesso",
           description: "Sua conta foi criada e você está logado.",
@@ -159,47 +148,26 @@ const Auth = () => {
     }
   };
 
-  // Create admin user if it doesn't exist
-  const createDefaultAdminUser = async () => {
-    const adminEmail = "admin@barberbliss.com";
-    const adminPassword = "admin123";
-
-    // Check if admin user exists
-    const { data: adminExists, error: checkError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_type', 'admin')
-      .single();
-
-    if (!adminExists && !checkError) {
-      // Admin doesn't exist, create one
-      const { data, error } = await supabase.auth.signUp({
-        email: adminEmail,
-        password: adminPassword,
-        options: {
-          data: {
-            email_confirmed: true
-          }
-        }
-      });
-
-      if (!error && data.user) {
-        // Update the profile to be admin
-        await supabase
-          .from('profiles')
-          .update({ user_type: 'admin' })
-          .eq('id', data.user.id);
-        
-        console.log("Admin user created successfully");
-      } else {
-        console.error("Error creating admin user:", error);
-      }
-    }
-  };
-
-  // Call this once when component mounts
+  // Check if admin exists in login page to provide default credentials
   useEffect(() => {
-    createDefaultAdminUser();
+    const checkAdminExists = async () => {
+      try {
+        // You can either check for admin in auth.users or in profiles with user_type='admin'
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_type', 'admin')
+          .single();
+
+        if (error) {
+          console.log("Admin check error:", error.message);
+        }
+      } catch (error) {
+        console.error("Error checking admin:", error);
+      }
+    };
+
+    checkAdminExists();
   }, []);
 
   return (

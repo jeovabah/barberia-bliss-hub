@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,13 +10,8 @@ import Hero from "../components/Hero";
 import Services from "../components/Services";
 import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
+import { useCompanyFromRoute } from "@/hooks/useCompanyFromRoute";
 import "@measured/puck/puck.css";
-
-interface Company {
-  id: string;
-  name: string;
-  slug: string;
-}
 
 interface PuckContent {
   content: any[];
@@ -26,9 +21,8 @@ interface PuckContent {
 }
 
 const CompanyPage = () => {
-  const { slug } = useParams();
   const navigate = useNavigate();
-  const [company, setCompany] = useState<Company | null>(null);
+  const { company, isLoading: isCompanyLoading, error: companyError } = useCompanyFromRoute();
   const [puckData, setPuckData] = useState<PuckContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usePuck, setUsePuck] = useState(false);
@@ -37,37 +31,27 @@ const CompanyPage = () => {
   const defaultSections = ["hero", "services", "barbers", "booking"];
   
   useEffect(() => {
-    if (!slug) {
-      navigate("/");
+    if (companyError) {
+      console.error("Error loading company:", companyError);
+      navigate("/not-found");
       return;
     }
     
-    fetchCompanyData();
-  }, [slug, navigate]);
+    if (!isCompanyLoading && company) {
+      document.title = `${company.name} | BarberBliss`;
+      fetchPuckContent();
+    }
+  }, [company, companyError, isCompanyLoading, navigate]);
   
-  const fetchCompanyData = async () => {
+  const fetchPuckContent = async () => {
+    if (!company) return;
+    
     try {
-      // Fetch company by slug
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-      
-      if (companyError || !companyData) {
-        console.error("Error fetching company:", companyError);
-        navigate("/not-found");
-        return;
-      }
-      
-      setCompany(companyData);
-      document.title = `${companyData.name} | BarberBliss`;
-      
       // Fetch puck content for this company
       const { data: puckData, error: puckError } = await supabase
         .from('puck_content')
         .select('content')
-        .eq('company_id', companyData.id)
+        .eq('company_id', company.id)
         .single();
       
       if (puckError) {
@@ -105,7 +89,6 @@ const CompanyPage = () => {
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      navigate("/not-found");
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +124,7 @@ const CompanyPage = () => {
     booking: <BookingForm />
   };
 
-  if (isLoading) {
+  if (isCompanyLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-amber-50/30">
         <div className="text-center">
