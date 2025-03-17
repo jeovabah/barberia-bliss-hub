@@ -172,28 +172,6 @@ const Auth = () => {
     }
   };
 
-  // Check if admin exists in login page to provide default credentials
-  useEffect(() => {
-    const checkAdminExists = async () => {
-      try {
-        // You can either check for admin in auth.users or in profiles with user_type='admin'
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_type', 'admin')
-          .single();
-
-        if (error) {
-          console.log("Admin check error:", error.message);
-        }
-      } catch (error) {
-        console.error("Error checking admin:", error);
-      }
-    };
-
-    checkAdminExists();
-  }, []);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md">

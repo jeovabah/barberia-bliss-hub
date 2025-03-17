@@ -50,44 +50,26 @@ const Admin = () => {
         return;
       }
 
-      // Modified approach to check for admin role without using RPC
-      // Check if the user is admin@barberbliss.com which is the admin account
-      if (session.user.email === 'admin@barberbliss.com') {
+      // Get user profile to check if admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      // Special case for admin@barberbliss.com or if user_type is admin
+      if (session.user.email === 'admin@barberbliss.com' || 
+          (profile && profile.user_type === 'admin')) {
         setIsAdmin(true);
         fetchCompanies();
         fetchUsers();
       } else {
-        // Check in profiles table directly
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profileError) {
-          console.error("Error checking profile:", profileError);
-          toast({
-            title: "Erro ao verificar permissões",
-            description: "Você não tem permissão para acessar esta página.",
-            variant: "destructive"
-          });
-          navigate('/auth');
-          return;
-        }
-        
-        if (profileData?.user_type !== 'admin') {
-          toast({
-            title: "Acesso restrito",
-            description: "Apenas administradores podem acessar esta página.",
-            variant: "destructive"
-          });
-          navigate('/company-dashboard');
-          return;
-        }
-        
-        setIsAdmin(true);
-        fetchCompanies();
-        fetchUsers();
+        toast({
+          title: "Acesso restrito",
+          description: "Apenas administradores podem acessar esta página.",
+          variant: "destructive"
+        });
+        navigate('/company-dashboard');
       }
     } catch (error: any) {
       console.error("Unexpected error:", error);
@@ -131,7 +113,7 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
-      // Modified approach to fetch users without using RPC
+      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, user_type, company_id, created_at');
@@ -146,9 +128,14 @@ const Admin = () => {
         return;
       }
       
+      // Get user emails from auth.users - Not directly accessible via Supabase JS client
+      // For this example, we'll use profile IDs as a fallback
+      
       // Get company details for each profile with a company_id
       const enhancedProfiles = await Promise.all(
         profiles.map(async (profile) => {
+          let companyName = "Sem empresa";
+          
           if (profile.company_id) {
             const { data: company } = await supabase
               .from('companies')
@@ -156,14 +143,14 @@ const Admin = () => {
               .eq('id', profile.company_id)
               .single();
             
-            return {
-              ...profile,
-              companies: company
-            };
+            if (company) {
+              companyName = company.name;
+            }
           }
+          
           return {
             ...profile,
-            companies: null
+            company_name: companyName
           };
         })
       );
@@ -368,7 +355,7 @@ const Admin = () => {
       console.error("Unexpected error:", error);
       toast({
         title: "Erro inesperado",
-        description: error.message,
+        description: error.message || "Ocorreu um erro ao criar o usuário.",
         variant: "destructive"
       });
     }
@@ -400,7 +387,7 @@ const Admin = () => {
       console.error("Unexpected error:", error);
       toast({
         title: "Erro inesperado",
-        description: error.message,
+        description: error.message || "Ocorreu um erro ao atualizar a empresa do usuário.",
         variant: "destructive"
       });
     }
@@ -734,7 +721,7 @@ const Admin = () => {
                               </span>
                             </TableCell>
                             <TableCell>
-                              {user.companies ? user.companies.name : 'Sem empresa'}
+                              {user.company_name}
                             </TableCell>
                             <TableCell>
                               {new Date(user.created_at).toLocaleDateString('pt-BR')}

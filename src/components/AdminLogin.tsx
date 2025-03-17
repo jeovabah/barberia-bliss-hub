@@ -36,6 +36,29 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         });
         onLogin(false);
       } else if (data.user) {
+        // Check if the user is an admin
+        const isAdminEmail = data.user.email === 'admin@barberbliss.com';
+        
+        if (!isAdminEmail) {
+          // Check the profile for admin role
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileError || profile?.user_type !== 'admin') {
+            toast({
+              title: "Acesso negado",
+              description: "Você não tem permissões de administrador.",
+              variant: "destructive",
+            });
+            await supabase.auth.signOut();
+            onLogin(false);
+            return;
+          }
+        }
+        
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo.",
