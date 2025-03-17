@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const Admin = () => {
   // New user form state
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserCompany, setNewUserCompany] = useState('');
+  const [newUserCompany, setNewUserCompany] = useState<string>('');
 
   // Edit company form state
   const [editCompanyId, setEditCompanyId] = useState<string | null>(null);
@@ -639,7 +640,10 @@ const Admin = () => {
                         </div>
                         <div className="grid gap-2">
                           <Label htmlFor="user-company">Empresa (opcional)</Label>
-                          <Select value={newUserCompany} onValueChange={setNewUserCompany}>
+                          <Select 
+                            value={newUserCompany} 
+                            onValueChange={(value: string) => setNewUserCompany(value)}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione uma empresa" />
                             </SelectTrigger>
