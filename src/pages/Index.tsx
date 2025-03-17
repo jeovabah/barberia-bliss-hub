@@ -3,15 +3,17 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "@/components/ui/toaster";
-import { config, PuckRenderer } from "@/lib/puck-config";
+import { PuckRenderer, config } from "@/lib/puck-config";
 import Hero from "../components/Hero";
 import Services from "../components/Services";
 import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
+import "@measured/puck/puck.css";
 
 const Index = () => {
   const [puckData, setPuckData] = useState<any>(null);
   const [usePuck, setUsePuck] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Default sections order
   const defaultSections = ["hero", "services", "barbers", "booking"];
@@ -24,21 +26,34 @@ const Index = () => {
     if (savedPuckData) {
       try {
         const parsedData = JSON.parse(savedPuckData);
-        if (parsedData && (
-            Array.isArray(parsedData.content) || 
-            (parsedData.content && parsedData.content.root)
-        )) {
-          setPuckData(parsedData);
-          setUsePuck(true);
-          return;
+        if (parsedData) {
+          // Normalize the data structure
+          const normalizedData = {
+            root: { props: {} },
+            content: Array.isArray(parsedData.content) 
+              ? parsedData.content 
+              : []
+          };
+          
+          if (normalizedData.content.length > 0) {
+            setPuckData(normalizedData);
+            setUsePuck(true);
+          } else {
+            setUsePuck(false);
+          }
+        } else {
+          setUsePuck(false);
         }
       } catch (e) {
         console.error("Error parsing Puck data:", e);
+        setUsePuck(false);
       }
+    } else {
+      // Fallback to classic rendering with sections
+      setUsePuck(false);
     }
     
-    // Fallback to classic rendering with sections
-    setUsePuck(false);
+    setIsLoading(false);
   }, []);
   
   // Get sections order from localStorage, or use default if not available
@@ -71,17 +86,30 @@ const Index = () => {
     booking: <BookingForm />
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-amber-50/30">
+        <div className="text-center">
+          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-amber-50/30">
       <Navbar />
       
       {usePuck && puckData ? (
-        <PuckRenderer data={puckData} />
+        <div className="puck-renderer-container">
+          <PuckRenderer data={puckData} />
+        </div>
       ) : (
         // Fallback to classic component rendering
         sectionsOrder.map((section) => (
           <div key={section}>
-            {sectionComponents[section]}
+            {sectionComponents[section as keyof typeof sectionComponents]}
           </div>
         ))
       )}

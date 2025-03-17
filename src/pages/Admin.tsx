@@ -22,11 +22,19 @@ const Admin = () => {
   useEffect(() => {
     console.log("Admin component initializing, loading homepage sections");
     loadHomepageSections();
+    
+    // Force isLoading to false after 2 seconds to prevent infinite loading
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Forcing loading state to complete after timeout");
+        setIsLoading(false);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const loadHomepageSections = () => {
-    setIsLoading(true);
-    
     try {
       // Default values
       const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
@@ -40,11 +48,10 @@ const Admin = () => {
         try {
           const puckData = JSON.parse(puckDataString);
           
-          if (puckData) {
+          if (puckData && puckData.content) {
             // Extract sections from Puck data
             let sectionsFromPuck: SectionType[] = [];
             
-            // Handle different possible structures of Puck data
             if (Array.isArray(puckData.content)) {
               // Direct array of components
               sectionsFromPuck = puckData.content
@@ -58,55 +65,27 @@ const Admin = () => {
                   }
                 })
                 .filter(Boolean) as SectionType[];
-            } else if (puckData.content && typeof puckData.content === 'object') {
-              // Handle nested structure
-              if (puckData.content.root && Array.isArray(puckData.content.root.children)) {
-                sectionsFromPuck = puckData.content.root.children
-                  .map((child: any) => {
-                    switch(child.type) {
-                      case 'HeroSection': return 'hero';
-                      case 'ServicesGrid': return 'services';
-                      case 'BarbersTeam': return 'barbers';
-                      case 'BookingSection': return 'booking';
-                      default: return null;
-                    }
-                  })
-                  .filter(Boolean) as SectionType[];
-              }
             }
             
             if (sectionsFromPuck.length > 0) {
               console.log("Using sections from Puck data:", sectionsFromPuck);
               setHomepageSections(sectionsFromPuck);
               localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
-              
-              // Normalize the Puck data structure
-              const normalizedContent = Array.isArray(puckData.content) 
-                ? puckData.content 
-                : puckData.content?.root?.children || [];
-              
-              const normalizedData = {
-                root: { props: {} },
-                content: normalizedContent
-              };
-              
-              localStorage.setItem('puckData', JSON.stringify(normalizedData));
-              
               setIsLoading(false);
               return;
             }
           }
           
-          console.log("Invalid Puck data structure, loading from homepageSections");
-          loadFromHomepageSections(defaultSections);
+          console.log("No valid sections found in Puck data, loading from homepageSections");
         } catch (e) {
           console.error("Error parsing Puck data:", e);
-          loadFromHomepageSections(defaultSections);
         }
       } else {
         console.log("No Puck data found, loading from homepageSections");
-        loadFromHomepageSections(defaultSections);
       }
+      
+      // If Puck data not available or invalid, load from homepageSections
+      loadFromHomepageSections(defaultSections);
     } catch (e) {
       console.error("Error loading homepage data:", e);
       // Use default values in case of error
@@ -141,10 +120,14 @@ const Admin = () => {
         localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
         setHomepageSections(defaultSections);
       }
+      
+      // Always ensure loading state is completed
+      setIsLoading(false);
     } catch (e) {
       console.error("Error in loadFromHomepageSections:", e);
       localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       setHomepageSections(defaultSections);
+      setIsLoading(false);
     }
   };
 

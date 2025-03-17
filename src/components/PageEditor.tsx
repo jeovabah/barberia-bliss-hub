@@ -30,68 +30,72 @@ const PageEditor: React.FC<EditorProps> = ({
   
   // Load Puck data when initialized
   useEffect(() => {
-    setIsLoading(true);
-    
-    try {
-      // Check if there's saved Puck data
-      const savedPuckData = localStorage.getItem('puckData');
-      console.log("Fetching Puck data:", savedPuckData ? "Data found" : "No data");
+    const loadPuckData = async () => {
+      setIsLoading(true);
       
-      if (savedPuckData) {
-        try {
-          const parsedData = JSON.parse(savedPuckData);
-          console.log("Puck data parsed successfully:", parsedData);
-          
-          // Ensure the data has the correct structure
-          if (parsedData && typeof parsedData === 'object') {
-            // Ensure we have a properly structured data object for Puck
-            const normalizedData: Data = {
-              root: {
-                props: {}
-              },
-              content: []
-            };
+      try {
+        // Check if there's saved Puck data
+        const savedPuckData = localStorage.getItem('puckData');
+        console.log("Fetching Puck data:", savedPuckData ? "Data found" : "No data");
+        
+        if (savedPuckData) {
+          try {
+            const parsedData = JSON.parse(savedPuckData);
+            console.log("Puck data parsed successfully:", parsedData);
             
-            // Extract content based on the structure we find
-            if (Array.isArray(parsedData.content)) {
-              normalizedData.content = parsedData.content;
-            } else if (parsedData.content && typeof parsedData.content === 'object') {
-              // Handle nested content structure
-              if (Array.isArray(parsedData.content.root?.children)) {
-                normalizedData.content = parsedData.content.root.children;
+            // Ensure the data has the correct structure
+            if (parsedData && typeof parsedData === 'object') {
+              // Create a properly structured data object for Puck
+              const normalizedData: Data = {
+                root: {
+                  props: {}
+                },
+                content: []
+              };
+              
+              // Extract content based on the structure we find
+              if (Array.isArray(parsedData.content)) {
+                normalizedData.content = parsedData.content;
+              } else if (parsedData.content && typeof parsedData.content === 'object') {
+                if (parsedData.content.root && Array.isArray(parsedData.content.root.children)) {
+                  normalizedData.content = parsedData.content.root.children;
+                } else {
+                  // Invalid structure, create default
+                  await createDefaultPuckData();
+                  return;
+                }
               } else {
-                // Create default components
-                createDefaultPuckData();
+                // Invalid structure, create default
+                await createDefaultPuckData();
                 return;
               }
+              
+              setPuckData(normalizedData);
+              setIsLoading(false);
             } else {
-              createDefaultPuckData();
-              return;
+              console.log("Invalid Puck data structure, creating default");
+              await createDefaultPuckData();
             }
-            
-            setPuckData(normalizedData);
-          } else {
-            console.log("Invalid Puck data structure, creating default");
-            createDefaultPuckData();
+          } catch (e) {
+            console.error("Error parsing Puck data:", e);
+            await createDefaultPuckData();
           }
-        } catch (e) {
-          console.error("Error parsing Puck data:", e);
-          createDefaultPuckData();
+        } else {
+          console.log("No Puck data found, creating default data");
+          await createDefaultPuckData();
         }
-      } else {
-        console.log("No Puck data found, creating default data");
-        createDefaultPuckData();
+      } catch (e) {
+        console.error("Error loading editor:", e);
+        await createDefaultPuckData();
+        setIsLoading(false);
       }
-    } catch (e) {
-      console.error("Error loading editor:", e);
-      createDefaultPuckData();
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    
+    loadPuckData();
   }, [initialSections]);
 
   // Function to create default Puck data based on initial sections
-  const createDefaultPuckData = () => {
+  const createDefaultPuckData = async () => {
     console.log("Creating default Puck data with sections:", initialSections);
     
     // Map section types to Puck components
@@ -141,6 +145,7 @@ const PageEditor: React.FC<EditorProps> = ({
     console.log("Default Puck data created:", defaultData);
     setPuckData(defaultData);
     localStorage.setItem('puckData', JSON.stringify(defaultData));
+    setIsLoading(false);
   };
 
   // When the user makes changes in the editor
