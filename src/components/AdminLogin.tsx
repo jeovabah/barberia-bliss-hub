@@ -23,7 +23,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     // Simple mock authentication
     setTimeout(() => {
       // In a real app, you would validate against a backend
-      if (username === "admin" && password === "admin123") {
+      if (username === "admin@barberbliss.com" && password === "admin123") {
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao painel administrativo.",
@@ -54,7 +54,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="username">Usuário</Label>
+                <Label htmlFor="username">Email</Label>
                 <Input
                   id="username"
                   type="text"
@@ -75,7 +75,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
                   autoComplete="current-password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={isLoading}>
                 {isLoading ? "Autenticando..." : "Entrar"}
               </Button>
             </div>
@@ -83,8 +83,8 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         </CardContent>
         <CardFooter className="flex flex-col">
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Para demonstração, use:<br />
-            Usuário: admin<br />
+            Usando as credenciais padrão:<br />
+            Email: admin@barberbliss.com<br />
             Senha: admin123
           </p>
         </CardFooter>

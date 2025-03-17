@@ -123,9 +123,16 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Pass emailConfirm: false to disable email verification
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            email_confirmed: true
+          }
+        }
       });
 
       if (error) {
@@ -135,9 +142,10 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        // With email verification disabled, user should be logged in immediately
         toast({
           title: "Conta criada com sucesso",
-          description: "Verifique seu email para confirmar o cadastro.",
+          description: "Sua conta foi criada e você está logado.",
         });
       }
     } catch (error: any) {
@@ -150,6 +158,49 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Create admin user if it doesn't exist
+  const createDefaultAdminUser = async () => {
+    const adminEmail = "admin@barberbliss.com";
+    const adminPassword = "admin123";
+
+    // Check if admin user exists
+    const { data: adminExists, error: checkError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_type', 'admin')
+      .single();
+
+    if (!adminExists && !checkError) {
+      // Admin doesn't exist, create one
+      const { data, error } = await supabase.auth.signUp({
+        email: adminEmail,
+        password: adminPassword,
+        options: {
+          data: {
+            email_confirmed: true
+          }
+        }
+      });
+
+      if (!error && data.user) {
+        // Update the profile to be admin
+        await supabase
+          .from('profiles')
+          .update({ user_type: 'admin' })
+          .eq('id', data.user.id);
+        
+        console.log("Admin user created successfully");
+      } else {
+        console.error("Error creating admin user:", error);
+      }
+    }
+  };
+
+  // Call this once when component mounts
+  useEffect(() => {
+    createDefaultAdminUser();
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
@@ -191,7 +242,7 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full">
+                  <Button type="submit" disabled={loading} className="w-full bg-amber-600 hover:bg-amber-700">
                     {loading ? "Entrando..." : "Entrar"}
                   </Button>
                 </div>
@@ -222,13 +273,16 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full">
+                  <Button type="submit" disabled={loading} className="w-full bg-amber-600 hover:bg-amber-700">
                     {loading ? "Criando conta..." : "Criar Conta"}
                   </Button>
                 </div>
               </form>
             </TabsContent>
           </Tabs>
+          <div className="mt-4 pt-4 border-t text-center text-sm">
+            <p>Acesso administrativo:<br/>Email: admin@barberbliss.com<br/>Senha: admin123</p>
+          </div>
         </CardContent>
       </Card>
     </div>
