@@ -19,6 +19,7 @@ const Admin = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,9 +47,15 @@ const Admin = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        navigate('/auth');
+        // Only navigate if we haven't already checked auth
+        if (!hasCheckedAuth) {
+          setHasCheckedAuth(true);
+          navigate('/auth');
+        }
         return;
       }
+
+      setHasCheckedAuth(true);
 
       // Get user profile to check if admin
       const { data: profile, error: profileError } = await supabase
@@ -395,6 +402,11 @@ const Admin = () => {
 
   const handleSignOut = async () => {
     try {
+      // First clear local storage to ensure we don't get into a loop
+      localStorage.removeItem('sb-fxdliwfsmavtagwnrjon-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Then attempt to sign out through the API
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -406,8 +418,7 @@ const Admin = () => {
         });
       }
       
-      // Regardless of error, clear local session and redirect
-      localStorage.removeItem('supabase.auth.token');
+      // Always navigate to auth regardless of API result
       navigate('/auth');
     } catch (error: any) {
       console.error("Error signing out:", error);
@@ -433,17 +444,27 @@ const Admin = () => {
   }
 
   if (!isAdmin) {
+    if (hasCheckedAuth) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Acesso Restrito</CardTitle>
+              <CardDescription>Apenas administradores podem acessar esta página.</CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Button onClick={() => navigate('/')} className="w-full">Voltar para Home</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acesso Restrito</CardTitle>
-            <CardDescription>Apenas administradores podem acessar esta página.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => navigate('/')} className="w-full">Voltar para Home</Button>
-          </CardFooter>
-        </Card>
+        <div className="text-center">
+          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
+          <p>Verificando permissões...</p>
+        </div>
       </div>
     );
   }

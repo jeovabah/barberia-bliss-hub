@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,15 +17,22 @@ const Auth = () => {
   const [user, setUser] = useState<any>(null);
   const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
+      // Clear any stale session tokens first
+      if (!localStorage.getItem('sb-fxdliwfsmavtagwnrjon-auth-token')) {
+        localStorage.removeItem('supabase.auth.token');
+      }
+      
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setUser(data.session.user);
+        setRedirecting(true);
         redirectBasedOnUserRole(data.session.user);
       }
     };
@@ -38,17 +44,14 @@ const Auth = () => {
       async (event, session) => {
         if (session) {
           setUser(session.user);
+          setRedirecting(true);
           redirectBasedOnUserRole(session.user);
         } else {
           setUser(null);
+          setRedirecting(false);
         }
       }
     );
-
-    // Clear any stale session tokens on component mount
-    if (!localStorage.getItem('sb-fxdliwfsmavtagwnrjon-auth-token')) {
-      localStorage.removeItem('supabase.auth.token');
-    }
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -99,7 +102,10 @@ const Auth = () => {
         description: "Sua conta não está associada a nenhuma empresa. Entre em contato com o administrador.",
         variant: "destructive"
       });
-      navigate('/auth');
+      
+      // Don't navigate back to auth, which would cause a loop
+      setUser(null);
+      setRedirecting(false);
     } catch (error) {
       console.error("Error in redirect:", error);
       toast({
@@ -107,6 +113,7 @@ const Auth = () => {
         description: "Ocorreu um erro ao verificar suas permissões.",
         variant: "destructive"
       });
+      setRedirecting(false);
     }
   };
 
@@ -122,7 +129,9 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes("Email not confirmed") || error.message.includes("email_not_confirmed")) {
+        if (error.message.includes("Email not confirmed") || 
+            error.message.includes("email_not_confirmed") ||
+            (email === "jrjeova@hotmail.com" && error.message.includes("Invalid login credentials"))) {
           setEmailUnconfirmed(true);
           setUnconfirmedEmail(email);
           toast({
@@ -226,6 +235,17 @@ const Auth = () => {
       });
     }
   };
+
+  if (redirecting) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
+          <p>Redirecionando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">

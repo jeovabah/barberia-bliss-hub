@@ -14,6 +14,7 @@ const CompanyDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [puckData, setPuckData] = useState<any>(null);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -26,9 +27,15 @@ const CompanyDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        navigate('/auth');
+        // Only navigate if we haven't already checked auth
+        if (!hasCheckedAuth) {
+          setHasCheckedAuth(true);
+          navigate('/auth');
+        }
         return;
       }
+
+      setHasCheckedAuth(true);
 
       // Special case for admin
       if (session.user.email === 'admin@barberbliss.com') {
@@ -185,6 +192,11 @@ const CompanyDashboard = () => {
 
   const handleSignOut = async () => {
     try {
+      // First clear local storage to ensure we don't get into a loop
+      localStorage.removeItem('sb-fxdliwfsmavtagwnrjon-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Then attempt to sign out through the API
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -196,8 +208,7 @@ const CompanyDashboard = () => {
         });
       }
       
-      // Regardless of error, clear local session and redirect
-      localStorage.removeItem('supabase.auth.token');
+      // Always navigate to auth regardless of API result
       navigate('/auth');
     } catch (error: any) {
       console.error("Error signing out:", error);
@@ -223,8 +234,18 @@ const CompanyDashboard = () => {
   }
 
   if (!profile) {
-    navigate('/auth');
-    return null;
+    if (hasCheckedAuth) {
+      navigate('/auth');
+      return null;
+    }
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
+          <p>Verificando autenticação...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!company) {
