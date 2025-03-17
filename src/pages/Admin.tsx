@@ -111,61 +111,6 @@ const Admin = () => {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, user_type, company_id, created_at');
-      
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        toast({
-          title: "Erro ao carregar usuários",
-          description: profilesError.message,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Get user emails from auth.users - Not directly accessible via Supabase JS client
-      // For this example, we'll use profile IDs as a fallback
-      
-      // Get company details for each profile with a company_id
-      const enhancedProfiles = await Promise.all(
-        profiles.map(async (profile) => {
-          let companyName = "Sem empresa";
-          
-          if (profile.company_id) {
-            const { data: company } = await supabase
-              .from('companies')
-              .select('name')
-              .eq('id', profile.company_id)
-              .single();
-            
-            if (company) {
-              companyName = company.name;
-            }
-          }
-          
-          return {
-            ...profile,
-            company_name: companyName
-          };
-        })
-      );
-      
-      setUsers(enhancedProfiles || []);
-    } catch (error: any) {
-      console.error("Unexpected error:", error);
-      toast({
-        title: "Erro inesperado",
-        description: error.message || "Ocorreu um erro ao carregar os usuários.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleCreateCompany = async () => {
     if (!newCompanyName || !newCompanySlug) {
       toast({
@@ -288,6 +233,58 @@ const Admin = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      // Get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, user_type, company_id, created_at');
+      
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        toast({
+          title: "Erro ao carregar usuários",
+          description: profilesError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Get company details for each profile with a company_id
+      const enhancedProfiles = await Promise.all(
+        profiles.map(async (profile) => {
+          let companyName = "Sem empresa";
+          
+          if (profile.company_id) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('name')
+              .eq('id', profile.company_id)
+              .single();
+            
+            if (company) {
+              companyName = company.name;
+            }
+          }
+          
+          return {
+            ...profile,
+            company_name: companyName
+          };
+        })
+      );
+      
+      setUsers(enhancedProfiles || []);
+    } catch (error: any) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Erro inesperado",
+        description: error.message || "Ocorreu um erro ao carregar os usuários.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCreateUser = async () => {
     if (!newUserEmail || !newUserPassword) {
       toast({
@@ -324,33 +321,36 @@ const Admin = () => {
         return;
       }
 
-      // Update the user profile with company association
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          company_id: newUserCompany || null,
-          user_type: 'company' 
-        })
-        .eq('id', authData.user.id)
-        .select();
+      // Update the user profile with company association if specified
+      if (newUserCompany) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            company_id: newUserCompany,
+            user_type: 'company' 
+          })
+          .eq('id', authData.user.id)
+          .select();
 
-      if (profileError) {
-        console.error("Error updating user profile:", profileError);
-        toast({
-          title: "Erro ao atualizar perfil",
-          description: profileError.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Usuário criado",
-          description: "O usuário foi criado com sucesso."
-        });
-        setNewUserEmail('');
-        setNewUserPassword('');
-        setNewUserCompany('');
-        fetchUsers();
+        if (profileError) {
+          console.error("Error updating user profile:", profileError);
+          toast({
+            title: "Erro ao atualizar perfil",
+            description: profileError.message,
+            variant: "destructive"
+          });
+          return;
+        }
       }
+      
+      toast({
+        title: "Usuário criado",
+        description: "O usuário foi criado com sucesso."
+      });
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserCompany('');
+      fetchUsers();
     } catch (error: any) {
       console.error("Unexpected error:", error);
       toast({
@@ -448,6 +448,7 @@ const Admin = () => {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
 
+          {/* Companies Tab */}
           <TabsContent value="companies">
             <Card>
               <CardHeader>
@@ -614,6 +615,7 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
+          {/* Users Tab */}
           <TabsContent value="users">
             <Card>
               <CardHeader>
@@ -661,18 +663,26 @@ const Admin = () => {
                           <Label htmlFor="user-company">Empresa (opcional)</Label>
                           <Select 
                             value={newUserCompany} 
-                            onValueChange={(value: string) => setNewUserCompany(value)}
+                            onValueChange={setNewUserCompany}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione uma empresa" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">Sem empresa</SelectItem>
-                              {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  {company.name}
+                              {companies.length > 0 ? (
+                                <>
+                                  <SelectItem value="">Sem empresa</SelectItem>
+                                  {companies.map((company) => (
+                                    <SelectItem key={company.id} value={company.id}>
+                                      {company.name}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              ) : (
+                                <SelectItem value="" disabled>
+                                  Nenhuma empresa cadastrada
                                 </SelectItem>
-                              ))}
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
@@ -752,12 +762,20 @@ const Admin = () => {
                                           <SelectValue placeholder="Selecione uma empresa" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="">Sem empresa</SelectItem>
-                                          {companies.map((company) => (
-                                            <SelectItem key={company.id} value={company.id}>
-                                              {company.name}
+                                          {companies.length > 0 ? (
+                                            <>
+                                              <SelectItem value="">Sem empresa</SelectItem>
+                                              {companies.map((company) => (
+                                                <SelectItem key={company.id} value={company.id}>
+                                                  {company.name}
+                                                </SelectItem>
+                                              ))}
+                                            </>
+                                          ) : (
+                                            <SelectItem value="" disabled>
+                                              Nenhuma empresa cadastrada
                                             </SelectItem>
-                                          ))}
+                                          )}
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -780,6 +798,7 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
+          {/* Dashboard Tab */}
           <TabsContent value="dashboard">
             <AdminDashboard />
           </TabsContent>
