@@ -166,6 +166,8 @@ const CompanyDashboard = () => {
 
     try {
       setLoading(true);
+      console.log("Saving Puck data:", data);
+      
       // Remove from localStorage first to prevent any loops
       localStorage.removeItem('puckData');
       
@@ -190,12 +192,14 @@ const CompanyDashboard = () => {
       
       if (existingData) {
         // Update existing record
+        console.log("Updating existing puck content record");
         result = await supabase
           .from('puck_content')
           .update({ content: data })
           .eq('company_id', company.id);
       } else {
         // Insert new record
+        console.log("Creating new puck content record");
         result = await supabase
           .from('puck_content')
           .insert({ company_id: company.id, content: data });
@@ -205,15 +209,25 @@ const CompanyDashboard = () => {
         console.error("Error saving puck content:", result.error);
         toast({
           title: "Erro ao salvar",
-          description: "Não foi possível salvar as alterações.",
+          description: "Não foi possível salvar as alterações: " + result.error.message,
           variant: "destructive"
         });
       } else {
+        console.log("Puck content saved successfully:", result);
         toast({
           title: "Salvo com sucesso",
           description: "As alterações foram salvas com sucesso."
         });
         setPuckData(data);
+        
+        // Refresh the data to ensure we have the latest content
+        const { data: refreshedContent, error: refreshError } = await supabase
+          .rpc('get_puck_content_by_company', { company_id_param: company.id });
+          
+        if (!refreshError && refreshedContent) {
+          console.log("Refreshed puck content:", refreshedContent);
+          setPuckData(refreshedContent);
+        }
       }
     } catch (error) {
       console.error("Unexpected error saving puck content:", error);
@@ -329,7 +343,7 @@ const CompanyDashboard = () => {
       </header>
 
       <main className="container mx-auto py-8 px-6">
-        <Tabs defaultValue="appointments">
+        <Tabs defaultValue="editor">
           <TabsList className="mb-8">
             <TabsTrigger value="editor">Editor de Página</TabsTrigger>
             <TabsTrigger value="appointments">Agendamentos</TabsTrigger>

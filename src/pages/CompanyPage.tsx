@@ -52,7 +52,7 @@ const CompanyPage = () => {
       
       console.log("Fetching Puck content using function for company:", company.id);
       
-      // Usar nossa nova função para buscar o conteúdo Puck evitando problemas de permissão
+      // Usar nossa função para buscar o conteúdo Puck evitando problemas de permissão
       const { data: puckContent, error: puckError } = await supabase
         .rpc('get_puck_content_by_company', { company_id_param: company.id });
       
@@ -72,6 +72,8 @@ const CompanyPage = () => {
             ? JSON.parse(puckContent) 
             : puckContent;
           
+          console.log("Parsed content:", parsedContent);
+          
           // Garantir que o conteúdo tenha a estrutura esperada
           const normalizedData = {
             root: parsedContent.root || { props: {} },
@@ -80,10 +82,14 @@ const CompanyPage = () => {
               : []
           };
           
-          if (normalizedData.content.length > 0) {
+          console.log("Normalized data:", normalizedData);
+          
+          if (normalizedData.content && normalizedData.content.length > 0) {
             setPuckData(normalizedData);
             setUsePuck(true);
+            console.log("Using Puck content:", normalizedData);
           } else {
+            console.log("No valid Puck content found, using default sections");
             setUsePuck(false);
           }
         } catch (e) {
