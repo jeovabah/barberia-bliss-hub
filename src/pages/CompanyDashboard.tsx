@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ const CompanyDashboard = () => {
   const [company, setCompany] = useState<any>(null);
   const [puckData, setPuckData] = useState<any>(null);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -97,16 +99,25 @@ const CompanyDashboard = () => {
         setCompany(companyData);
         
         // Fetch Puck content
-        const { data: puckData, error: puckError } = await supabase
+        const { data: puckContent, error: puckError } = await supabase
           .from('puck_content')
           .select('*')
           .eq('company_id', companyData.id)
-          .single();
+          .maybeSingle();
 
-        if (puckError && puckError.code !== 'PGRST116') {
+        if (puckError) {
           console.error("Error fetching puck content:", puckError);
-        } else if (puckData) {
-          setPuckData(puckData.content);
+          toast({
+            title: "Erro ao carregar conteúdo da página",
+            description: "Não foi possível carregar o conteúdo da sua página.",
+            variant: "destructive"
+          });
+        } else if (puckContent) {
+          console.log("Puck content loaded from database:", puckContent);
+          setPuckData(puckContent.content);
+        } else {
+          console.log("No puck content found in database");
+          setPuckData(null);
         }
       }
     } catch (error) {
@@ -118,6 +129,7 @@ const CompanyDashboard = () => {
       });
     } finally {
       setLoading(false);
+      setDataLoaded(true);
     }
   };
 
@@ -132,15 +144,21 @@ const CompanyDashboard = () => {
     }
 
     try {
+      setLoading(true);
       // Check if puck content exists for this company
       const { data: existingData, error: checkError } = await supabase
         .from('puck_content')
         .select('id')
         .eq('company_id', company.id)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError) {
         console.error("Error checking existing puck content:", checkError);
+        toast({
+          title: "Erro ao verificar dados existentes",
+          description: "Não foi possível verificar se já existem dados para esta empresa.",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -175,6 +193,13 @@ const CompanyDashboard = () => {
       }
     } catch (error) {
       console.error("Unexpected error saving puck content:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro inesperado ao salvar as alterações.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,9 +217,11 @@ const CompanyDashboard = () => {
 
   const handleSignOut = async () => {
     try {
+      setLoading(true);
       // First clear local storage to ensure we don't get into a loop
       localStorage.removeItem('sb-fxdliwfsmavtagwnrjon-auth-token');
       localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('puckData');
       
       // Then attempt to sign out through the API
       const { error } = await supabase.auth.signOut();
@@ -219,10 +246,12 @@ const CompanyDashboard = () => {
       });
       // Attempt to redirect anyway
       navigate('/auth');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading && !dataLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
@@ -293,11 +322,13 @@ const CompanyDashboard = () => {
           </TabsList>
 
           <TabsContent value="editor">
-            <PageEditor 
-              initialData={puckData}
-              onSave={savePuckData}
-              onPreview={viewSite}
-            />
+            {dataLoaded && (
+              <PageEditor 
+                initialData={puckData}
+                onSave={savePuckData}
+                onPreview={viewSite}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="appointments">

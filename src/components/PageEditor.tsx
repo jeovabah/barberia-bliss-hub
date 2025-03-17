@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SaveIcon, Eye, RotateCcw } from "lucide-react";
@@ -25,19 +25,23 @@ const PageEditor: React.FC<EditorProps> = ({
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitialized = useRef(false);
   
   console.log("PageEditor rendering with initialSections:", initialSections);
   console.log("PageEditor initialData:", initialData);
   
-  // Load Puck data when initialized
+  // Load Puck data when initialized - only runs once
   useEffect(() => {
+    // Skip if we've already initialized to prevent infinite loops
+    if (hasInitialized.current) return;
+    
     const loadPuckData = async () => {
       setIsLoading(true);
       
       try {
-        // If we have initialData from props, use it
+        // Priority 1: If we have initialData from props (database), use it
         if (initialData) {
-          console.log("Using provided initial data");
+          console.log("Using provided initial data from database");
           
           // Ensure the data has the correct structure
           if (typeof initialData === 'object') {
@@ -57,65 +61,21 @@ const PageEditor: React.FC<EditorProps> = ({
             }
             
             setPuckData(normalizedData);
+            hasInitialized.current = true;
             setIsLoading(false);
             return;
           }
         }
         
-        // Check if there's saved Puck data in localStorage as fallback
-        const savedPuckData = localStorage.getItem('puckData');
-        console.log("Checking localStorage fallback:", savedPuckData ? "Data found" : "No data");
-        
-        if (savedPuckData) {
-          try {
-            const parsedData = JSON.parse(savedPuckData);
-            console.log("Puck data from localStorage parsed successfully");
-            
-            // Ensure the data has the correct structure
-            if (parsedData && typeof parsedData === 'object') {
-              // Create a properly structured data object for Puck
-              const normalizedData: Data = {
-                root: {
-                  props: {}
-                },
-                content: []
-              };
-              
-              // Extract content based on the structure we find
-              if (Array.isArray(parsedData.content)) {
-                normalizedData.content = parsedData.content;
-              } else if (parsedData.content && typeof parsedData.content === 'object') {
-                if (parsedData.content.root && Array.isArray(parsedData.content.root.children)) {
-                  normalizedData.content = parsedData.content.root.children;
-                } else {
-                  // Invalid structure, create default
-                  await createDefaultPuckData();
-                  return;
-                }
-              } else {
-                // Invalid structure, create default
-                await createDefaultPuckData();
-                return;
-              }
-              
-              setPuckData(normalizedData);
-              setIsLoading(false);
-            } else {
-              console.log("Invalid Puck data structure in localStorage, creating default");
-              await createDefaultPuckData();
-            }
-          } catch (e) {
-            console.error("Error parsing Puck data from localStorage:", e);
-            await createDefaultPuckData();
-          }
-        } else {
-          console.log("No Puck data found, creating default data");
-          await createDefaultPuckData();
-        }
+        // Priority, 2: Create default data (we no longer check localStorage)
+        console.log("No database data found, creating default data");
+        await createDefaultPuckData();
       } catch (e) {
         console.error("Error loading editor:", e);
         await createDefaultPuckData();
+      } finally {
         setIsLoading(false);
+        hasInitialized.current = true;
       }
     };
     
@@ -172,8 +132,7 @@ const PageEditor: React.FC<EditorProps> = ({
     
     console.log("Default Puck data created");
     setPuckData(defaultData);
-    localStorage.setItem('puckData', JSON.stringify(defaultData));
-    setIsLoading(false);
+    // We no longer save to localStorage here
   };
 
   // When the user makes changes in the editor
@@ -194,10 +153,7 @@ const PageEditor: React.FC<EditorProps> = ({
       return;
     }
     
-    // Save to localStorage as a fallback
-    localStorage.setItem('puckData', JSON.stringify(puckData));
-    
-    // Call the onSave callback
+    // Call the onSave callback to save to the database
     onSave(puckData);
   };
 

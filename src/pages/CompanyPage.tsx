@@ -48,23 +48,24 @@ const CompanyPage = () => {
     
     try {
       // Fetch puck content for this company
-      const { data: puckData, error: puckError } = await supabase
+      const { data: puckContent, error: puckError } = await supabase
         .from('puck_content')
         .select('content')
         .eq('company_id', company.id)
-        .single();
+        .maybeSingle();
       
       if (puckError) {
         console.error("Error fetching puck content:", puckError);
         // No puck content, will use default sections
         setUsePuck(false);
-      } else if (puckData && puckData.content) {
+      } else if (puckContent && puckContent.content) {
+        console.log("Found Puck content in database:", puckContent);
         // Process puck data
         try {
           // Check if content is already an object or if it needs parsing
-          const parsedContent = typeof puckData.content === 'string' 
-            ? JSON.parse(puckData.content) 
-            : puckData.content;
+          const parsedContent = typeof puckContent.content === 'string' 
+            ? JSON.parse(puckContent.content) 
+            : puckContent.content;
           
           // Ensure the content has the expected structure
           const normalizedData = {
@@ -85,6 +86,7 @@ const CompanyPage = () => {
           setUsePuck(false);
         }
       } else {
+        console.log("No Puck content found for company:", company.id);
         setUsePuck(false);
       }
     } catch (error) {
@@ -93,28 +95,6 @@ const CompanyPage = () => {
       setIsLoading(false);
     }
   };
-  
-  // Get sections order from localStorage, or use default if not available
-  const getSectionsOrder = () => {
-    try {
-      const saved = localStorage.getItem('homepageSections');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Validate that we have a non-empty array
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-      // If nothing saved or invalid data, initialize with default order
-      localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
-      return defaultSections;
-    } catch (e) {
-      console.error("Error loading sections order:", e);
-      return defaultSections;
-    }
-  };
-  
-  const sectionsOrder = getSectionsOrder();
   
   // Mapping of section types to components
   const sectionComponents = {
@@ -154,7 +134,7 @@ const CompanyPage = () => {
         </div>
       ) : (
         // Fallback to classic component rendering
-        sectionsOrder.map((section) => (
+        defaultSections.map((section) => (
           <div key={section}>
             {sectionComponents[section as keyof typeof sectionComponents]}
           </div>
