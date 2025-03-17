@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, MoreHorizontal, Calendar } from "lucide-react";
+import { Eye, MoreHorizontal, Calendar, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Mock data for appointments - we'll replace with real data later
 const mockAppointments = [
@@ -52,13 +64,32 @@ const mockAppointments = [
   },
 ];
 
+interface Appointment {
+  id: string;
+  clientName: string;
+  service: string;
+  barber: string;
+  date: string;
+  time: string;
+  status: string;
+}
+
 interface AppointmentTableProps {
   companyId: string;
 }
 
 const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
-  const [appointments, setAppointments] = useState(mockAppointments);
+  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newAppointment, setNewAppointment] = useState<Partial<Appointment>>({
+    clientName: "",
+    service: "",
+    barber: "",
+    date: new Date().toISOString().split('T')[0],
+    time: "10:00",
+    status: "pending"
+  });
   const { toast } = useToast();
 
   // In a real implementation, we would fetch appointments from Supabase here
@@ -109,6 +140,12 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
             Concluído
           </span>
         );
+      case "canceled":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Cancelado
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -141,6 +178,56 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
     });
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewAppointment(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setNewAppointment(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddAppointment = () => {
+    // Validate form
+    if (!newAppointment.clientName || !newAppointment.service || !newAppointment.barber || !newAppointment.date || !newAppointment.time) {
+      toast({
+        title: "Erro ao adicionar",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // In a real implementation, we would add the appointment to Supabase
+    const appointment: Appointment = {
+      id: `${Date.now()}`, // Generate a temporary ID
+      clientName: newAppointment.clientName!,
+      service: newAppointment.service!,
+      barber: newAppointment.barber!,
+      date: newAppointment.date!,
+      time: newAppointment.time!,
+      status: newAppointment.status || "pending",
+    };
+
+    setAppointments([...appointments, appointment]);
+    setIsDialogOpen(false);
+    
+    // Reset form
+    setNewAppointment({
+      clientName: "",
+      service: "",
+      barber: "",
+      date: new Date().toISOString().split('T')[0],
+      time: "10:00",
+      status: "pending"
+    });
+    
+    toast({
+      title: "Agendamento adicionado",
+      description: "O agendamento foi adicionado com sucesso!",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -153,10 +240,108 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
     <div className="bg-white rounded-md shadow-sm">
       <div className="p-4 flex justify-between items-center border-b">
         <h3 className="text-lg font-medium">Agendamentos</h3>
-        <Button size="sm">
-          <Calendar className="mr-2 h-4 w-4" />
-          Novo Agendamento
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Novo Agendamento
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Novo Agendamento</DialogTitle>
+              <DialogDescription>
+                Adicione um novo agendamento para sua barbearia.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="clientName" className="text-right">
+                  Cliente
+                </Label>
+                <Input
+                  id="clientName"
+                  name="clientName"
+                  value={newAppointment.clientName}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="service" className="text-right">
+                  Serviço
+                </Label>
+                <Input
+                  id="service"
+                  name="service"
+                  value={newAppointment.service}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="barber" className="text-right">
+                  Barbeiro
+                </Label>
+                <Input
+                  id="barber"
+                  name="barber"
+                  value={newAppointment.barber}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">
+                  Data
+                </Label>
+                <Input
+                  id="date"
+                  name="date"
+                  type="date"
+                  value={newAppointment.date}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="time" className="text-right">
+                  Horário
+                </Label>
+                <Input
+                  id="time"
+                  name="time"
+                  type="time"
+                  value={newAppointment.time}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select 
+                  onValueChange={(value) => handleSelectChange("status", value)}
+                  defaultValue="pending"
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="canceled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddAppointment}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <Table>
