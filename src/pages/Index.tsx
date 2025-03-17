@@ -26,6 +26,7 @@ const Index = () => {
             parsedContent.root && 
             parsedContent.root.children && 
             parsedContent.root.children.length > 0) {
+          console.log("Conteúdo Puck válido encontrado, usando layout personalizado");
           setPuckContent(parsedContent);
         } else {
           console.log("Conteúdo Puck encontrado, mas está vazio. Usando layout padrão.");
