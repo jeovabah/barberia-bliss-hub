@@ -22,19 +22,32 @@ const Admin = () => {
 
   useEffect(() => {
     // Load saved sections order
-    const savedSections = localStorage.getItem('homepageSections');
-    if (savedSections) {
-      try {
-        setHomepageSections(JSON.parse(savedSections));
-      } catch (e) {
-        console.error("Error parsing saved sections:", e);
-        // Set default sections if parsing fails
-        localStorage.setItem('homepageSections', JSON.stringify(['hero', 'services', 'barbers', 'booking']));
+    const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
+    
+    try {
+      const savedSections = localStorage.getItem('homepageSections');
+      if (savedSections) {
+        const parsed = JSON.parse(savedSections);
+        // Validate that we have a non-empty array
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setHomepageSections(parsed);
+        } else {
+          // Set default if saved data is invalid
+          localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
+          setHomepageSections(defaultSections);
+        }
+      } else {
+        // Initialize with default sections if none exist
+        localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
+        setHomepageSections(defaultSections);
       }
-    } else {
-      // Initialize with default sections if none exist
-      localStorage.setItem('homepageSections', JSON.stringify(['hero', 'services', 'barbers', 'booking']));
+    } catch (e) {
+      console.error("Error parsing saved sections:", e);
+      // Set default sections if parsing fails
+      localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
+      setHomepageSections(defaultSections);
     }
+    
     setIsLoading(false);
   }, []);
 
@@ -53,6 +66,12 @@ const Admin = () => {
   const saveHomepageChanges = (sections: SectionType[]) => {
     setHomepageSections(sections);
     localStorage.setItem('homepageSections', JSON.stringify(sections));
+    
+    toast({
+      title: "Alterações salvas",
+      description: "A organização da página foi atualizada com sucesso.",
+      variant: "default",
+    });
   };
   
   const resetHomepageContent = () => {

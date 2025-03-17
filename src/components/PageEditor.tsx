@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PencilIcon, EyeIcon, RotateCcwIcon, GripVertical } from "lucide-react";
+import { PencilIcon, EyeIcon, RotateCcwIcon, GripVertical, SaveIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SectionType = 'hero' | 'services' | 'barbers' | 'booking';
@@ -25,6 +25,13 @@ const PageEditor: React.FC<EditorProps> = ({
 }) => {
   const [sections, setSections] = useState<SectionType[]>(initialSections);
   const [activeTab, setActiveTab] = useState<string>('editor');
+  
+  // Ensure sections are always set from props
+  useEffect(() => {
+    if (initialSections && initialSections.length > 0) {
+      setSections(initialSections);
+    }
+  }, [initialSections]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -146,7 +153,10 @@ const PageEditor: React.FC<EditorProps> = ({
           </DragDropContext>
 
           <div className="mt-6 flex justify-end">
-            <Button onClick={handleSave}>Salvar Alterações</Button>
+            <Button onClick={handleSave} className="flex items-center gap-2">
+              <SaveIcon className="w-4 h-4" />
+              Salvar Alterações
+            </Button>
           </div>
         </TabsContent>
 

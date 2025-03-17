@@ -17,9 +17,13 @@ const Index = () => {
     try {
       const saved = localStorage.getItem('homepageSections');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Validate that we have a non-empty array
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
-      // If nothing saved, initialize with default order
+      // If nothing saved or invalid data, initialize with default order
       localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       return defaultSections;
     } catch (e) {
@@ -35,7 +39,7 @@ const Index = () => {
   }, []);
 
   // Mapping of section types to components
-  const sectionComponents: Record<string, JSX.Element> = {
+  const sectionComponents = {
     hero: <Hero />,
     services: <Services />,
     barbers: <BarberProfile />,
@@ -47,7 +51,7 @@ const Index = () => {
       <Navbar />
       
       {/* Render sections in the order specified in localStorage */}
-      {sectionsOrder.map((section: string) => (
+      {sectionsOrder.map((section) => (
         <div key={section}>
           {sectionComponents[section]}
         </div>
