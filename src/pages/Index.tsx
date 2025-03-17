@@ -21,9 +21,7 @@ const Index = () => {
     if (savedContent) {
       try {
         const parsedContent = JSON.parse(savedContent);
-        if (parsedContent && parsedContent.root && parsedContent.root.children && parsedContent.root.children.length > 0) {
-          setPuckContent(parsedContent);
-        }
+        setPuckContent(parsedContent);
       } catch (e) {
         console.error("Error parsing stored content:", e);
       }

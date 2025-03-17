@@ -9,8 +9,10 @@ import "@measured/puck/puck.css";
 import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("adminAuthenticated") === "true"
   );
@@ -73,6 +75,9 @@ const Admin = () => {
       description: "As alterações na página inicial foram salvas com sucesso.",
       variant: "default",
     });
+    
+    // Redirect to homepage to see changes
+    navigate("/");
   };
   
   const resetHomepageContent = () => {
@@ -83,6 +88,13 @@ const Admin = () => {
       description: "O conteúdo personalizado foi removido e a página padrão foi restaurada.",
       variant: "default",
     });
+    
+    // Redirect to homepage to see the default layout
+    navigate("/");
+  };
+
+  const previewHomepage = () => {
+    navigate("/");
   };
 
   if (!isAuthenticated) {
@@ -105,7 +117,7 @@ const Admin = () => {
         </button>
       </div>
       
-      <Tabs defaultValue="agendamentos" className="w-full">
+      <Tabs defaultValue="homepage" className="w-full">
         <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
           <TabsTrigger value="servicos">Serviços</TabsTrigger>
@@ -149,13 +161,20 @@ const Admin = () => {
                 <CardTitle>Editor da Página Inicial</CardTitle>
                 <CardDescription>Modifique completamente a página inicial do site.</CardDescription>
               </div>
-              <Button 
-                variant="destructive" 
-                onClick={resetHomepageContent}
-                className="ml-auto"
-              >
-                Restaurar Padrão
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={previewHomepage}
+                >
+                  Visualizar Página
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={resetHomepageContent}
+                >
+                  Restaurar Padrão
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[600px]">

@@ -716,10 +716,8 @@ export const config: Config = {
               type: "array",
               label: "Especialidades",
               arrayFields: {
-                value: {
-                  type: "text",
-                  label: "Especialidade"
-                }
+                type: "text",
+                label: "Especialidade"
               }
             },
             image: {
