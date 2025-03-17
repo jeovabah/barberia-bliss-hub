@@ -64,7 +64,7 @@ const PageEditor: React.FC<EditorProps> = ({
     console.log("Creating default Puck data with sections:", initialSections);
     
     // Map section types to Puck components
-    const children = initialSections.map(sectionType => {
+    const rootChildren = initialSections.map(sectionType => {
       switch(sectionType) {
         case 'hero':
           return {
@@ -99,15 +99,12 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     }).filter(Boolean);
     
-    // Data structure for Puck
+    // Creating a proper Data structure for Puck according to its API
     const defaultData: Data = {
       root: {
-        props: {},
-        type: "page"
+        props: {}
       },
-      content: {
-        children: children
-      }
+      content: rootChildren
     };
     
     console.log("Default Puck data created:", defaultData);
@@ -125,7 +122,7 @@ const PageEditor: React.FC<EditorProps> = ({
   const handleSave = () => {
     console.log("Saving changes, current data:", puckData);
     
-    if (!puckData || !puckData.content || !puckData.content.children) {
+    if (!puckData || !puckData.content) {
       toast({
         title: "Error saving",
         description: "Invalid data. Try reloading the page.",
@@ -138,7 +135,7 @@ const PageEditor: React.FC<EditorProps> = ({
     localStorage.setItem('puckData', JSON.stringify(puckData));
     
     // Extract section types from Puck data
-    const sections: SectionType[] = puckData.content.children
+    const sections: SectionType[] = puckData.content
       .map((child: any) => {
         switch(child.type) {
           case 'HeroSection': return 'hero';
@@ -247,8 +244,8 @@ const PageEditor: React.FC<EditorProps> = ({
         <div className="mt-6">
           <h3 className="font-medium mb-2">Preview:</h3>
           <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
-            {puckData && puckData.content ? (
-              <PuckRenderer data={puckData.content} />
+            {puckData ? (
+              <PuckRenderer data={puckData} />
             ) : (
               <p className="text-muted-foreground text-center py-10">No content to preview.</p>
             )}

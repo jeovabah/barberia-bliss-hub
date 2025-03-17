@@ -39,8 +39,8 @@ const Admin = () => {
         try {
           const puckData = JSON.parse(puckDataString);
           
-          if (puckData && puckData.content && puckData.content.children) {
-            const sectionsFromPuck: SectionType[] = puckData.content.children
+          if (puckData && puckData.content) {
+            const sectionsFromPuck: SectionType[] = puckData.content
               .map((child: any) => {
                 switch(child.type) {
                   case 'HeroSection': return 'hero';

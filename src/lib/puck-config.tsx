@@ -773,13 +773,13 @@ export const config: Config = {
 
 // Component for rendering Puck content on the front-end
 export const PuckRenderer = ({ data }: { data: any }) => {
-  if (!data || !data.root || !data.root.children) {
+  if (!data || !data.content) {
     return null;
   }
   
   return (
     <div className="puck-renderer">
-      {data.root.children.map((child: any, index: number) => {
+      {data.content.map((child: any, index: number) => {
         const Component = config.components[child.type]?.render;
         return Component ? <Component key={index} {...child.props} /> : null;
       })}
