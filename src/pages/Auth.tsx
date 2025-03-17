@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +47,7 @@ const Auth = () => {
 
   const redirectBasedOnUserRole = async (user: any) => {
     try {
-      // Special case for admin
+      // Special case for system admin
       if (user.email === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
@@ -63,34 +62,41 @@ const Auth = () => {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        navigate('/company-dashboard');
+        toast({
+          title: "Erro ao verificar perfil",
+          description: "Não foi possível verificar suas permissões.",
+          variant: "destructive"
+        });
         return;
       }
 
+      // Admin goes to admin dashboard
       if (profile?.user_type === 'admin') {
         navigate('/admin');
         return;
       }
 
+      // Company user goes to their company page or dashboard
       if (profile?.company_id) {
-        // Get company slug
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('slug')
-          .eq('id', profile.company_id)
-          .single();
-
-        if (!companyError && company?.slug) {
-          navigate(`/${company.slug}`);
-          return;
-        }
+        // Company users go to company dashboard
+        navigate('/company-dashboard');
+        return;
       }
       
-      // Default fallback
-      navigate('/company-dashboard');
+      // Default fallback - if no company assigned
+      toast({
+        title: "Sem empresa associada",
+        description: "Sua conta não está associada a nenhuma empresa. Entre em contato com o administrador.",
+        variant: "destructive"
+      });
+      navigate('/auth');
     } catch (error) {
       console.error("Error in redirect:", error);
-      navigate('/company-dashboard');
+      toast({
+        title: "Erro ao redirecionar",
+        description: "Ocorreu um erro ao verificar suas permissões.",
+        variant: "destructive"
+      });
     }
   };
 

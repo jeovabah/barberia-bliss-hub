@@ -31,6 +31,12 @@ const CompanyDashboard = () => {
         return;
       }
 
+      // Special case for admin
+      if (session.user.email === 'admin@barberbliss.com') {
+        navigate('/admin');
+        return;
+      }
+
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -39,9 +45,16 @@ const CompanyDashboard = () => {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
+        toast({
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível carregar os dados do seu perfil.",
+          variant: "destructive"
+        });
+        navigate('/auth');
         return;
       }
 
+      // If user is admin by user_type, redirect to admin panel
       if (profileData.user_type === 'admin') {
         navigate('/admin');
         return;
@@ -49,35 +62,54 @@ const CompanyDashboard = () => {
 
       setProfile(profileData);
 
-      if (profileData.company_id) {
-        // Fetch company data
-        const { data: companyData, error: companyError } = await supabase
-          .from('companies')
+      // Company users must have a company_id
+      if (!profileData.company_id) {
+        toast({
+          title: "Sem empresa associada",
+          description: "Sua conta não está associada a nenhuma empresa. Entre em contato com o administrador.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Fetch company data
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', profileData.company_id)
+        .single();
+
+      if (companyError) {
+        console.error("Error fetching company:", companyError);
+        toast({
+          title: "Erro ao carregar empresa",
+          description: "Não foi possível carregar os dados da sua empresa.",
+          variant: "destructive"
+        });
+      } else {
+        setCompany(companyData);
+        
+        // Fetch Puck content
+        const { data: puckData, error: puckError } = await supabase
+          .from('puck_content')
           .select('*')
-          .eq('id', profileData.company_id)
+          .eq('company_id', companyData.id)
           .single();
 
-        if (companyError) {
-          console.error("Error fetching company:", companyError);
-        } else {
-          setCompany(companyData);
-          
-          // Fetch Puck content
-          const { data: puckData, error: puckError } = await supabase
-            .from('puck_content')
-            .select('*')
-            .eq('company_id', companyData.id)
-            .single();
-
-          if (puckError && puckError.code !== 'PGRST116') {
-            console.error("Error fetching puck content:", puckError);
-          } else if (puckData) {
-            setPuckData(puckData.content);
-          }
+        if (puckError && puckError.code !== 'PGRST116') {
+          console.error("Error fetching puck content:", puckError);
+        } else if (puckData) {
+          setPuckData(puckData.content);
         }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
