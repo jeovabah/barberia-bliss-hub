@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLogin from "@/components/AdminLogin";
@@ -8,6 +8,7 @@ import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -15,15 +16,32 @@ const Admin = () => {
   );
   
   // Store separate content for homepage and about page
-  const [homepageContent, setHomepageContent] = useState(() => {
-    const savedData = localStorage.getItem("homepageContent");
-    return savedData ? JSON.parse(savedData) : { root: { children: [] } };
-  });
-  
-  const [componentContent, setComponentContent] = useState(() => {
-    const savedData = localStorage.getItem("puckContent");
-    return savedData ? JSON.parse(savedData) : { root: { children: [] } };
-  });
+  const [homepageContent, setHomepageContent] = useState<any>({ root: { children: [] } });
+  const [componentContent, setComponentContent] = useState<any>({ root: { children: [] } });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Load saved data
+    const savedHomepage = localStorage.getItem("homepageContent");
+    if (savedHomepage) {
+      try {
+        setHomepageContent(JSON.parse(savedHomepage));
+      } catch (e) {
+        console.error("Error parsing homepage content:", e);
+      }
+    }
+    
+    const savedComponents = localStorage.getItem("puckContent");
+    if (savedComponents) {
+      try {
+        setComponentContent(JSON.parse(savedComponents));
+      } catch (e) {
+        console.error("Error parsing component content:", e);
+      }
+    }
+    
+    setIsLoading(false);
+  }, []);
 
   const handleLogin = (success: boolean) => {
     if (success) {
@@ -56,9 +74,23 @@ const Admin = () => {
       variant: "default",
     });
   };
+  
+  const resetHomepageContent = () => {
+    localStorage.removeItem("homepageContent");
+    setHomepageContent({ root: { children: [] } });
+    toast({
+      title: "Página inicial redefinida",
+      description: "O conteúdo personalizado foi removido e a página padrão foi restaurada.",
+      variant: "default",
+    });
+  };
 
   if (!isAuthenticated) {
     return <AdminLogin onLogin={handleLogin} />;
+  }
+  
+  if (isLoading) {
+    return <div className="container mx-auto py-10 px-4 flex items-center justify-center">Carregando...</div>;
   }
 
   return (
@@ -112,9 +144,18 @@ const Admin = () => {
         
         <TabsContent value="homepage" className="min-h-[600px]">
           <Card>
-            <CardHeader>
-              <CardTitle>Editor da Página Inicial</CardTitle>
-              <CardDescription>Modifique completamente a página inicial do site.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Editor da Página Inicial</CardTitle>
+                <CardDescription>Modifique completamente a página inicial do site.</CardDescription>
+              </div>
+              <Button 
+                variant="destructive" 
+                onClick={resetHomepageContent}
+                className="ml-auto"
+              >
+                Restaurar Padrão
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[600px]">
@@ -122,6 +163,12 @@ const Admin = () => {
                   config={config}
                   data={homepageContent}
                   onPublish={handleHomepageContentChange}
+                  renderHeader={() => (
+                    <div className="p-4 bg-white border-b">
+                      <h3 className="text-lg font-medium">Editor da Página Inicial</h3>
+                      <p className="text-sm text-muted-foreground">Arraste e solte blocos para criar sua página personalizada.</p>
+                    </div>
+                  )}
                 />
               </div>
             </CardContent>
