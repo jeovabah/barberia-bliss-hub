@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SaveIcon, Eye, RotateCcw } from "lucide-react";
 import { Puck, type Data } from "@measured/puck";
-import { config, PuckRenderer } from "@/lib/puck-config";
+import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
+import "@measured/puck/puck.css";
 
 type SectionType = 'hero' | 'services' | 'barbers' | 'booking';
 
@@ -24,14 +25,12 @@ const PageEditor: React.FC<EditorProps> = ({
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
   
   console.log("PageEditor rendering with initialSections:", initialSections);
   
   // Load Puck data when initialized
   useEffect(() => {
     setIsLoading(true);
-    setHasError(false);
     
     try {
       // Check if there's saved Puck data
@@ -43,40 +42,36 @@ const PageEditor: React.FC<EditorProps> = ({
           const parsedData = JSON.parse(savedPuckData);
           console.log("Puck data parsed successfully:", parsedData);
           
-          // Check if the parsed data has the correct structure
+          // Ensure the data has the correct structure
           if (parsedData && typeof parsedData === 'object') {
-            if (parsedData.root && Array.isArray(parsedData.content)) {
-              // Data structure is already correct
-              setPuckData(parsedData);
-            } else {
-              // Create a properly structured Puck data object
-              const transformedData: Data = {
-                root: {
-                  props: {}
-                },
-                content: []
-              };
-              
-              // Try to extract components from different possible structures
-              if (Array.isArray(parsedData.content)) {
-                transformedData.content = parsedData.content;
-              } else if (parsedData.content && parsedData.content.root && 
-                          Array.isArray(parsedData.content.root.children)) {
-                transformedData.content = parsedData.content.root.children;
-              } else if (parsedData.content && Array.isArray(parsedData.content.children)) {
-                transformedData.content = parsedData.content.children;
+            // Ensure we have a properly structured data object for Puck
+            const normalizedData: Data = {
+              root: {
+                props: {}
+              },
+              content: []
+            };
+            
+            // Extract content based on the structure we find
+            if (Array.isArray(parsedData.content)) {
+              normalizedData.content = parsedData.content;
+            } else if (parsedData.content && typeof parsedData.content === 'object') {
+              // Handle nested content structure
+              if (Array.isArray(parsedData.content.root?.children)) {
+                normalizedData.content = parsedData.content.root.children;
               } else {
-                // If we can't extract components, create default data
-                console.log("Cannot extract components from saved data, creating default");
+                // Create default components
                 createDefaultPuckData();
                 return;
               }
-              
-              setPuckData(transformedData);
-              localStorage.setItem('puckData', JSON.stringify(transformedData));
+            } else {
+              createDefaultPuckData();
+              return;
             }
+            
+            setPuckData(normalizedData);
           } else {
-            console.log("Parsed data is not a valid object, creating default");
+            console.log("Invalid Puck data structure, creating default");
             createDefaultPuckData();
           }
         } catch (e) {
@@ -89,7 +84,7 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     } catch (e) {
       console.error("Error loading editor:", e);
-      setHasError(true);
+      createDefaultPuckData();
     } finally {
       setIsLoading(false);
     }
@@ -220,22 +215,6 @@ const PageEditor: React.FC<EditorProps> = ({
     );
   }
 
-  // Error component
-  if (hasError || !puckData) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center h-[600px]">
-            <p className="text-red-500 mb-4">Erro ao carregar o editor. Por favor, tente novamente.</p>
-            <Button onClick={createDefaultPuckData}>
-              Tentar novamente
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -269,21 +248,14 @@ const PageEditor: React.FC<EditorProps> = ({
         </div>
 
         <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
-          <Puck
-            config={config}
-            data={puckData}
-            onPublish={handleSave}
-            onChange={handlePuckChange}
-          />
-        </div>
-
-        <div className="mt-6">
-          <h3 className="font-medium mb-2">Visualização:</h3>
-          <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
-            {puckData && (
-              <PuckRenderer data={puckData} />
-            )}
-          </div>
+          {puckData && (
+            <Puck
+              config={config}
+              data={puckData}
+              onPublish={handleSave}
+              onChange={handlePuckChange}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

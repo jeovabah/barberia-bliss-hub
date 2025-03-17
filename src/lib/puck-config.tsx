@@ -1,4 +1,5 @@
 import { Config } from "@measured/puck";
+import { Render } from "@measured/puck";
 import { ComponentProps } from "react";
 
 // Components for Puck Editor
@@ -636,7 +637,7 @@ export const config: Config = {
             }
           }
         }
-      }
+      },
     },
     // Barbers Team Component
     BarbersTeam: {
@@ -728,7 +729,7 @@ export const config: Config = {
             }
           }
         }
-      }
+      },
     },
     // Booking Section
     BookingSection: {
@@ -773,23 +774,11 @@ export const config: Config = {
 
 // Component for rendering Puck content on the front-end
 export const PuckRenderer = ({ data }: { data: any }) => {
-  if (!data || !data.content) {
+  if (!data) {
+    console.log("No data provided to PuckRenderer");
     return null;
   }
   
-  // Garantir que content é uma array
-  const contentArray = Array.isArray(data.content) 
-    ? data.content 
-    : data.content.root && Array.isArray(data.content.root.children)
-      ? data.content.root.children
-      : [];
-  
-  return (
-    <div className="puck-renderer">
-      {contentArray.map((child: any, index: number) => {
-        const Component = config.components[child.type]?.render;
-        return Component ? <Component key={index} {...child.props} /> : null;
-      })}
-    </div>
-  );
+  // Using Puck's built-in Render component for proper rendering
+  return <Render config={config} data={data} />;
 };

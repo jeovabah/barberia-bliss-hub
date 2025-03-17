@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,16 +40,14 @@ const Admin = () => {
         try {
           const puckData = JSON.parse(puckDataString);
           
-          if (puckData && puckData.content) {
-            // Garantir que content é uma array
-            const contentArray = Array.isArray(puckData.content) 
-              ? puckData.content 
-              : puckData.content.root && Array.isArray(puckData.content.root.children)
-                ? puckData.content.root.children
-                : [];
+          if (puckData) {
+            // Extract sections from Puck data
+            let sectionsFromPuck: SectionType[] = [];
             
-            if (contentArray.length > 0) {
-              const sectionsFromPuck: SectionType[] = contentArray
+            // Handle different possible structures of Puck data
+            if (Array.isArray(puckData.content)) {
+              // Direct array of components
+              sectionsFromPuck = puckData.content
                 .map((child: any) => {
                   switch(child.type) {
                     case 'HeroSection': return 'hero';
@@ -59,33 +58,47 @@ const Admin = () => {
                   }
                 })
                 .filter(Boolean) as SectionType[];
-              
-              if (sectionsFromPuck.length > 0) {
-                console.log("Using sections from Puck data:", sectionsFromPuck);
-                setHomepageSections(sectionsFromPuck);
-                // Save the sections for future reference
-                localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
-                
-                // Also fix the Puck data structure in localStorage if needed
-                if (!Array.isArray(puckData.content)) {
-                  const fixedData = {
-                    root: { props: {} },
-                    content: contentArray
-                  };
-                  localStorage.setItem('puckData', JSON.stringify(fixedData));
-                }
-                
-                setIsLoading(false);
-                return;
+            } else if (puckData.content && typeof puckData.content === 'object') {
+              // Handle nested structure
+              if (puckData.content.root && Array.isArray(puckData.content.root.children)) {
+                sectionsFromPuck = puckData.content.root.children
+                  .map((child: any) => {
+                    switch(child.type) {
+                      case 'HeroSection': return 'hero';
+                      case 'ServicesGrid': return 'services';
+                      case 'BarbersTeam': return 'barbers';
+                      case 'BookingSection': return 'booking';
+                      default: return null;
+                    }
+                  })
+                  .filter(Boolean) as SectionType[];
               }
             }
             
-            console.log("Invalid Puck data structure, loading from homepageSections");
-            loadFromHomepageSections(defaultSections);
-          } else {
-            console.log("Invalid Puck data structure, loading from homepageSections");
-            loadFromHomepageSections(defaultSections);
+            if (sectionsFromPuck.length > 0) {
+              console.log("Using sections from Puck data:", sectionsFromPuck);
+              setHomepageSections(sectionsFromPuck);
+              localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
+              
+              // Normalize the Puck data structure
+              const normalizedContent = Array.isArray(puckData.content) 
+                ? puckData.content 
+                : puckData.content?.root?.children || [];
+              
+              const normalizedData = {
+                root: { props: {} },
+                content: normalizedContent
+              };
+              
+              localStorage.setItem('puckData', JSON.stringify(normalizedData));
+              
+              setIsLoading(false);
+              return;
+            }
           }
+          
+          console.log("Invalid Puck data structure, loading from homepageSections");
+          loadFromHomepageSections(defaultSections);
         } catch (e) {
           console.error("Error parsing Puck data:", e);
           loadFromHomepageSections(defaultSections);
