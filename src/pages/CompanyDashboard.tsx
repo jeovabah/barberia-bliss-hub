@@ -27,11 +27,11 @@ const CompanyDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      // Obtenha a sessão atual do usuário
+      // Get current user session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Apenas navegue se ainda não verificamos a autenticação
+        // Only navigate if we haven't checked auth yet
         if (!hasCheckedAuth) {
           setHasCheckedAuth(true);
           navigate('/auth');
@@ -41,19 +41,19 @@ const CompanyDashboard = () => {
 
       setHasCheckedAuth(true);
 
-      // Obtenha o email do usuário da sessão - não consulte diretamente a tabela auth.users
+      // Get user email from session
       const userEmail = session.user.email;
       const userId = session.user.id;
       
       console.log("Session user:", session.user);
       
-      // Caso especial para admin baseado no email da sessão, não consultando auth.users
+      // Special case for admin based on session email
       if (userEmail === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
       }
 
-      // Buscar perfil do usuário da tabela profiles
+      // Fetch user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -61,10 +61,10 @@ const CompanyDashboard = () => {
         .single();
 
       if (profileError) {
-        console.error("Erro ao buscar perfil:", profileError);
+        console.error("Error fetching profile:", profileError);
         toast({
-          title: "Erro ao carregar perfil",
-          description: "Não foi possível carregar os dados do seu perfil.",
+          title: "Error loading profile",
+          description: "Could not load your profile data.",
           variant: "destructive"
         });
         navigate('/auth');
@@ -73,7 +73,7 @@ const CompanyDashboard = () => {
 
       console.log("Profile data:", profileData);
 
-      // Se o usuário for administrador por user_type, redirecione para o painel de administração
+      // If user is admin by user_type, redirect to admin panel
       if (profileData.user_type === 'admin') {
         navigate('/admin');
         return;
@@ -81,18 +81,18 @@ const CompanyDashboard = () => {
 
       setProfile(profileData);
 
-      // Usuários da empresa devem ter um company_id
+      // Company users should have a company_id
       if (!profileData.company_id) {
         toast({
-          title: "Sem empresa associada",
-          description: "Sua conta não está associada a nenhuma empresa. Entre em contato com o administrador.",
+          title: "No associated company",
+          description: "Your account is not associated with any company. Contact the administrator.",
           variant: "destructive"
         });
         setLoading(false);
         return;
       }
 
-      // Buscar dados da empresa
+      // Fetch company data
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
@@ -100,52 +100,89 @@ const CompanyDashboard = () => {
         .single();
 
       if (companyError) {
-        console.error("Erro ao buscar empresa:", companyError);
+        console.error("Error fetching company:", companyError);
         toast({
-          title: "Erro ao carregar empresa",
-          description: "Não foi possível carregar os dados da sua empresa.",
+          title: "Error loading company",
+          description: "Could not load your company data.",
           variant: "destructive"
         });
       } else {
         setCompany(companyData);
         console.log("Company data:", companyData);
         
-        // Usar nossa nova função para buscar o conteúdo Puck sem problemas de permissão
-        try {
-          console.log("Fetching Puck content using the new function for company:", companyData.id);
+        // First try a direct query to debug
+        const { data: directPuckData, error: directPuckError } = await supabase
+          .from('puck_content')
+          .select('*')
+          .eq('company_id', companyData.id)
+          .maybeSingle();
           
-          // Chamando a função diretamente via RPC em vez de acessar a tabela
+        console.log("Direct puck_content query result:", directPuckData, directPuckError);
+        
+        // Use our function to fetch Puck content
+        try {
+          console.log("Fetching Puck content via function for company:", companyData.id);
+          
+          // Call the function directly via RPC
           const { data: puckContent, error: puckError } = await supabase
             .rpc('get_puck_content_by_company', { company_id_param: companyData.id });
 
           console.log("Puck content function response:", puckContent, puckError);
 
           if (puckError) {
-            console.error("Erro ao buscar conteúdo puck via função:", puckError);
+            console.error("Error fetching puck content via function:", puckError);
             toast({
-              title: "Erro ao carregar conteúdo da página",
-              description: "Não foi possível carregar o conteúdo da sua página.",
+              title: "Error loading page content",
+              description: "Could not load your page content.",
               variant: "destructive"
             });
           } else if (puckContent) {
-            console.log("Conteúdo Puck carregado via função:", puckContent);
-            // Certifique-se de limpar qualquer dado do localStorage para evitar loops
+            console.log("Puck content loaded via function:", puckContent);
+            
+            // Make sure to clear any localStorage data to avoid loops
             localStorage.removeItem('puckData');
-            setPuckData(puckContent);
+            
+            // Process the content based on its type
+            try {
+              let processedContent;
+              
+              if (typeof puckContent === 'string') {
+                console.log("Parsing string content");
+                processedContent = JSON.parse(puckContent);
+              } else {
+                console.log("Using object content directly");
+                processedContent = puckContent;
+              }
+              
+              // Ensure we have a properly formatted object
+              if (!processedContent.root) {
+                processedContent.root = { props: {} };
+              }
+              
+              if (!Array.isArray(processedContent.content)) {
+                processedContent.content = [];
+              }
+              
+              console.log("Processed content:", processedContent);
+              setPuckData(processedContent);
+            } catch (parseError) {
+              console.error("Error parsing puck content:", parseError);
+              setPuckData(null);
+            }
           } else {
-            console.log("Nenhum conteúdo puck encontrado via função");
+            console.log("No puck content found via function");
             localStorage.removeItem('puckData');
             setPuckData(null);
           }
         } catch (fetchError) {
-          console.error("Exceção ao buscar conteúdo puck:", fetchError);
+          console.error("Exception fetching puck content:", fetchError);
         }
       }
     } catch (error) {
-      console.error("Erro inesperado:", error);
+      console.error("Unexpected error:", error);
       toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.",
+        title: "Unexpected error",
+        description: "An error occurred while loading data. Please try again later.",
         variant: "destructive"
       });
     } finally {
@@ -157,8 +194,8 @@ const CompanyDashboard = () => {
   const savePuckData = async (data: any) => {
     if (!company) {
       toast({
-        title: "Erro",
-        description: "Você precisa estar associado a uma empresa para salvar alterações.",
+        title: "Error",
+        description: "You need to be associated with a company to save changes.",
         variant: "destructive"
       });
       return;
@@ -171,18 +208,24 @@ const CompanyDashboard = () => {
       // Remove from localStorage first to prevent any loops
       localStorage.removeItem('puckData');
       
-      // Check if puck content exists for this company
+      // Convert data to proper format if needed
+      const dataToSave = data;
+      console.log("Data to save:", dataToSave);
+      
+      // Check if puck content exists for this company with direct query
       const { data: existingData, error: checkError } = await supabase
         .from('puck_content')
         .select('id')
         .eq('company_id', company.id)
         .maybeSingle();
 
+      console.log("Existing data check:", existingData, checkError);
+      
       if (checkError) {
         console.error("Error checking existing puck content:", checkError);
         toast({
-          title: "Erro ao verificar dados existentes",
-          description: "Não foi possível verificar se já existem dados para esta empresa.",
+          title: "Error checking existing data",
+          description: "Could not verify if data already exists for this company.",
           variant: "destructive"
         });
         return;
@@ -195,35 +238,48 @@ const CompanyDashboard = () => {
         console.log("Updating existing puck content record");
         result = await supabase
           .from('puck_content')
-          .update({ content: data })
+          .update({ content: dataToSave })
           .eq('company_id', company.id);
       } else {
         // Insert new record
         console.log("Creating new puck content record");
         result = await supabase
           .from('puck_content')
-          .insert({ company_id: company.id, content: data });
+          .insert({ company_id: company.id, content: dataToSave });
       }
 
+      console.log("Save operation result:", result);
+      
       if (result.error) {
         console.error("Error saving puck content:", result.error);
         toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar as alterações: " + result.error.message,
+          title: "Error saving",
+          description: "Could not save changes: " + result.error.message,
           variant: "destructive"
         });
       } else {
-        console.log("Puck content saved successfully:", result);
+        console.log("Puck content saved successfully");
         toast({
-          title: "Salvo com sucesso",
-          description: "As alterações foram salvas com sucesso."
+          title: "Saved successfully",
+          description: "Changes were saved successfully."
         });
-        setPuckData(data);
+        setPuckData(dataToSave);
+        
+        // Verify the saved data with a direct query
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('puck_content')
+          .select('content')
+          .eq('company_id', company.id)
+          .maybeSingle();
+          
+        console.log("Verification query result:", verifyData, verifyError);
         
         // Refresh the data to ensure we have the latest content
         const { data: refreshedContent, error: refreshError } = await supabase
           .rpc('get_puck_content_by_company', { company_id_param: company.id });
           
+        console.log("Refreshed content via function:", refreshedContent, refreshError);
+        
         if (!refreshError && refreshedContent) {
           console.log("Refreshed puck content:", refreshedContent);
           setPuckData(refreshedContent);
@@ -232,8 +288,8 @@ const CompanyDashboard = () => {
     } catch (error) {
       console.error("Unexpected error saving puck content:", error);
       toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro inesperado ao salvar as alterações.",
+        title: "Error saving",
+        description: "An unexpected error occurred while saving changes.",
         variant: "destructive"
       });
     } finally {
