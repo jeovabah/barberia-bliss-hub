@@ -28,7 +28,12 @@ const Admin = () => {
         setHomepageSections(JSON.parse(savedSections));
       } catch (e) {
         console.error("Error parsing saved sections:", e);
+        // Set default sections if parsing fails
+        localStorage.setItem('homepageSections', JSON.stringify(['hero', 'services', 'barbers', 'booking']));
       }
+    } else {
+      // Initialize with default sections if none exist
+      localStorage.setItem('homepageSections', JSON.stringify(['hero', 'services', 'barbers', 'booking']));
     }
     setIsLoading(false);
   }, []);

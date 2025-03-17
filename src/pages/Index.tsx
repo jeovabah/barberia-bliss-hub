@@ -9,8 +9,26 @@ import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
 
 const Index = () => {
+  // Default sections order
+  const defaultSections = ["hero", "services", "barbers", "booking"];
+  
   // Get sections order from localStorage, or use default if not available
-  const sectionsOrder = JSON.parse(localStorage.getItem('homepageSections') || '["hero", "services", "barbers", "booking"]');
+  const getSectionsOrder = () => {
+    try {
+      const saved = localStorage.getItem('homepageSections');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+      // If nothing saved, initialize with default order
+      localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
+      return defaultSections;
+    } catch (e) {
+      console.error("Error loading sections order:", e);
+      return defaultSections;
+    }
+  };
+  
+  const sectionsOrder = getSectionsOrder();
   
   useEffect(() => {
     document.title = "BarberBliss | Experiência Premium de Barbearia";
