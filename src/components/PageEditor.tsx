@@ -41,37 +41,46 @@ const PageEditor: React.FC<EditorProps> = ({
       try {
         // Priority 1: If we have initialData from props (database), use it
         if (initialData) {
-          console.log("Using provided initial data from database");
+          console.log("Using provided initial data from database", initialData);
           
-          // Ensure the data has the correct structure
-          if (typeof initialData === 'object') {
-            // Create a properly structured data object for Puck
-            const normalizedData: Data = {
-              root: {
-                props: {}
-              },
-              content: []
-            };
+          // Check if initialData has a nested content structure (from direct table query)
+          if (initialData.content && typeof initialData.content === 'object') {
+            console.log("Found nested content object structure", initialData.content);
             
-            // Extract content based on the structure we find
-            if (initialData.content && Array.isArray(initialData.content)) {
-              normalizedData.content = initialData.content;
+            // Extract the proper Puck data structure
+            const puckContent = initialData.content;
+            
+            // Validate that it has the expected Puck structure
+            if (puckContent && 
+                typeof puckContent === 'object' && 
+                'content' in puckContent && 
+                'root' in puckContent && 
+                Array.isArray(puckContent.content)) {
+              console.log("Valid nested Puck data structure found");
+              setPuckData(puckContent as Data);
+              hasInitialized.current = true;
+              setIsLoading(false);
+              return;
             }
-            
-            // Extract root props if available
-            if (initialData.root && initialData.root.props) {
-              normalizedData.root.props = initialData.root.props;
-            }
-            
-            setPuckData(normalizedData);
+          }
+          
+          // Check if initialData is already in the correct Puck format
+          if (typeof initialData === 'object' && 
+              'content' in initialData && 
+              'root' in initialData &&
+              Array.isArray(initialData.content)) {
+            console.log("Direct Puck data structure found");
+            setPuckData(initialData as Data);
             hasInitialized.current = true;
             setIsLoading(false);
             return;
           }
+          
+          console.log("Provided data doesn't match expected Puck structure, creating default");
         }
         
         // Priority 2: Create default data
-        console.log("No database data found, creating default data");
+        console.log("No valid database data found, creating default data");
         await createDefaultPuckData();
       } catch (e) {
         console.error("Error loading editor:", e);
