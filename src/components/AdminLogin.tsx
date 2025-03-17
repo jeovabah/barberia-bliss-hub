@@ -36,27 +36,46 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         });
         onLogin(false);
       } else if (data.user) {
-        // Check if the user is an admin
-        const isAdminEmail = data.user.email === 'admin@barberbliss.com';
+        // Special case for admin@barberbliss.com - treat as admin immediately
+        if (data.user.email === 'admin@barberbliss.com') {
+          toast({
+            title: "Login bem-sucedido",
+            description: "Bem-vindo ao painel administrativo.",
+          });
+          onLogin(true);
+          return;
+        }
         
-        if (!isAdminEmail) {
-          // Check the profile for admin role
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('user_type')
-            .eq('id', data.user.id)
-            .single();
-            
-          if (profileError || profile?.user_type !== 'admin') {
-            toast({
-              title: "Acesso negado",
-              description: "Você não tem permissões de administrador.",
-              variant: "destructive",
-            });
-            await supabase.auth.signOut();
-            onLogin(false);
-            return;
-          }
+        // For non-admin@barberbliss.com users, check admin status through a direct DB query
+        // This avoids the recursive RLS issue by calling a service specifically for this check
+        const { data: functionData, error: functionError } = await supabase.rpc('is_admin', {
+          user_id: data.user.id
+        });
+        
+        console.log("Admin check result:", functionData);
+        
+        if (functionError) {
+          console.error("Error checking admin status:", functionError);
+          toast({
+            title: "Erro ao verificar permissões",
+            description: "Não foi possível verificar suas permissões de administrador.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          onLogin(false);
+          return;
+        }
+        
+        // Check if the user is an admin based on the function result
+        if (!functionData) {
+          toast({
+            title: "Acesso negado",
+            description: "Você não tem permissões de administrador.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          onLogin(false);
+          return;
         }
         
         toast({
