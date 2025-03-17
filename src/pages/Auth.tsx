@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,12 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -103,6 +108,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setEmailUnconfirmed(false);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -111,11 +117,21 @@ const Auth = () => {
       });
 
       if (error) {
-        toast({
-          title: "Erro ao entrar",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error.message.includes("Email not confirmed") || error.message.includes("email_not_confirmed")) {
+          setEmailUnconfirmed(true);
+          setUnconfirmedEmail(email);
+          toast({
+            title: "Email não confirmado",
+            description: "Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao entrar",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Login bem-sucedido",
@@ -136,6 +152,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setEmailUnconfirmed(false);
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -156,9 +173,11 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        setEmailUnconfirmed(true);
+        setUnconfirmedEmail(email);
         toast({
           title: "Conta criada com sucesso",
-          description: "Sua conta foi criada e você está logado.",
+          description: "Verifique seu email para confirmar sua conta.",
         });
       }
     } catch (error: any) {
@@ -172,6 +191,37 @@ const Auth = () => {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: unconfirmedEmail || email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Erro ao reenviar confirmação",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email de confirmação enviado",
+          description: "Verifique sua caixa de entrada para confirmar seu email.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro inesperado",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md">
@@ -182,6 +232,23 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {emailUnconfirmed && (
+            <Alert className="mb-4 bg-amber-50 border-amber-500">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800">Email não confirmado</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                Você precisa confirmar seu email ({unconfirmedEmail || email}) antes de fazer login.
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-amber-800 underline ml-1"
+                  onClick={handleResendConfirmation}
+                >
+                  Reenviar email de confirmação
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="signin">Entrar</TabsTrigger>
