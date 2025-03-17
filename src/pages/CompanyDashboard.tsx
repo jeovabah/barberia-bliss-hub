@@ -46,7 +46,7 @@ const CompanyDashboard = () => {
       
       console.log("Session user:", session.user);
       
-      // Caso especial para admin
+      // Caso especial para admin baseado no email da sessão, não consultando auth.users
       if (userEmail === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
@@ -109,31 +109,38 @@ const CompanyDashboard = () => {
         setCompany(companyData);
         console.log("Company data:", companyData);
         
-        // Buscar conteúdo Puck com RLS aplicado
-        const { data: puckContent, error: puckError } = await supabase
-          .from('puck_content')
-          .select('*')
-          .eq('company_id', companyData.id)
-          .maybeSingle();
+        // Buscar conteúdo Puck com RLS aplicado - aqui é onde provavelmente está o erro
+        try {
+          console.log("Attempting to fetch Puck content for company:", companyData.id);
+          
+          const { data: puckContent, error: puckError } = await supabase
+            .from('puck_content')
+            .select('*')
+            .eq('company_id', companyData.id)
+            .maybeSingle();
 
-        console.log("Puck content query:", `company_id = ${companyData.id}`);
+          console.log("Puck content query:", `company_id = ${companyData.id}`);
+          console.log("Puck content response:", puckContent, puckError);
 
-        if (puckError) {
-          console.error("Erro ao buscar conteúdo puck:", puckError);
-          toast({
-            title: "Erro ao carregar conteúdo da página",
-            description: "Não foi possível carregar o conteúdo da sua página.",
-            variant: "destructive"
-          });
-        } else if (puckContent) {
-          console.log("Conteúdo Puck carregado do banco de dados:", puckContent);
-          // Certifique-se de limpar qualquer dado do localStorage para evitar loops
-          localStorage.removeItem('puckData');
-          setPuckData(puckContent.content);
-        } else {
-          console.log("Nenhum conteúdo puck encontrado no banco de dados");
-          localStorage.removeItem('puckData');
-          setPuckData(null);
+          if (puckError) {
+            console.error("Erro ao buscar conteúdo puck:", puckError);
+            toast({
+              title: "Erro ao carregar conteúdo da página",
+              description: "Não foi possível carregar o conteúdo da sua página.",
+              variant: "destructive"
+            });
+          } else if (puckContent) {
+            console.log("Conteúdo Puck carregado do banco de dados:", puckContent);
+            // Certifique-se de limpar qualquer dado do localStorage para evitar loops
+            localStorage.removeItem('puckData');
+            setPuckData(puckContent.content);
+          } else {
+            console.log("Nenhum conteúdo puck encontrado no banco de dados");
+            localStorage.removeItem('puckData');
+            setPuckData(null);
+          }
+        } catch (fetchError) {
+          console.error("Exceção ao buscar conteúdo puck:", fetchError);
         }
       }
     } catch (error) {
