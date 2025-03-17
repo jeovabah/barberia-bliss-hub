@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,12 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle, Trash2, Edit, LogOut, UserPlus } from "lucide-react";
+import AdminDashboard from "@/components/AdminDashboard";
 
 const Admin = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,6 +42,7 @@ const Admin = () => {
 
   const checkAdmin = async () => {
     try {
+      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -48,29 +50,47 @@ const Admin = () => {
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
+      // Instead of querying profiles table directly (which causes the infinite recursion),
+      // we'll check if the user is admin by querying the auth.users metadata
+      const { data: userRoleData, error: userRoleError } = await supabase.rpc(
+        'get_user_type',
+        { user_id: session.user.id }
+      );
+      
+      if (userRoleError) {
+        console.error("Error checking user role:", userRoleError);
+        toast({
+          title: "Erro ao verificar permissões",
+          description: "Você não tem permissão para acessar esta página.",
+          variant: "destructive"
+        });
         navigate('/auth');
         return;
       }
-
-      if (profileData.user_type !== 'admin') {
+      
+      if (userRoleData !== 'admin') {
+        toast({
+          title: "Acesso restrito",
+          description: "Apenas administradores podem acessar esta página.",
+          variant: "destructive"
+        });
         navigate('/company-dashboard');
         return;
       }
 
-      setProfile(profileData);
+      setIsAdmin(true);
       fetchCompanies();
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Unexpected error:", error);
+      toast({
+        title: "Erro inesperado",
+        description: error.message || "Ocorreu um erro ao verificar suas permissões.",
+        variant: "destructive"
+      });
       navigate('/auth');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,33 +103,46 @@ const Admin = () => {
 
       if (error) {
         console.error("Error fetching companies:", error);
+        toast({
+          title: "Erro ao carregar empresas",
+          description: error.message,
+          variant: "destructive"
+        });
       } else {
         setCompanies(data || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Unexpected error:", error);
-    } finally {
-      setIsLoading(false);
+      toast({
+        title: "Erro inesperado",
+        description: error.message || "Ocorreu um erro ao carregar as empresas.",
+        variant: "destructive"
+      });
     }
   };
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          companies:company_id (id, name)
-        `)
-        .order('created_at', { ascending: false });
+      // Use RPC function instead of directly querying the profiles table
+      const { data, error } = await supabase.rpc('get_users_with_companies');
 
       if (error) {
         console.error("Error fetching users:", error);
+        toast({
+          title: "Erro ao carregar usuários",
+          description: error.message,
+          variant: "destructive"
+        });
       } else {
         setUsers(data || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Unexpected error:", error);
+      toast({
+        title: "Erro inesperado",
+        description: error.message || "Ocorreu um erro ao carregar os usuários.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -360,6 +393,22 @@ const Admin = () => {
     );
   }
 
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Acesso Restrito</CardTitle>
+            <CardDescription>Apenas administradores podem acessar esta página.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => navigate('/')} className="w-full">Voltar para Home</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">
@@ -376,6 +425,7 @@ const Admin = () => {
           <TabsList className="mb-8">
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
 
           <TabsContent value="companies">
@@ -705,6 +755,10 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="dashboard">
+            <AdminDashboard />
           </TabsContent>
         </Tabs>
       </main>

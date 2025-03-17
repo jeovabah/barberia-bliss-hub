@@ -22,7 +22,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     setIsLoading(true);
 
     try {
-      // Use Supabase authentication instead of mock
+      // Use Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email: username,
         password: password,
