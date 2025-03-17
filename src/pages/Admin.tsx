@@ -20,12 +20,58 @@ const Admin = () => {
   const [homepageSections, setHomepageSections] = useState<SectionType[]>(['hero', 'services', 'barbers', 'booking']);
 
   useEffect(() => {
+    setIsLoading(true);
     // Load saved sections order
     const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
     
     try {
+      // First check if there's Puck data, and extract sections from it
+      const puckData = localStorage.getItem('puckData');
+      if (puckData) {
+        const parsedPuck = JSON.parse(puckData);
+        if (parsedPuck && parsedPuck.content && parsedPuck.content.root && parsedPuck.content.root.children) {
+          // If we have valid Puck data, extract sections from it
+          const sectionsFromPuck: SectionType[] = parsedPuck.content.root.children.map((child: any) => {
+            switch(child.type) {
+              case 'HeroSection': return 'hero';
+              case 'ServicesGrid': return 'services';
+              case 'BarbersTeam': return 'barbers';
+              case 'BookingSection': return 'booking';
+              default: return null;
+            }
+          }).filter(Boolean);
+          
+          if (sectionsFromPuck.length > 0) {
+            console.log("Extracted sections from Puck data:", sectionsFromPuck);
+            setHomepageSections(sectionsFromPuck);
+            localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
+          } else {
+            // Fallback to homepageSections if Puck data doesn't have valid sections
+            fallbackToSavedSections();
+          }
+        } else {
+          fallbackToSavedSections();
+        }
+      } else {
+        fallbackToSavedSections();
+      }
+    } catch (e) {
+      console.error("Error loading homepage data:", e);
+      // Set default sections if parsing fails
+      localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
+      setHomepageSections(defaultSections);
+      console.log("Error parsing, set default sections");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const fallbackToSavedSections = () => {
+    const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
+    
+    try {
       const savedSections = localStorage.getItem('homepageSections');
-      console.log("Loaded sections from localStorage:", savedSections);
+      console.log("Loading sections from localStorage:", savedSections);
       
       if (savedSections) {
         const parsed = JSON.parse(savedSections);
@@ -46,15 +92,11 @@ const Admin = () => {
         console.log("No saved data, set default sections");
       }
     } catch (e) {
-      console.error("Error parsing saved sections:", e);
-      // Set default sections if parsing fails
+      console.error("Error in fallback loading:", e);
       localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       setHomepageSections(defaultSections);
-      console.log("Error parsing, set default sections");
     }
-    
-    setIsLoading(false);
-  }, []);
+  };
 
   const handleLogin = (success: boolean) => {
     if (success) {
@@ -84,7 +126,7 @@ const Admin = () => {
     setHomepageSections(defaultSections);
     localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
     
-    // Also clear any Puck data to reset to defaults
+    // Clear any Puck data to reset to defaults
     localStorage.removeItem('puckData');
     
     toast({
@@ -106,7 +148,7 @@ const Admin = () => {
     return <div className="container mx-auto py-10 px-4 flex items-center justify-center">Carregando...</div>;
   }
 
-  console.log("Rendering PageEditor with sections:", homepageSections);
+  console.log("Rendering Admin with sections:", homepageSections);
 
   return (
     <div className="container mx-auto py-10 px-4">

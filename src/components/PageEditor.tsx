@@ -7,6 +7,7 @@ import { PencilIcon, EyeIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Puck, Config } from "@measured/puck";
 import { config, PuckRenderer } from "@/lib/puck-config";
+import { toast } from "@/components/ui/use-toast";
 
 type SectionType = 'hero' | 'services' | 'barbers' | 'booking';
 
@@ -25,22 +26,33 @@ const PageEditor: React.FC<EditorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('editor');
   const [puckData, setPuckData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  console.log("Initial sections:", initialSections);
   
   // Get initial Puck data from localStorage or create default
   useEffect(() => {
+    setIsLoading(true);
     try {
       const savedPuckData = localStorage.getItem('puckData');
       if (savedPuckData) {
         const parsedData = JSON.parse(savedPuckData);
-        setPuckData(parsedData);
-        console.log("Loaded Puck data from localStorage:", parsedData);
+        if (parsedData && parsedData.content) {
+          setPuckData(parsedData);
+          console.log("Loaded Puck data from localStorage:", parsedData);
+        } else {
+          console.log("Invalid Puck data found, creating default");
+          createDefaultPuckData();
+        }
       } else {
-        // Create default Puck data based on initialSections
+        console.log("No Puck data found, creating default");
         createDefaultPuckData();
       }
     } catch (e) {
       console.error("Error loading Puck data:", e);
       createDefaultPuckData();
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -54,22 +66,22 @@ const PageEditor: React.FC<EditorProps> = ({
               case 'hero':
                 return {
                   type: "HeroSection",
-                  props: config.components.HeroSection.defaultProps
+                  props: {...config.components.HeroSection.defaultProps}
                 };
               case 'services':
                 return {
                   type: "ServicesGrid",
-                  props: config.components.ServicesGrid.defaultProps
+                  props: {...config.components.ServicesGrid.defaultProps}
                 };
               case 'barbers':
                 return {
                   type: "BarbersTeam",
-                  props: config.components.BarbersTeam.defaultProps
+                  props: {...config.components.BarbersTeam.defaultProps}
                 };
               case 'booking':
                 return {
                   type: "BookingSection",
-                  props: config.components.BookingSection.defaultProps
+                  props: {...config.components.BookingSection.defaultProps}
                 };
               default:
                 return null;
@@ -79,22 +91,31 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     };
     
+    console.log("Created default Puck data:", defaultData);
     setPuckData(defaultData);
     localStorage.setItem('puckData', JSON.stringify(defaultData));
-    console.log("Created default Puck data:", defaultData);
   };
 
   const handlePuckChange = (data: any) => {
-    setPuckData(data);
     console.log("Puck data changed:", data);
+    setPuckData(data);
   };
 
   const handleSave = () => {
+    if (!puckData || !puckData.content || !puckData.content.root || !puckData.content.root.children) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Dados inválidos. Tente recarregar a página.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Save Puck data to localStorage
     localStorage.setItem('puckData', JSON.stringify(puckData));
     
     // Extract section types from Puck data for the section order
-    const sections: SectionType[] = puckData?.content?.root?.children?.map((child: any) => {
+    const sections: SectionType[] = puckData.content.root.children.map((child: any) => {
       switch(child.type) {
         case 'HeroSection': return 'hero';
         case 'ServicesGrid': return 'services';
@@ -104,7 +125,14 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     }).filter(Boolean) || initialSections;
     
+    console.log("Saving sections:", sections);
     onSave(sections);
+    
+    toast({
+      title: "Alterações salvas",
+      description: "As alterações na página inicial foram salvas com sucesso.",
+      variant: "default",
+    });
   };
 
   const handleReset = () => {
@@ -113,12 +141,28 @@ const PageEditor: React.FC<EditorProps> = ({
   };
 
   // Show loading state if Puck data is not ready
-  if (!puckData) {
+  if (isLoading) {
     return (
       <Card className="w-full">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center h-[600px]">
             <p className="text-muted-foreground">Carregando editor...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If data is still not available after loading
+  if (!puckData) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center h-[600px]">
+            <p className="text-muted-foreground">Erro ao carregar editor. Por favor, tente novamente.</p>
+            <Button onClick={createDefaultPuckData} variant="outline" className="ml-4">
+              Tentar novamente
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -175,12 +219,22 @@ const PageEditor: React.FC<EditorProps> = ({
           </div>
 
           <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
-            <Puck
-              config={config}
-              data={puckData}
-              onPublish={handleSave}
-              onChange={handlePuckChange}
-            />
+            {puckData && (
+              <Puck
+                config={config}
+                data={puckData}
+                onPublish={handleSave}
+                onChange={handlePuckChange}
+                renderHeader={() => (
+                  <div className="p-4 bg-amber-50 border-b">
+                    <h2 className="font-bold text-amber-800">Editor de Página</h2>
+                    <p className="text-sm text-amber-700">
+                      Arraste componentes da barra lateral para a área de edição
+                    </p>
+                  </div>
+                )}
+              />
+            )}
           </div>
 
           <div className="mt-6 flex justify-end">
