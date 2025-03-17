@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PencilIcon, EyeIcon, RotateCcwIcon, GripVertical, SaveIcon } from "lucide-react";
+import { PencilIcon, EyeIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Puck, Config } from "@measured/puck";
+import { config, PuckRenderer } from "@/lib/puck-config";
 
 type SectionType = 'hero' | 'services' | 'barbers' | 'booking';
 
@@ -22,47 +23,107 @@ const PageEditor: React.FC<EditorProps> = ({
   onReset,
   initialSections = ['hero', 'services', 'barbers', 'booking']
 }) => {
-  const [sections, setSections] = useState<SectionType[]>([]);
   const [activeTab, setActiveTab] = useState<string>('editor');
+  const [puckData, setPuckData] = useState<any>(null);
   
-  // Update sections from props on mount and when initialSections changes
+  // Get initial Puck data from localStorage or create default
   useEffect(() => {
-    console.log("Initial sections:", initialSections);
-    if (initialSections && initialSections.length > 0) {
-      setSections([...initialSections]);
-    } else {
-      // Fallback to default if no sections provided
-      setSections(['hero', 'services', 'barbers', 'booking']);
+    try {
+      const savedPuckData = localStorage.getItem('puckData');
+      if (savedPuckData) {
+        const parsedData = JSON.parse(savedPuckData);
+        setPuckData(parsedData);
+        console.log("Loaded Puck data from localStorage:", parsedData);
+      } else {
+        // Create default Puck data based on initialSections
+        createDefaultPuckData();
+      }
+    } catch (e) {
+      console.error("Error loading Puck data:", e);
+      createDefaultPuckData();
     }
-  }, [initialSections]);
+  }, []);
 
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  const createDefaultPuckData = () => {
+    // Create a default Puck data structure based on initialSections
+    const defaultData = {
+      content: {
+        root: {
+          children: initialSections.map(sectionType => {
+            switch(sectionType) {
+              case 'hero':
+                return {
+                  type: "HeroSection",
+                  props: config.components.HeroSection.defaultProps
+                };
+              case 'services':
+                return {
+                  type: "ServicesGrid",
+                  props: config.components.ServicesGrid.defaultProps
+                };
+              case 'barbers':
+                return {
+                  type: "BarbersTeam",
+                  props: config.components.BarbersTeam.defaultProps
+                };
+              case 'booking':
+                return {
+                  type: "BookingSection",
+                  props: config.components.BookingSection.defaultProps
+                };
+              default:
+                return null;
+            }
+          }).filter(Boolean)
+        }
+      }
+    };
     
-    const items = Array.from(sections);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    setSections(items);
+    setPuckData(defaultData);
+    localStorage.setItem('puckData', JSON.stringify(defaultData));
+    console.log("Created default Puck data:", defaultData);
+  };
+
+  const handlePuckChange = (data: any) => {
+    setPuckData(data);
+    console.log("Puck data changed:", data);
   };
 
   const handleSave = () => {
+    // Save Puck data to localStorage
+    localStorage.setItem('puckData', JSON.stringify(puckData));
+    
+    // Extract section types from Puck data for the section order
+    const sections: SectionType[] = puckData?.content?.root?.children?.map((child: any) => {
+      switch(child.type) {
+        case 'HeroSection': return 'hero';
+        case 'ServicesGrid': return 'services';
+        case 'BarbersTeam': return 'barbers';
+        case 'BookingSection': return 'booking';
+        default: return null;
+      }
+    }).filter(Boolean) || initialSections;
+    
     onSave(sections);
   };
 
-  const sectionNames = {
-    hero: "Seção Hero",
-    services: "Serviços",
-    barbers: "Barbeiros",
-    booking: "Agendamento"
+  const handleReset = () => {
+    createDefaultPuckData();
+    onReset();
   };
-  
-  const sectionDescriptions = {
-    hero: "Título principal e chamada para ação",
-    services: "Lista de serviços oferecidos",
-    barbers: "Equipe de barbeiros",
-    booking: "Formulário de agendamento"
-  };
+
+  // Show loading state if Puck data is not ready
+  if (!puckData) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center h-[600px]">
+            <p className="text-muted-foreground">Carregando editor...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -70,7 +131,7 @@ const PageEditor: React.FC<EditorProps> = ({
         <div>
           <CardTitle className="text-xl md:text-2xl">Editor da Página Inicial</CardTitle>
           <CardDescription>
-            Arraste e solte blocos para personalizar sua página inicial
+            Use o editor Puck para personalizar sua página inicial
           </CardDescription>
         </div>
         <div className="flex gap-2">
@@ -80,7 +141,7 @@ const PageEditor: React.FC<EditorProps> = ({
                 <PencilIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Editor</span>
               </TabsTrigger>
-              <TabsTrigger value="preview" className="flex items-center gap-1" onClick={() => setActiveTab('preview')}>
+              <TabsTrigger value="preview" className="flex items-center gap-1">
                 <EyeIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Preview</span>
               </TabsTrigger>
@@ -96,7 +157,7 @@ const PageEditor: React.FC<EditorProps> = ({
           </Button>
           <Button 
             variant="destructive" 
-            onClick={onReset}
+            onClick={handleReset}
             className="flex items-center gap-1"
           >
             <RotateCcwIcon className="w-4 h-4" />
@@ -109,54 +170,18 @@ const PageEditor: React.FC<EditorProps> = ({
         <TabsContent value="editor" className="mt-0">
           <div className="mb-4">
             <p className="text-sm text-muted-foreground">
-              Organize as seções arrastando e soltando os elementos abaixo. Clique em Salvar quando terminar.
+              Personalize sua página inicial usando o editor Puck. Arraste e solte elementos para criar seu layout. Clique em Salvar quando terminar.
             </p>
           </div>
 
-          {sections.length > 0 ? (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="sections">
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="space-y-2"
-                  >
-                    {sections.map((section, index) => (
-                      <Draggable key={section} draggableId={section} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={cn(
-                              "flex items-center justify-between p-4 rounded-md border bg-card",
-                              snapshot.isDragging ? "shadow-lg" : ""
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div {...provided.dragHandleProps} className="cursor-grab">
-                                <GripVertical className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="font-medium">{sectionNames[section]}</p>
-                                <p className="text-sm text-muted-foreground">{sectionDescriptions[section]}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            <div className="p-8 text-center border rounded-md bg-muted/20">
-              <p>Nenhuma seção disponível para exibição. Redefina para o padrão.</p>
-              <Button onClick={onReset} className="mt-4">Restaurar seções padrão</Button>
-            </div>
-          )}
+          <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
+            <Puck
+              config={config}
+              data={puckData}
+              onPublish={handleSave}
+              onChange={handlePuckChange}
+            />
+          </div>
 
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} className="flex items-center gap-2">
@@ -167,25 +192,14 @@ const PageEditor: React.FC<EditorProps> = ({
         </TabsContent>
 
         <TabsContent value="preview" className="mt-0">
-          <div className="border rounded-md p-4 bg-gray-50 h-[600px] overflow-auto">
-            <div className="text-center p-8 bg-amber-50">
-              <h2 className="text-2xl font-bold mb-4">Preview da Página Inicial</h2>
-              <p className="mb-4">Esta é uma representação simplificada da sua página.</p>
-              {sections.length > 0 ? (
-                <div className="space-y-4">
-                  {sections.map((section) => (
-                    <div key={section} className="p-4 border rounded bg-white">
-                      <h3 className="font-bold">{sectionNames[section]}</h3>
-                      <p>{sectionDescriptions[section]}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center border rounded-md bg-white">
-                  <p>Nenhuma seção disponível para visualização.</p>
-                </div>
-              )}
-            </div>
+          <div className="border rounded-md p-4 bg-gray-50 h-[800px] overflow-auto">
+            {puckData && puckData.content ? (
+              <PuckRenderer data={puckData.content} />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">Nenhum conteúdo para visualizar.</p>
+              </div>
+            )}
           </div>
         </TabsContent>
       </CardContent>

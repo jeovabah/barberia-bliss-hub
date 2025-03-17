@@ -74,7 +74,7 @@ const Admin = () => {
     
     toast({
       title: "Alterações salvas",
-      description: "A organização da página foi atualizada com sucesso.",
+      description: "A página inicial foi atualizada com sucesso.",
       variant: "default",
     });
   };
@@ -84,9 +84,12 @@ const Admin = () => {
     setHomepageSections(defaultSections);
     localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
     
+    // Also clear any Puck data to reset to defaults
+    localStorage.removeItem('puckData');
+    
     toast({
       title: "Página inicial redefinida",
-      description: "A organização da página foi restaurada para o padrão.",
+      description: "A página inicial foi restaurada para o padrão.",
       variant: "default",
     });
   };
