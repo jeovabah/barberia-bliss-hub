@@ -11,11 +11,19 @@ import PageEditor from "@/components/PageEditor";
 import { LogOut, Home } from "lucide-react";
 import AppointmentsTable from "@/components/AppointmentsTable";
 
+// Define PuckContent interface to match the expected structure
+interface PuckContent {
+  content: any[];
+  root: {
+    props: any;
+  };
+}
+
 const CompanyDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
-  const [puckData, setPuckData] = useState<any>(null);
+  const [puckData, setPuckData] = useState<PuckContent | null>(null);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
@@ -136,6 +144,11 @@ const CompanyDashboard = () => {
               description: "Could not load your page content.",
               variant: "destructive"
             });
+            // Create default empty structure
+            setPuckData({
+              content: [],
+              root: { props: {} }
+            });
           } else if (puckContent) {
             console.log("Puck content loaded via function:", puckContent);
             
@@ -144,38 +157,61 @@ const CompanyDashboard = () => {
             
             // Process the content based on its type
             try {
-              let processedContent;
+              let processedContent: PuckContent;
               
               if (typeof puckContent === 'string') {
                 console.log("Parsing string content");
                 processedContent = JSON.parse(puckContent);
+              } else if (typeof puckContent === 'object') {
+                console.log("Processing object content");
+                
+                // Create a properly structured PuckContent object
+                processedContent = {
+                  content: Array.isArray(puckContent.content) ? puckContent.content : [],
+                  root: {
+                    props: puckContent.root && puckContent.root.props ? puckContent.root.props : {}
+                  }
+                };
+                
+                // If we have a malformed object without content/root properties
+                if (!puckContent.content && !puckContent.root) {
+                  console.log("Content is missing required properties, using default structure");
+                  processedContent = {
+                    content: [],
+                    root: { props: {} }
+                  };
+                }
               } else {
-                console.log("Using object content directly");
-                processedContent = puckContent;
-              }
-              
-              // Ensure we have a properly formatted object
-              if (!processedContent.root) {
-                processedContent.root = { props: {} };
-              }
-              
-              if (!Array.isArray(processedContent.content)) {
-                processedContent.content = [];
+                console.log("Unexpected content format, using default");
+                processedContent = {
+                  content: [],
+                  root: { props: {} }
+                };
               }
               
               console.log("Processed content:", processedContent);
               setPuckData(processedContent);
             } catch (parseError) {
               console.error("Error parsing puck content:", parseError);
-              setPuckData(null);
+              setPuckData({
+                content: [],
+                root: { props: {} }
+              });
             }
           } else {
             console.log("No puck content found via function");
             localStorage.removeItem('puckData');
-            setPuckData(null);
+            setPuckData({
+              content: [],
+              root: { props: {} }
+            });
           }
         } catch (fetchError) {
           console.error("Exception fetching puck content:", fetchError);
+          setPuckData({
+            content: [],
+            root: { props: {} }
+          });
         }
       }
     } catch (error) {
@@ -185,13 +221,17 @@ const CompanyDashboard = () => {
         description: "An error occurred while loading data. Please try again later.",
         variant: "destructive"
       });
+      setPuckData({
+        content: [],
+        root: { props: {} }
+      });
     } finally {
       setLoading(false);
       setDataLoaded(true);
     }
   };
 
-  const savePuckData = async (data: any) => {
+  const savePuckData = async (data: PuckContent) => {
     if (!company) {
       toast({
         title: "Error",
@@ -208,8 +248,14 @@ const CompanyDashboard = () => {
       // Remove from localStorage first to prevent any loops
       localStorage.removeItem('puckData');
       
-      // Convert data to proper format if needed
-      const dataToSave = data;
+      // Ensure data has the correct structure
+      const dataToSave: PuckContent = {
+        content: Array.isArray(data.content) ? data.content : [],
+        root: {
+          props: data.root && data.root.props ? data.root.props : {}
+        }
+      };
+      
       console.log("Data to save:", dataToSave);
       
       // Check if puck content exists for this company with direct query
@@ -282,7 +328,24 @@ const CompanyDashboard = () => {
         
         if (!refreshError && refreshedContent) {
           console.log("Refreshed puck content:", refreshedContent);
-          setPuckData(refreshedContent);
+          
+          // Process the refreshed content
+          let processedContent: PuckContent;
+          
+          if (typeof refreshedContent === 'string') {
+            processedContent = JSON.parse(refreshedContent);
+          } else if (typeof refreshedContent === 'object') {
+            processedContent = {
+              content: Array.isArray(refreshedContent.content) ? refreshedContent.content : [],
+              root: {
+                props: refreshedContent.root && refreshedContent.root.props ? refreshedContent.root.props : {}
+              }
+            };
+          } else {
+            processedContent = dataToSave; // Use the data we just saved
+          }
+          
+          setPuckData(processedContent);
         }
       }
     } catch (error) {

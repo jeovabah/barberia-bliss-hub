@@ -83,9 +83,25 @@ const CompanyPage = () => {
             console.log("Parsing string content");
             normalizedData = JSON.parse(puckContent);
           } else if (typeof puckContent === 'object') {
-            // Handle object format
-            console.log("Using object content directly");
-            normalizedData = puckContent;
+            // Ensure the object has the required structure for PuckContent
+            console.log("Processing object content");
+            
+            // Create a properly structured PuckContent object
+            normalizedData = {
+              content: Array.isArray(puckContent.content) ? puckContent.content : [],
+              root: {
+                props: puckContent.root && puckContent.root.props ? puckContent.root.props : {}
+              }
+            };
+            
+            // If we have a malformed object without content/root properties
+            if (!puckContent.content && !puckContent.root) {
+              console.log("Content is missing required properties, using default structure");
+              normalizedData = {
+                content: [],
+                root: { props: {} }
+              };
+            }
           } else {
             throw new Error("Unexpected content format");
           }
@@ -96,14 +112,8 @@ const CompanyPage = () => {
           if (normalizedData && 
               normalizedData.content && 
               Array.isArray(normalizedData.content) && 
-              normalizedData.content.length > 0) {
-            
-            // Ensure we have the root props object
-            if (!normalizedData.root) {
-              normalizedData.root = { props: {} };
-            } else if (!normalizedData.root.props) {
-              normalizedData.root.props = {};
-            }
+              normalizedData.root && 
+              normalizedData.root.props) {
             
             console.log("Using Puck content with structure:", {
               contentLength: normalizedData.content.length,
