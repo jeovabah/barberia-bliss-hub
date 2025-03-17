@@ -50,31 +50,27 @@ const CompanyPage = () => {
       // Limpar qualquer cache do localStorage
       localStorage.removeItem('puckData');
       
-      console.log("Fetching Puck content for company:", company.id);
+      console.log("Fetching Puck content using function for company:", company.id);
       
-      // Buscar conteúdo puck para esta empresa
-      // Não precisamos de autenticação para acessar o conteúdo público (graças à nova política RLS)
+      // Usar nossa nova função para buscar o conteúdo Puck evitando problemas de permissão
       const { data: puckContent, error: puckError } = await supabase
-        .from('puck_content')
-        .select('content')
-        .eq('company_id', company.id)
-        .maybeSingle();
+        .rpc('get_puck_content_by_company', { company_id_param: company.id });
       
-      console.log("Puck content query result:", puckContent, puckError);
+      console.log("Puck content function result:", puckContent, puckError);
       
       if (puckError) {
         console.error("Error fetching puck content:", puckError);
         console.log("Detailed error:", puckError.message, puckError.details);
         // Sem conteúdo puck, usará seções padrão
         setUsePuck(false);
-      } else if (puckContent && puckContent.content) {
-        console.log("Found Puck content in database:", puckContent);
+      } else if (puckContent) {
+        console.log("Found Puck content using function:", puckContent);
         // Processar dados puck
         try {
           // Verificar se o conteúdo já é um objeto ou se precisa ser analisado
-          const parsedContent = typeof puckContent.content === 'string' 
-            ? JSON.parse(puckContent.content) 
-            : puckContent.content;
+          const parsedContent = typeof puckContent === 'string' 
+            ? JSON.parse(puckContent) 
+            : puckContent;
           
           // Garantir que o conteúdo tenha a estrutura esperada
           const normalizedData = {

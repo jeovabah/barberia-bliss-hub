@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,33 +108,30 @@ const CompanyDashboard = () => {
         setCompany(companyData);
         console.log("Company data:", companyData);
         
-        // Buscar conteúdo Puck com RLS aplicado - aqui é onde provavelmente está o erro
+        // Usar nossa nova função para buscar o conteúdo Puck sem problemas de permissão
         try {
-          console.log("Attempting to fetch Puck content for company:", companyData.id);
+          console.log("Fetching Puck content using the new function for company:", companyData.id);
           
+          // Chamando a função diretamente via RPC em vez de acessar a tabela
           const { data: puckContent, error: puckError } = await supabase
-            .from('puck_content')
-            .select('*')
-            .eq('company_id', companyData.id)
-            .maybeSingle();
+            .rpc('get_puck_content_by_company', { company_id_param: companyData.id });
 
-          console.log("Puck content query:", `company_id = ${companyData.id}`);
-          console.log("Puck content response:", puckContent, puckError);
+          console.log("Puck content function response:", puckContent, puckError);
 
           if (puckError) {
-            console.error("Erro ao buscar conteúdo puck:", puckError);
+            console.error("Erro ao buscar conteúdo puck via função:", puckError);
             toast({
               title: "Erro ao carregar conteúdo da página",
               description: "Não foi possível carregar o conteúdo da sua página.",
               variant: "destructive"
             });
           } else if (puckContent) {
-            console.log("Conteúdo Puck carregado do banco de dados:", puckContent);
+            console.log("Conteúdo Puck carregado via função:", puckContent);
             // Certifique-se de limpar qualquer dado do localStorage para evitar loops
             localStorage.removeItem('puckData');
-            setPuckData(puckContent.content);
+            setPuckData(puckContent);
           } else {
-            console.log("Nenhum conteúdo puck encontrado no banco de dados");
+            console.log("Nenhum conteúdo puck encontrado via função");
             localStorage.removeItem('puckData');
             setPuckData(null);
           }

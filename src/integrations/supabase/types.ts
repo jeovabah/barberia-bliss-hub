@@ -108,6 +108,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_puck_content_by_company: {
+        Args: {
+          company_id_param: string
+        }
+        Returns: Json
+      }
       is_admin: {
         Args: {
           user_id: string
