@@ -1,72 +1,92 @@
 
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "@/components/ui/toaster";
-import { PuckRenderer, config } from "@/lib/puck-config";
 import { supabase } from "@/integrations/supabase/client";
+import { PuckRenderer, config } from "@/lib/puck-config";
 import Hero from "../components/Hero";
 import Services from "../components/Services";
 import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
+import "@measured/puck/puck.css";
+
+interface Company {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface PuckContent {
+  content: any[];
+  root: {
+    props: any;
+  };
+}
 
 const CompanyPage = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const [company, setCompany] = useState<any>(null);
-  const [puckData, setPuckData] = useState<any>(null);
-  const [usePuck, setUsePuck] = useState(false);
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const [company, setCompany] = useState<Company | null>(null);
+  const [puckData, setPuckData] = useState<PuckContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [usePuck, setUsePuck] = useState(false);
   
   // Default sections order
   const defaultSections = ["hero", "services", "barbers", "booking"];
   
   useEffect(() => {
-    const fetchCompanyData = async () => {
-      if (!slug) {
-        setError("URL da empresa não encontrada.");
-        setIsLoading(false);
+    if (!slug) {
+      navigate("/");
+      return;
+    }
+    
+    fetchCompanyData();
+  }, [slug, navigate]);
+  
+  const fetchCompanyData = async () => {
+    try {
+      // Fetch company by slug
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+      
+      if (companyError || !companyData) {
+        console.error("Error fetching company:", companyError);
+        navigate("/not-found");
         return;
       }
-
-      try {
-        // First, find the company by slug
-        const { data: companyData, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('slug', slug)
-          .single();
-
-        if (companyError) {
-          console.error("Error fetching company:", companyError);
-          setError("Empresa não encontrada.");
-          setIsLoading(false);
-          return;
-        }
-
-        setCompany(companyData);
-        document.title = `${companyData.name} | BarberBliss`;
-
-        // Then, fetch the Puck content for this company
-        const { data: puckData, error: puckError } = await supabase
-          .from('puck_content')
-          .select('*')
-          .eq('company_id', companyData.id)
-          .single();
-
-        if (puckError) {
-          if (puckError.code !== 'PGRST116') { // Not found
-            console.error("Error fetching puck content:", puckError);
-          }
-          // Fallback to classic rendering
-          setUsePuck(false);
-        } else if (puckData && puckData.content) {
-          // Normalize the data structure
+      
+      setCompany(companyData);
+      document.title = `${companyData.name} | BarberBliss`;
+      
+      // Fetch puck content for this company
+      const { data: puckData, error: puckError } = await supabase
+        .from('puck_content')
+        .select('content')
+        .eq('company_id', companyData.id)
+        .single();
+      
+      if (puckError) {
+        console.error("Error fetching puck content:", puckError);
+        // No puck content, will use default sections
+        setUsePuck(false);
+      } else if (puckData && puckData.content) {
+        // Process puck data
+        try {
+          // Check if content is already an object or if it needs parsing
+          const parsedContent = typeof puckData.content === 'string' 
+            ? JSON.parse(puckData.content) 
+            : puckData.content;
+          
+          // Ensure the content has the expected structure
           const normalizedData = {
-            root: { props: {} },
-            content: Array.isArray(puckData.content.content) 
-              ? puckData.content.content 
+            root: parsedContent.root || { props: {} },
+            content: Array.isArray(parsedContent.content) 
+              ? parsedContent.content 
               : []
           };
           
@@ -76,20 +96,20 @@ const CompanyPage = () => {
           } else {
             setUsePuck(false);
           }
-        } else {
+        } catch (e) {
+          console.error("Error parsing Puck data:", e);
           setUsePuck(false);
         }
-
-        setIsLoading(false);
-      } catch (e) {
-        console.error("Unexpected error:", e);
-        setError("Erro ao carregar dados da empresa.");
-        setIsLoading(false);
+      } else {
+        setUsePuck(false);
       }
-    };
-
-    fetchCompanyData();
-  }, [slug]);
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      navigate("/not-found");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Get sections order from localStorage, or use default if not available
   const getSectionsOrder = () => {
@@ -102,7 +122,8 @@ const CompanyPage = () => {
           return parsed;
         }
       }
-      // If nothing saved or invalid data, use default order
+      // If nothing saved or invalid data, initialize with default order
+      localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       return defaultSections;
     } catch (e) {
       console.error("Error loading sections order:", e);
@@ -131,30 +152,16 @@ const CompanyPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-amber-50/30">
-        <div className="text-center p-8 max-w-md bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">Erro</h2>
-          <p className="mb-6">{error}</p>
-          <a 
-            href="/" 
-            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-medium inline-block transition-colors"
-          >
-            Voltar para a Página Inicial
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen overflow-x-hidden bg-amber-50/30">
       <Navbar />
       
       {company && (
-        <div className="text-center py-4 bg-amber-100">
-          <h1 className="text-xl font-bold">{company.name}</h1>
+        <div className="py-20 bg-amber-600 text-white text-center">
+          <div className="container mx-auto px-4">
+            <h1 className="text-4xl font-bold mb-4">{company.name}</h1>
+            <p className="text-xl max-w-2xl mx-auto">Bem-vindo à nossa barbearia. Oferecemos serviços premium para o homem moderno.</p>
+          </div>
         </div>
       )}
       
