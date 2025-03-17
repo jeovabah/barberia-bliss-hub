@@ -322,7 +322,7 @@ const Admin = () => {
       }
 
       // Update the user profile with company association if specified
-      if (newUserCompany) {
+      if (newUserCompany && newUserCompany !== "none") {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -365,7 +365,7 @@ const Admin = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .update({ company_id: companyId })
+        .update({ company_id: companyId === "none" ? null : companyId })
         .eq('id', userId)
         .select();
 
@@ -671,7 +671,7 @@ const Admin = () => {
                             <SelectContent>
                               {companies.length > 0 ? (
                                 <>
-                                  <SelectItem value="">Sem empresa</SelectItem>
+                                  <SelectItem value="none">Sem empresa</SelectItem>
                                   {companies.map((company) => (
                                     <SelectItem key={company.id} value={company.id}>
                                       {company.name}
@@ -679,7 +679,7 @@ const Admin = () => {
                                   ))}
                                 </>
                               ) : (
-                                <SelectItem value="" disabled>
+                                <SelectItem value="no-companies" disabled>
                                   Nenhuma empresa cadastrada
                                 </SelectItem>
                               )}
@@ -755,8 +755,8 @@ const Admin = () => {
                                     <div className="py-4">
                                       <Label htmlFor="user-company-change">Empresa</Label>
                                       <Select 
-                                        defaultValue={user.company_id || ''} 
-                                        onValueChange={(value) => handleUpdateUserCompany(user.id, value || null)}
+                                        defaultValue={user.company_id || "none"} 
+                                        onValueChange={(value) => handleUpdateUserCompany(user.id, value)}
                                       >
                                         <SelectTrigger className="mt-2">
                                           <SelectValue placeholder="Selecione uma empresa" />
@@ -764,7 +764,7 @@ const Admin = () => {
                                         <SelectContent>
                                           {companies.length > 0 ? (
                                             <>
-                                              <SelectItem value="">Sem empresa</SelectItem>
+                                              <SelectItem value="none">Sem empresa</SelectItem>
                                               {companies.map((company) => (
                                                 <SelectItem key={company.id} value={company.id}>
                                                   {company.name}
@@ -772,7 +772,7 @@ const Admin = () => {
                                               ))}
                                             </>
                                           ) : (
-                                            <SelectItem value="" disabled>
+                                            <SelectItem value="no-companies" disabled>
                                               Nenhuma empresa cadastrada
                                             </SelectItem>
                                           )}
