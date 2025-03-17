@@ -54,10 +54,13 @@ const PageEditor: React.FC<EditorProps> = ({
             };
             
             // Extract content based on the structure we find
-            if (Array.isArray(initialData.content)) {
+            if (initialData.content && Array.isArray(initialData.content)) {
               normalizedData.content = initialData.content;
-            } else if (initialData.root && Array.isArray(initialData.root.children)) {
-              normalizedData.content = initialData.root.children;
+            }
+            
+            // Extract root props if available
+            if (initialData.root && initialData.root.props) {
+              normalizedData.root.props = initialData.root.props;
             }
             
             setPuckData(normalizedData);

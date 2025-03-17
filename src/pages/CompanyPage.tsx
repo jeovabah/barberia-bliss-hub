@@ -54,7 +54,7 @@ const CompanyPage = () => {
       
       console.log("Fetching Puck content for company ID:", company.id);
       
-      // Direct query to puck_content table first to debug
+      // Direct query to puck_content table to get the content
       const { data: directData, error: directError } = await supabase
         .from('puck_content')
         .select('*')
@@ -63,7 +63,35 @@ const CompanyPage = () => {
         
       console.log("Direct query result:", directData, directError);
       
-      // Use the function to fetch Puck content
+      if (directData && directData.content) {
+        // Extract the content field from directData
+        const contentData = directData.content as any;
+        
+        // Validate that it has the expected structure
+        if (contentData && 
+            typeof contentData === 'object' && 
+            'content' in contentData && 
+            'root' in contentData && 
+            Array.isArray(contentData.content)) {
+          console.log("Found valid Puck content directly:", contentData);
+          
+          // It has the right shape
+          const validPuckData: PuckContent = {
+            content: contentData.content,
+            root: {
+              props: contentData.root && typeof contentData.root === 'object' && 
+                     contentData.root.props ? contentData.root.props : {}
+            }
+          };
+          
+          setPuckData(validPuckData);
+          setUsePuck(true);
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // If direct query didn't work or had invalid data, try the function
       const { data: puckContent, error: puckError } = await supabase
         .rpc('get_puck_content_by_company', { company_id_param: company.id });
       

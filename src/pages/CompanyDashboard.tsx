@@ -128,7 +128,40 @@ const CompanyDashboard = () => {
           
         console.log("Direct puck_content query result:", directPuckData, directPuckError);
         
-        // Use our function to fetch Puck content
+        if (directPuckData) {
+          // Extract the content field from the direct query result
+          console.log("Found Puck content directly:", directPuckData.content);
+          
+          try {
+            // Extract the content field from directPuckData
+            const contentData = directPuckData.content as any;
+            
+            // Validate that it has the expected structure
+            if (contentData && 
+                typeof contentData === 'object' && 
+                'content' in contentData && 
+                'root' in contentData && 
+                Array.isArray(contentData.content)) {
+              // It has the right shape
+              const validPuckData: PuckContent = {
+                content: contentData.content,
+                root: {
+                  props: contentData.root && typeof contentData.root === 'object' && 
+                         contentData.root.props ? contentData.root.props : {}
+                }
+              };
+              
+              setPuckData(validPuckData);
+              setDataLoaded(true);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error("Error processing direct Puck data:", error);
+          }
+        }
+        
+        // If direct query didn't work or had invalid data, try the function
         try {
           console.log("Fetching Puck content via function for company:", companyData.id);
           
@@ -277,12 +310,12 @@ const CompanyDashboard = () => {
 
       // Convert PuckContent to Json type for Supabase
       // This ensures compatibility with the database schema
-      const contentAsJson: Json = {
+      const contentAsJson = {
         content: data.content,
         root: {
           props: data.root.props
         }
-      };
+      } as Json;
 
       let result;
       
@@ -328,69 +361,29 @@ const CompanyDashboard = () => {
         console.log("Verification query result:", verifyData, verifyError);
         
         // Refresh the data to ensure we have the latest content
-        const { data: refreshedContent, error: refreshError } = await supabase
-          .rpc('get_puck_content_by_company', { company_id_param: company.id });
-          
-        console.log("Refreshed content via function:", refreshedContent, refreshError);
-        
-        if (!refreshError && refreshedContent) {
+        if (verifyData && verifyData.content) {
           try {
-            console.log("Refreshed puck content:", refreshedContent);
+            const contentData = verifyData.content as any;
             
-            // Default content in case of issues
-            const defaultContent: PuckContent = {
-              content: [],
-              root: { props: {} }
-            };
-            
-            // Process the refreshed content with type safety
-            let validPuckData: PuckContent;
-            
-            // Check if refreshedContent is an object with both content and root properties
-            if (typeof refreshedContent === 'object' && refreshedContent !== null && 
-                'content' in refreshedContent && 'root' in refreshedContent && 
-                Array.isArray((refreshedContent as any).content)) {
-              // It has the right shape, validate deeper structure
-              const contentData = refreshedContent as any;
-              validPuckData = {
-                content: Array.isArray(contentData.content) ? contentData.content : [],
+            // Validate that the returned data has the expected structure
+            if (contentData && 
+                typeof contentData === 'object' && 
+                'content' in contentData && 
+                'root' in contentData && 
+                Array.isArray(contentData.content)) {
+              // It has the right shape
+              const validPuckData: PuckContent = {
+                content: contentData.content,
                 root: {
                   props: contentData.root && typeof contentData.root === 'object' && 
                          contentData.root.props ? contentData.root.props : {}
                 }
               };
-            } else if (typeof refreshedContent === 'string') {
-              // Try to parse string content
-              try {
-                const parsedContent = JSON.parse(refreshedContent);
-                if (parsedContent && 
-                    'content' in parsedContent && Array.isArray(parsedContent.content) && 
-                    'root' in parsedContent && typeof parsedContent.root === 'object') {
-                  validPuckData = {
-                    content: parsedContent.content,
-                    root: {
-                      props: parsedContent.root.props || {}
-                    }
-                  };
-                } else {
-                  console.log("Parsed content missing required structure");
-                  validPuckData = defaultContent;
-                }
-              } catch (parseError) {
-                console.error("Error parsing string content:", parseError);
-                validPuckData = defaultContent;
-              }
-            } else {
-              // Fallback to default content
-              console.log("Content has invalid structure:", refreshedContent);
-              validPuckData = defaultContent;
+              
+              setPuckData(validPuckData);
             }
-            
-            setPuckData(validPuckData);
           } catch (error) {
-            console.error("Error processing refreshed content:", error);
-            // Keep using the data we just saved
-            setPuckData(data);
+            console.error("Error processing verified content:", error);
           }
         }
       }
