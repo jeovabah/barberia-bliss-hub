@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLogin from "@/components/AdminLogin";
 import AdminDashboard from "@/components/AdminDashboard";
-import { Puck, PuckPreview } from "@measured/puck";
+import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { config } from "@/lib/puck-config";
 

@@ -115,7 +115,6 @@ export const config: Config = {
         text: {
           type: "text",
           label: "Texto",
-          placeholder: "Digite o título",
         },
         size: {
           type: "select",
@@ -135,9 +134,8 @@ export const config: Config = {
       },
       fields: {
         content: {
-          type: "rich-text",
+          type: "textarea",
           label: "Conteúdo",
-          placeholder: "Digite seu conteúdo...",
         },
       },
     },
@@ -151,17 +149,14 @@ export const config: Config = {
         src: {
           type: "text",
           label: "URL da imagem",
-          placeholder: "https://...",
         },
         alt: {
           type: "text",
           label: "Texto alternativo",
-          placeholder: "Descrição da imagem",
         },
         className: {
           type: "text",
           label: "Classes CSS (opcional)",
-          placeholder: "w-full h-auto",
         },
       },
     },
@@ -176,12 +171,10 @@ export const config: Config = {
         label: {
           type: "text",
           label: "Texto do botão",
-          placeholder: "Clique Aqui",
         },
         href: {
           type: "text",
           label: "Link",
-          placeholder: "#",
         },
         variant: {
           type: "select",
@@ -205,22 +198,18 @@ export const config: Config = {
         title: {
           type: "text",
           label: "Título",
-          placeholder: "Nome do serviço",
         },
         price: {
           type: "text",
           label: "Preço",
-          placeholder: "R$ 35,00",
         },
         description: {
           type: "textarea",
           label: "Descrição",
-          placeholder: "Descreva o serviço...",
         },
         imageUrl: {
           type: "text",
           label: "URL da imagem (opcional)",
-          placeholder: "https://...",
         },
       },
     },
@@ -237,27 +226,22 @@ export const config: Config = {
         title: {
           type: "text",
           label: "Título",
-          placeholder: "Título do Card",
         },
         content: {
           type: "textarea",
           label: "Conteúdo",
-          placeholder: "Descreva o conteúdo...",
         },
         imageUrl: {
           type: "text",
           label: "URL da imagem (opcional)",
-          placeholder: "https://...",
         },
         buttonLabel: {
           type: "text",
           label: "Texto do botão (opcional)",
-          placeholder: "Saiba Mais",
         },
         buttonLink: {
           type: "text",
           label: "Link do botão (opcional)",
-          placeholder: "#",
         },
       },
     },
@@ -272,7 +256,10 @@ export const PuckRenderer = ({ data }: { data: any }) => {
   
   return (
     <div className="puck-renderer">
-      <PuckPreview data={data} config={config} />
+      {data.root.children.map((child: any, index: number) => {
+        const Component = config.components[child.type]?.render;
+        return Component ? <Component key={index} {...child.props} /> : null;
+      })}
     </div>
   );
 };
