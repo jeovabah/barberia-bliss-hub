@@ -8,25 +8,26 @@ import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
 import "@measured/puck/puck.css";
 
-type SectionType = 'hero' | 'services' | 'barbers' | 'booking';
-
 interface EditorProps {
-  onSave: (sections: SectionType[]) => void;
+  onSave: (data: any) => void;
   onPreview: () => void;
-  onReset: () => void;
-  initialSections?: SectionType[];
+  onReset?: () => void;
+  initialData?: any;
+  initialSections?: ('hero' | 'services' | 'barbers' | 'booking')[];
 }
 
 const PageEditor: React.FC<EditorProps> = ({ 
   onSave, 
   onPreview, 
   onReset,
+  initialData = null,
   initialSections = ['hero', 'services', 'barbers', 'booking']
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   console.log("PageEditor rendering with initialSections:", initialSections);
+  console.log("PageEditor initialData:", initialData);
   
   // Load Puck data when initialized
   useEffect(() => {
@@ -34,14 +35,41 @@ const PageEditor: React.FC<EditorProps> = ({
       setIsLoading(true);
       
       try {
-        // Check if there's saved Puck data
+        // If we have initialData from props, use it
+        if (initialData) {
+          console.log("Using provided initial data");
+          
+          // Ensure the data has the correct structure
+          if (typeof initialData === 'object') {
+            // Create a properly structured data object for Puck
+            const normalizedData: Data = {
+              root: {
+                props: {}
+              },
+              content: []
+            };
+            
+            // Extract content based on the structure we find
+            if (Array.isArray(initialData.content)) {
+              normalizedData.content = initialData.content;
+            } else if (initialData.root && Array.isArray(initialData.root.children)) {
+              normalizedData.content = initialData.root.children;
+            }
+            
+            setPuckData(normalizedData);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Check if there's saved Puck data in localStorage as fallback
         const savedPuckData = localStorage.getItem('puckData');
-        console.log("Fetching Puck data:", savedPuckData ? "Data found" : "No data");
+        console.log("Checking localStorage fallback:", savedPuckData ? "Data found" : "No data");
         
         if (savedPuckData) {
           try {
             const parsedData = JSON.parse(savedPuckData);
-            console.log("Puck data parsed successfully:", parsedData);
+            console.log("Puck data from localStorage parsed successfully");
             
             // Ensure the data has the correct structure
             if (parsedData && typeof parsedData === 'object') {
@@ -73,11 +101,11 @@ const PageEditor: React.FC<EditorProps> = ({
               setPuckData(normalizedData);
               setIsLoading(false);
             } else {
-              console.log("Invalid Puck data structure, creating default");
+              console.log("Invalid Puck data structure in localStorage, creating default");
               await createDefaultPuckData();
             }
           } catch (e) {
-            console.error("Error parsing Puck data:", e);
+            console.error("Error parsing Puck data from localStorage:", e);
             await createDefaultPuckData();
           }
         } else {
@@ -92,7 +120,7 @@ const PageEditor: React.FC<EditorProps> = ({
     };
     
     loadPuckData();
-  }, [initialSections]);
+  }, [initialData, initialSections]);
 
   // Function to create default Puck data based on initial sections
   const createDefaultPuckData = async () => {
@@ -142,7 +170,7 @@ const PageEditor: React.FC<EditorProps> = ({
       content: contentItems
     };
     
-    console.log("Default Puck data created:", defaultData);
+    console.log("Default Puck data created");
     setPuckData(defaultData);
     localStorage.setItem('puckData', JSON.stringify(defaultData));
     setIsLoading(false);
@@ -150,7 +178,6 @@ const PageEditor: React.FC<EditorProps> = ({
 
   // When the user makes changes in the editor
   const handlePuckChange = (data: Data) => {
-    console.log("Puck data changed:", data);
     setPuckData(data);
   };
 
@@ -167,40 +194,25 @@ const PageEditor: React.FC<EditorProps> = ({
       return;
     }
     
-    // Save Puck data to localStorage
+    // Save to localStorage as a fallback
     localStorage.setItem('puckData', JSON.stringify(puckData));
     
-    // Extract section types from Puck data
-    const sections: SectionType[] = puckData.content
-      .map((child: any) => {
-        switch(child.type) {
-          case 'HeroSection': return 'hero';
-          case 'ServicesGrid': return 'services';
-          case 'BarbersTeam': return 'barbers';
-          case 'BookingSection': return 'booking';
-          default: return null;
-        }
-      })
-      .filter(Boolean) as SectionType[];
-    
-    console.log("Extracted sections to save:", sections);
-    onSave(sections);
-    
-    toast({
-      title: "Alterações salvas",
-      description: "As alterações na página inicial foram salvas com sucesso.",
-    });
+    // Call the onSave callback
+    onSave(puckData);
   };
 
   // Reset to default
   const handleReset = () => {
     console.log("Resetting to default");
-    createDefaultPuckData();
-    onReset();
+    if (onReset) {
+      onReset();
+    } else {
+      createDefaultPuckData();
+    }
     
     toast({
       title: "Página redefinida",
-      description: "A página inicial foi redefinida para o padrão.",
+      description: "A página foi redefinida para o padrão.",
     });
   };
 
@@ -224,9 +236,9 @@ const PageEditor: React.FC<EditorProps> = ({
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Editor da Página Inicial</CardTitle>
+          <CardTitle>Editor da Página</CardTitle>
           <CardDescription>
-            Use o editor abaixo para personalizar a página inicial do seu site
+            Use o editor abaixo para personalizar a sua página
           </CardDescription>
         </div>
         <div className="flex space-x-2">
