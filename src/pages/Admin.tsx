@@ -25,26 +25,32 @@ const Admin = () => {
     
     try {
       const savedSections = localStorage.getItem('homepageSections');
+      console.log("Loaded sections from localStorage:", savedSections);
+      
       if (savedSections) {
         const parsed = JSON.parse(savedSections);
         // Validate that we have a non-empty array
         if (Array.isArray(parsed) && parsed.length > 0) {
           setHomepageSections(parsed);
+          console.log("Set homepage sections to:", parsed);
         } else {
           // Set default if saved data is invalid
           localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
           setHomepageSections(defaultSections);
+          console.log("Invalid data, set default sections");
         }
       } else {
         // Initialize with default sections if none exist
         localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
         setHomepageSections(defaultSections);
+        console.log("No saved data, set default sections");
       }
     } catch (e) {
       console.error("Error parsing saved sections:", e);
       // Set default sections if parsing fails
       localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       setHomepageSections(defaultSections);
+      console.log("Error parsing, set default sections");
     }
     
     setIsLoading(false);
@@ -96,6 +102,8 @@ const Admin = () => {
   if (isLoading) {
     return <div className="container mx-auto py-10 px-4 flex items-center justify-center">Carregando...</div>;
   }
+
+  console.log("Rendering PageEditor with sections:", homepageSections);
 
   return (
     <div className="container mx-auto py-10 px-4">

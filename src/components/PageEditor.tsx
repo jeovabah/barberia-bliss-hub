@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PencilIcon, EyeIcon, RotateCcwIcon, GripVertical, SaveIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,13 +22,17 @@ const PageEditor: React.FC<EditorProps> = ({
   onReset,
   initialSections = ['hero', 'services', 'barbers', 'booking']
 }) => {
-  const [sections, setSections] = useState<SectionType[]>(initialSections);
+  const [sections, setSections] = useState<SectionType[]>([]);
   const [activeTab, setActiveTab] = useState<string>('editor');
   
-  // Ensure sections are always set from props
+  // Update sections from props on mount and when initialSections changes
   useEffect(() => {
+    console.log("Initial sections:", initialSections);
     if (initialSections && initialSections.length > 0) {
-      setSections(initialSections);
+      setSections([...initialSections]);
+    } else {
+      // Fallback to default if no sections provided
+      setSections(['hero', 'services', 'barbers', 'booking']);
     }
   }, [initialSections]);
 
@@ -110,43 +113,50 @@ const PageEditor: React.FC<EditorProps> = ({
             </p>
           </div>
 
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="sections">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="space-y-2"
-                >
-                  {sections.map((section, index) => (
-                    <Draggable key={section} draggableId={section} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={cn(
-                            "flex items-center justify-between p-4 rounded-md border bg-card",
-                            snapshot.isDragging ? "shadow-lg" : ""
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div {...provided.dragHandleProps} className="cursor-grab">
-                              <GripVertical className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{sectionNames[section]}</p>
-                              <p className="text-sm text-muted-foreground">{sectionDescriptions[section]}</p>
+          {sections.length > 0 ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="sections">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-2"
+                  >
+                    {sections.map((section, index) => (
+                      <Draggable key={section} draggableId={section} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={cn(
+                              "flex items-center justify-between p-4 rounded-md border bg-card",
+                              snapshot.isDragging ? "shadow-lg" : ""
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div {...provided.dragHandleProps} className="cursor-grab">
+                                <GripVertical className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{sectionNames[section]}</p>
+                                <p className="text-sm text-muted-foreground">{sectionDescriptions[section]}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div className="p-8 text-center border rounded-md bg-muted/20">
+              <p>Nenhuma seção disponível para exibição. Redefina para o padrão.</p>
+              <Button onClick={onReset} className="mt-4">Restaurar seções padrão</Button>
+            </div>
+          )}
 
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} className="flex items-center gap-2">
@@ -161,14 +171,20 @@ const PageEditor: React.FC<EditorProps> = ({
             <div className="text-center p-8 bg-amber-50">
               <h2 className="text-2xl font-bold mb-4">Preview da Página Inicial</h2>
               <p className="mb-4">Esta é uma representação simplificada da sua página.</p>
-              <div className="space-y-4">
-                {sections.map((section) => (
-                  <div key={section} className="p-4 border rounded bg-white">
-                    <h3 className="font-bold">{sectionNames[section]}</h3>
-                    <p>{sectionDescriptions[section]}</p>
-                  </div>
-                ))}
-              </div>
+              {sections.length > 0 ? (
+                <div className="space-y-4">
+                  {sections.map((section) => (
+                    <div key={section} className="p-4 border rounded bg-white">
+                      <h3 className="font-bold">{sectionNames[section]}</h3>
+                      <p>{sectionDescriptions[section]}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center border rounded-md bg-white">
+                  <p>Nenhuma seção disponível para visualização.</p>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
