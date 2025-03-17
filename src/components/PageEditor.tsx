@@ -45,10 +45,6 @@ const PageEditor: React.FC<EditorProps> = ({
 
   const handleSave = () => {
     onSave(sections);
-    toast({
-      title: "Alterações salvas",
-      description: "As alterações na página inicial foram salvas com sucesso.",
-    });
   };
 
   const sectionNames = {

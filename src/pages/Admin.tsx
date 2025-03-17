@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLogin from "@/components/AdminLogin";
 import AdminDashboard from "@/components/AdminDashboard";
 import { toast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import PageEditor from "@/components/PageEditor";
 
