@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageEditor from "@/components/PageEditor";
 import { LogOut, Home } from "lucide-react";
 import AppointmentsTable from "@/components/AppointmentsTable";
+import { Json } from "@/integrations/supabase/types";
 
 // Define PuckContent interface to match the expected structure
 interface PuckContent {
@@ -157,42 +157,56 @@ const CompanyDashboard = () => {
             
             // Process the content based on its type
             try {
-              let processedContent: PuckContent;
+              // Default empty structure to use if data is malformed
+              const defaultContent: PuckContent = {
+                content: [],
+                root: { props: {} }
+              };
               
+              // Handle different response formats
               if (typeof puckContent === 'string') {
+                // Parse string content
                 console.log("Parsing string content");
-                processedContent = JSON.parse(puckContent);
-              } else if (typeof puckContent === 'object') {
+                try {
+                  const parsedContent = JSON.parse(puckContent);
+                  // Validate parsed content has the correct structure
+                  if (parsedContent && 
+                      Array.isArray(parsedContent.content) && 
+                      parsedContent.root && 
+                      typeof parsedContent.root.props === 'object') {
+                    setPuckData(parsedContent as PuckContent);
+                  } else {
+                    console.log("Parsed content missing required structure");
+                    setPuckData(defaultContent);
+                  }
+                } catch (parseError) {
+                  console.error("Error parsing string content:", parseError);
+                  setPuckData(defaultContent);
+                }
+              } else if (typeof puckContent === 'object' && puckContent !== null) {
+                // Handle object content
                 console.log("Processing object content");
                 
-                // Create a properly structured PuckContent object
-                processedContent = {
-                  content: Array.isArray(puckContent.content) ? puckContent.content : [],
-                  root: {
-                    props: puckContent.root && puckContent.root.props ? puckContent.root.props : {}
-                  }
-                };
-                
-                // If we have a malformed object without content/root properties
-                if (!puckContent.content && !puckContent.root) {
-                  console.log("Content is missing required properties, using default structure");
-                  processedContent = {
-                    content: [],
-                    root: { props: {} }
+                if (puckContent.content && Array.isArray(puckContent.content) && 
+                    puckContent.root && typeof puckContent.root === 'object') {
+                  // Content has valid structure
+                  const structured: PuckContent = {
+                    content: puckContent.content,
+                    root: {
+                      props: puckContent.root.props || {}
+                    }
                   };
+                  setPuckData(structured);
+                } else {
+                  console.log("Object missing required structure");
+                  setPuckData(defaultContent);
                 }
               } else {
-                console.log("Unexpected content format, using default");
-                processedContent = {
-                  content: [],
-                  root: { props: {} }
-                };
+                console.log("Unexpected content format or null content");
+                setPuckData(defaultContent);
               }
-              
-              console.log("Processed content:", processedContent);
-              setPuckData(processedContent);
             } catch (parseError) {
-              console.error("Error parsing puck content:", parseError);
+              console.error("Error processing puck content:", parseError);
               setPuckData({
                 content: [],
                 root: { props: {} }
@@ -248,16 +262,6 @@ const CompanyDashboard = () => {
       // Remove from localStorage first to prevent any loops
       localStorage.removeItem('puckData');
       
-      // Ensure data has the correct structure
-      const dataToSave: PuckContent = {
-        content: Array.isArray(data.content) ? data.content : [],
-        root: {
-          props: data.root && data.root.props ? data.root.props : {}
-        }
-      };
-      
-      console.log("Data to save:", dataToSave);
-      
       // Check if puck content exists for this company with direct query
       const { data: existingData, error: checkError } = await supabase
         .from('puck_content')
@@ -277,6 +281,12 @@ const CompanyDashboard = () => {
         return;
       }
 
+      // Convert PuckContent to Json type for Supabase
+      const contentAsJson: Json = {
+        content: data.content,
+        root: data.root
+      };
+
       let result;
       
       if (existingData) {
@@ -284,14 +294,14 @@ const CompanyDashboard = () => {
         console.log("Updating existing puck content record");
         result = await supabase
           .from('puck_content')
-          .update({ content: dataToSave })
+          .update({ content: contentAsJson })
           .eq('company_id', company.id);
       } else {
         // Insert new record
         console.log("Creating new puck content record");
         result = await supabase
           .from('puck_content')
-          .insert({ company_id: company.id, content: dataToSave });
+          .insert({ company_id: company.id, content: contentAsJson });
       }
 
       console.log("Save operation result:", result);
@@ -309,7 +319,7 @@ const CompanyDashboard = () => {
           title: "Saved successfully",
           description: "Changes were saved successfully."
         });
-        setPuckData(dataToSave);
+        setPuckData(data);
         
         // Verify the saved data with a direct query
         const { data: verifyData, error: verifyError } = await supabase
@@ -327,25 +337,50 @@ const CompanyDashboard = () => {
         console.log("Refreshed content via function:", refreshedContent, refreshError);
         
         if (!refreshError && refreshedContent) {
-          console.log("Refreshed puck content:", refreshedContent);
-          
-          // Process the refreshed content
-          let processedContent: PuckContent;
-          
-          if (typeof refreshedContent === 'string') {
-            processedContent = JSON.parse(refreshedContent);
-          } else if (typeof refreshedContent === 'object') {
-            processedContent = {
-              content: Array.isArray(refreshedContent.content) ? refreshedContent.content : [],
-              root: {
-                props: refreshedContent.root && refreshedContent.root.props ? refreshedContent.root.props : {}
-              }
+          try {
+            console.log("Refreshed puck content:", refreshedContent);
+            
+            // Default content in case of issues
+            const defaultContent: PuckContent = {
+              content: [],
+              root: { props: {} }
             };
-          } else {
-            processedContent = dataToSave; // Use the data we just saved
+            
+            // Process the refreshed content
+            if (typeof refreshedContent === 'string') {
+              try {
+                const parsedContent = JSON.parse(refreshedContent);
+                if (parsedContent && 
+                    Array.isArray(parsedContent.content) && 
+                    parsedContent.root && 
+                    typeof parsedContent.root.props === 'object') {
+                  setPuckData(parsedContent);
+                } else {
+                  setPuckData(defaultContent);
+                }
+              } catch {
+                setPuckData(defaultContent);
+              }
+            } else if (typeof refreshedContent === 'object' && refreshedContent !== null) {
+              if (refreshedContent.content && Array.isArray(refreshedContent.content) && 
+                  refreshedContent.root && typeof refreshedContent.root === 'object') {
+                setPuckData({
+                  content: refreshedContent.content,
+                  root: {
+                    props: refreshedContent.root.props || {}
+                  }
+                });
+              } else {
+                setPuckData(defaultContent);
+              }
+            } else {
+              setPuckData(defaultContent);
+            }
+          } catch (error) {
+            console.error("Error processing refreshed content:", error);
+            // Keep using the data we just saved
+            setPuckData(data);
           }
-          
-          setPuckData(processedContent);
         }
       }
     } catch (error) {

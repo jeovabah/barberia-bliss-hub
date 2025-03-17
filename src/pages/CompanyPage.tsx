@@ -12,6 +12,7 @@ import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
 import { useCompanyFromRoute } from "@/hooks/useCompanyFromRoute";
 import "@measured/puck/puck.css";
+import { Json } from "@/integrations/supabase/types";
 
 interface PuckContent {
   content: any[];
@@ -75,56 +76,57 @@ const CompanyPage = () => {
         console.log("Found Puck content:", puckContent);
         
         try {
-          // Process the content based on its structure
-          let normalizedData: PuckContent;
+          // Default empty structure to use if data is malformed
+          const defaultContent: PuckContent = {
+            content: [],
+            root: { props: {} }
+          };
           
+          // Process the content based on its structure
           if (typeof puckContent === 'string') {
             // Handle string format
             console.log("Parsing string content");
-            normalizedData = JSON.parse(puckContent);
-          } else if (typeof puckContent === 'object') {
-            // Ensure the object has the required structure for PuckContent
+            try {
+              const parsedContent = JSON.parse(puckContent);
+              // Validate parsed content has the correct structure
+              if (parsedContent && 
+                  Array.isArray(parsedContent.content) && 
+                  parsedContent.root && 
+                  typeof parsedContent.root.props === 'object') {
+                setPuckData(parsedContent);
+                setUsePuck(true);
+              } else {
+                console.log("Parsed content missing required structure");
+                setPuckData(defaultContent);
+                setUsePuck(false);
+              }
+            } catch (parseError) {
+              console.error("Error parsing string content:", parseError);
+              setPuckData(defaultContent);
+              setUsePuck(false);
+            }
+          } else if (typeof puckContent === 'object' && puckContent !== null) {
+            // Handle object content
             console.log("Processing object content");
             
-            // Create a properly structured PuckContent object
-            normalizedData = {
-              content: Array.isArray(puckContent.content) ? puckContent.content : [],
-              root: {
-                props: puckContent.root && puckContent.root.props ? puckContent.root.props : {}
-              }
-            };
-            
-            // If we have a malformed object without content/root properties
-            if (!puckContent.content && !puckContent.root) {
-              console.log("Content is missing required properties, using default structure");
-              normalizedData = {
-                content: [],
-                root: { props: {} }
-              };
+            if (puckContent.content && Array.isArray(puckContent.content) && 
+                puckContent.root && typeof puckContent.root === 'object') {
+              // Content has valid structure
+              setPuckData({
+                content: puckContent.content,
+                root: {
+                  props: puckContent.root.props || {}
+                }
+              });
+              setUsePuck(true);
+            } else {
+              console.log("Object missing required structure");
+              setPuckData(defaultContent);
+              setUsePuck(false);
             }
           } else {
-            throw new Error("Unexpected content format");
-          }
-          
-          console.log("Processed content:", normalizedData);
-          
-          // Check if we have valid content structure
-          if (normalizedData && 
-              normalizedData.content && 
-              Array.isArray(normalizedData.content) && 
-              normalizedData.root && 
-              normalizedData.root.props) {
-            
-            console.log("Using Puck content with structure:", {
-              contentLength: normalizedData.content.length,
-              hasRoot: !!normalizedData.root,
-              rootProps: normalizedData.root.props
-            });
-            
-            setPuckData(normalizedData);
-            setUsePuck(true);
-          } else {
-            console.log("No valid content structure found, using default sections");
+            console.log("Unexpected content format or null content");
+            setPuckData(defaultContent);
             setUsePuck(false);
           }
         } catch (e) {
