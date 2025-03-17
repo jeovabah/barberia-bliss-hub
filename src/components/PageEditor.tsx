@@ -67,7 +67,7 @@ const PageEditor: React.FC<EditorProps> = ({
           }
         }
         
-        // Priority, 2: Create default data (we no longer check localStorage)
+        // Priority 2: Create default data
         console.log("No database data found, creating default data");
         await createDefaultPuckData();
       } catch (e) {
@@ -132,7 +132,6 @@ const PageEditor: React.FC<EditorProps> = ({
     
     console.log("Default Puck data created");
     setPuckData(defaultData);
-    // We no longer save to localStorage here
   };
 
   // When the user makes changes in the editor

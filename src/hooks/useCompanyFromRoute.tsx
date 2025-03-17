@@ -30,6 +30,9 @@ export function useCompanyFromRoute() {
         setIsLoading(true);
         setError(null);
         
+        // Primeiro, limpe qualquer cache do localStorage
+        localStorage.removeItem('puckData');
+        
         const { data, error } = await supabase
           .from('companies')
           .select('*')

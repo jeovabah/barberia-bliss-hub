@@ -50,6 +50,8 @@ const CompanyPage = () => {
       // Clear any local storage cache
       localStorage.removeItem('puckData');
       
+      console.log("Fetching Puck content for company:", company.id);
+      
       // Fetch puck content for this company
       const { data: puckContent, error: puckError } = await supabase
         .from('puck_content')
