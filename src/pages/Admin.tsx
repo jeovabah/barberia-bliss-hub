@@ -20,23 +20,28 @@ const Admin = () => {
   const [homepageSections, setHomepageSections] = useState<SectionType[]>(['hero', 'services', 'barbers', 'booking']);
 
   useEffect(() => {
-    console.log("Admin component mounted, loading homepage sections");
+    console.log("Admin component iniciando, carregando seções da página inicial");
+    loadHomepageSections();
+  }, []);
+
+  const loadHomepageSections = () => {
     setIsLoading(true);
     
-    const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
-    
     try {
-      // First check if we have Puck data in localStorage
-      const puckData = localStorage.getItem('puckData');
+      // Valores padrão
+      const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
       
-      if (puckData) {
+      // Primeiro verificar se temos dados do Puck no localStorage
+      const puckDataString = localStorage.getItem('puckData');
+      
+      if (puckDataString) {
+        console.log("Dados do Puck encontrados, extraindo seções");
+        
         try {
-          const parsedPuck = JSON.parse(puckData);
-          console.log("Found Puck data in localStorage:", parsedPuck);
+          const puckData = JSON.parse(puckDataString);
           
-          if (parsedPuck && parsedPuck.content && parsedPuck.content.root && parsedPuck.content.root.children) {
-            // Extract sections from Puck data
-            const sectionsFromPuck: SectionType[] = parsedPuck.content.root.children
+          if (puckData && puckData.content && puckData.content.root && puckData.content.root.children) {
+            const sectionsFromPuck: SectionType[] = puckData.content.root.children
               .map((child: any) => {
                 switch(child.type) {
                   case 'HeroSection': return 'hero';
@@ -46,67 +51,66 @@ const Admin = () => {
                   default: return null;
                 }
               })
-              .filter(Boolean);
+              .filter(Boolean) as SectionType[];
             
             if (sectionsFromPuck.length > 0) {
-              console.log("Using sections from Puck data:", sectionsFromPuck);
+              console.log("Usando seções dos dados do Puck:", sectionsFromPuck);
               setHomepageSections(sectionsFromPuck);
-              // Save the sections to localStorage for future reference
+              // Salvar as seções para referência futura
               localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
             } else {
-              console.log("Puck data doesn't contain valid sections, falling back to saved sections");
-              loadFromHomepageSections();
+              console.log("Dados do Puck não contêm seções válidas, carregando de homepageSections");
+              loadFromHomepageSections(defaultSections);
             }
           } else {
-            console.log("Puck data structure is invalid, falling back to saved sections");
-            loadFromHomepageSections();
+            console.log("Estrutura de dados do Puck inválida, carregando de homepageSections");
+            loadFromHomepageSections(defaultSections);
           }
         } catch (e) {
-          console.error("Error parsing Puck data:", e);
-          loadFromHomepageSections();
+          console.error("Erro ao analisar dados do Puck:", e);
+          loadFromHomepageSections(defaultSections);
         }
       } else {
-        console.log("No Puck data found, loading from homepageSections");
-        loadFromHomepageSections();
+        console.log("Nenhum dado do Puck encontrado, carregando de homepageSections");
+        loadFromHomepageSections(defaultSections);
       }
     } catch (e) {
-      console.error("Error loading homepage data:", e);
-      setHomepageSections(defaultSections);
+      console.error("Erro ao carregar dados da página inicial:", e);
+      // Usar valores padrão em caso de erro
+      setHomepageSections(['hero', 'services', 'barbers', 'booking']);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  const loadFromHomepageSections = () => {
-    const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
-    
+  const loadFromHomepageSections = (defaultSections: SectionType[]) => {
     try {
       const savedSections = localStorage.getItem('homepageSections');
-      console.log("Loading from homepageSections:", savedSections);
+      console.log("Carregando de homepageSections:", savedSections);
       
       if (savedSections) {
         try {
           const parsed = JSON.parse(savedSections);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            console.log("Successfully loaded sections from homepageSections:", parsed);
+            console.log("Seções carregadas com sucesso de homepageSections:", parsed);
             setHomepageSections(parsed);
           } else {
-            console.log("Invalid data in homepageSections, using defaults");
+            console.log("Dados inválidos em homepageSections, usando padrão");
             localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
             setHomepageSections(defaultSections);
           }
         } catch (e) {
-          console.error("Error parsing homepageSections:", e);
+          console.error("Erro ao analisar homepageSections:", e);
           localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
           setHomepageSections(defaultSections);
         }
       } else {
-        console.log("No homepageSections found, using defaults");
+        console.log("Nenhum homepageSections encontrado, usando padrão");
         localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
         setHomepageSections(defaultSections);
       }
     } catch (e) {
-      console.error("Error in loadFromHomepageSections:", e);
+      console.error("Erro em loadFromHomepageSections:", e);
       localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
       setHomepageSections(defaultSections);
     }
@@ -125,30 +129,28 @@ const Admin = () => {
   };
 
   const saveHomepageChanges = (sections: SectionType[]) => {
-    console.log("Saving homepage changes with sections:", sections);
+    console.log("Salvando alterações da página inicial com seções:", sections);
     setHomepageSections(sections);
     localStorage.setItem('homepageSections', JSON.stringify(sections));
     
     toast({
       title: "Alterações salvas",
       description: "A página inicial foi atualizada com sucesso.",
-      variant: "default",
     });
   };
   
   const resetHomepageContent = () => {
-    console.log("Resetting homepage content");
+    console.log("Redefinindo conteúdo da página inicial");
     const defaultSections: SectionType[] = ['hero', 'services', 'barbers', 'booking'];
     setHomepageSections(defaultSections);
     localStorage.setItem('homepageSections', JSON.stringify(defaultSections));
     
-    // Clear Puck data
+    // Limpar dados do Puck
     localStorage.removeItem('puckData');
     
     toast({
       title: "Página inicial redefinida",
       description: "A página inicial foi restaurada para o padrão.",
-      variant: "default",
     });
   };
 
@@ -171,7 +173,7 @@ const Admin = () => {
     );
   }
 
-  console.log("Rendering Admin with sections:", homepageSections);
+  console.log("Renderizando Admin com seções:", homepageSections);
 
   return (
     <div className="container mx-auto py-10 px-4">

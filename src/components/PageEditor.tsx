@@ -2,9 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EyeIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
-import { Puck } from "@measured/puck";
+import { SaveIcon, Eye, RotateCcw } from "lucide-react";
+import { Puck, type Data } from "@measured/puck";
 import { config, PuckRenderer } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
 
@@ -23,72 +22,84 @@ const PageEditor: React.FC<EditorProps> = ({
   onReset,
   initialSections = ['hero', 'services', 'barbers', 'booking']
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('editor');
-  const [puckData, setPuckData] = useState<any>(null);
+  const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   
-  console.log("PageEditor component initialized with initialSections:", initialSections);
+  console.log("PageEditor renderizando com initialSections:", initialSections);
   
+  // Carregar dados do Puck ao inicializar
   useEffect(() => {
     setIsLoading(true);
+    setHasError(false);
+    
     try {
-      // First check if there's saved Puck data
+      // Verificar se há dados salvos do Puck
       const savedPuckData = localStorage.getItem('puckData');
-      console.log("Retrieved puckData from localStorage:", savedPuckData ? "Found data" : "No data found");
+      console.log("Buscando dados do Puck:", savedPuckData ? "Dados encontrados" : "Nenhum dado");
       
       if (savedPuckData) {
         try {
           const parsedData = JSON.parse(savedPuckData);
-          console.log("Successfully parsed Puck data:", parsedData);
+          console.log("Dados do Puck analisados com sucesso:", parsedData);
           setPuckData(parsedData);
         } catch (e) {
-          console.error("Error parsing saved Puck data:", e);
+          console.error("Erro ao analisar dados do Puck:", e);
           createDefaultPuckData();
         }
       } else {
-        console.log("No saved Puck data found, creating default");
+        console.log("Nenhum dado do Puck encontrado, criando dados padrão");
         createDefaultPuckData();
       }
     } catch (e) {
-      console.error("Error in PageEditor useEffect:", e);
-      createDefaultPuckData();
+      console.error("Erro ao carregar o editor:", e);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
   }, [initialSections]);
 
+  // Função para criar dados padrão do Puck com base nas seções iniciais
   const createDefaultPuckData = () => {
-    console.log("Creating default Puck data with sections:", initialSections);
+    console.log("Criando dados padrão do Puck com seções:", initialSections);
     
-    // Create the children array based on the initialSections
+    // Mapear tipos de seção para componentes do Puck
     const children = initialSections.map(sectionType => {
       switch(sectionType) {
         case 'hero':
           return {
             type: "HeroSection",
-            props: {...config.components.HeroSection.defaultProps}
+            props: {
+              ...config.components.HeroSection.defaultProps
+            }
           };
         case 'services':
           return {
             type: "ServicesGrid",
-            props: {...config.components.ServicesGrid.defaultProps}
+            props: {
+              ...config.components.ServicesGrid.defaultProps
+            }
           };
         case 'barbers':
           return {
             type: "BarbersTeam",
-            props: {...config.components.BarbersTeam.defaultProps}
+            props: {
+              ...config.components.BarbersTeam.defaultProps
+            }
           };
         case 'booking':
           return {
             type: "BookingSection",
-            props: {...config.components.BookingSection.defaultProps}
+            props: {
+              ...config.components.BookingSection.defaultProps
+            }
           };
         default:
           return null;
       }
     }).filter(Boolean);
     
-    // Create the default Puck data structure
+    // Estrutura de dados para o Puck
     const defaultData = {
       content: {
         root: {
@@ -97,18 +108,20 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     };
     
-    console.log("Created default Puck data:", defaultData);
+    console.log("Dados padrão do Puck criados:", defaultData);
     setPuckData(defaultData);
     localStorage.setItem('puckData', JSON.stringify(defaultData));
   };
 
-  const handlePuckChange = (data: any) => {
-    console.log("Puck data changed, new data:", data);
+  // Quando o usuário faz alterações no editor
+  const handlePuckChange = (data: Data) => {
+    console.log("Dados do Puck alterados:", data);
     setPuckData(data);
   };
 
+  // Salvar alterações
   const handleSave = () => {
-    console.log("Save button clicked, current puckData:", puckData);
+    console.log("Salvando alterações, dados atuais:", puckData);
     
     if (!puckData || !puckData.content || !puckData.content.root || !puckData.content.root.children) {
       toast({
@@ -119,149 +132,126 @@ const PageEditor: React.FC<EditorProps> = ({
       return;
     }
     
-    // Save Puck data to localStorage
+    // Salvar dados do Puck no localStorage
     localStorage.setItem('puckData', JSON.stringify(puckData));
     
-    // Extract section types from Puck data for the section order
-    const sections: SectionType[] = puckData.content.root.children.map((child: any) => {
-      switch(child.type) {
-        case 'HeroSection': return 'hero';
-        case 'ServicesGrid': return 'services';
-        case 'BarbersTeam': return 'barbers';
-        case 'BookingSection': return 'booking';
-        default: return null;
-      }
-    }).filter(Boolean);
+    // Extrair tipos de seção dos dados do Puck
+    const sections: SectionType[] = puckData.content.root.children
+      .map((child: any) => {
+        switch(child.type) {
+          case 'HeroSection': return 'hero';
+          case 'ServicesGrid': return 'services';
+          case 'BarbersTeam': return 'barbers';
+          case 'BookingSection': return 'booking';
+          default: return null;
+        }
+      })
+      .filter(Boolean) as SectionType[];
     
-    console.log("Saving extracted sections:", sections);
+    console.log("Seções extraídas para salvar:", sections);
     onSave(sections);
     
     toast({
       title: "Alterações salvas",
       description: "As alterações na página inicial foram salvas com sucesso.",
-      variant: "default",
     });
   };
 
+  // Restaurar para o padrão
   const handleReset = () => {
-    console.log("Reset button clicked");
+    console.log("Restaurando para o padrão");
     createDefaultPuckData();
     onReset();
+    
+    toast({
+      title: "Página restaurada",
+      description: "A página inicial foi restaurada para o padrão.",
+    });
   };
 
-  const renderLoadingState = () => (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-center h-[600px]">
-          <div className="text-center">
-            <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
-            <p className="text-muted-foreground">Carregando editor...</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderErrorState = () => (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex flex-col items-center justify-center h-[600px]">
-          <p className="text-red-500 mb-4">Erro ao carregar editor. Por favor, tente novamente.</p>
-          <Button onClick={createDefaultPuckData} variant="outline">
-            Tentar novamente
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
+  // Componente de carregamento
   if (isLoading) {
-    return renderLoadingState();
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center h-[600px]">
+            <div className="text-center">
+              <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
+              <p className="text-muted-foreground">Carregando editor...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  if (!puckData) {
-    return renderErrorState();
+  // Componente de erro
+  if (hasError || !puckData) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center h-[600px]">
+            <p className="text-red-500 mb-4">Erro ao carregar editor. Por favor, tente novamente.</p>
+            <Button onClick={createDefaultPuckData}>
+              Tentar novamente
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-xl md:text-2xl">Editor da Página Inicial</CardTitle>
+          <CardTitle>Editor da Página Inicial</CardTitle>
           <CardDescription>
-            Use o editor para personalizar sua página inicial
+            Use o editor abaixo para personalizar a página inicial do seu site
           </CardDescription>
         </div>
-        <div className="flex gap-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-            <TabsList>
-              <TabsTrigger value="editor">Editor</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button 
-            variant="outline" 
-            onClick={onPreview}
-          >
-            <EyeIcon className="w-4 h-4 mr-2" />
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={onPreview}>
+            <Eye className="w-4 h-4 mr-2" />
             Ver Site
           </Button>
-          <Button 
-            variant="destructive" 
-            onClick={handleReset}
-          >
-            <RotateCcwIcon className="w-4 h-4 mr-2" />
+          <Button variant="destructive" onClick={handleReset}>
+            <RotateCcw className="w-4 h-4 mr-2" />
             Restaurar
+          </Button>
+          <Button onClick={handleSave}>
+            <SaveIcon className="w-4 h-4 mr-2" />
+            Salvar
           </Button>
         </div>
       </CardHeader>
 
       <CardContent>
-        <TabsContent value="editor" className="mt-0">
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">
-              Personalize sua página inicial usando o editor. Arraste componentes e edite suas propriedades.
-            </p>
-          </div>
+        <div className="p-4 bg-amber-50 border rounded-md mb-4">
+          <p className="text-amber-800">
+            Arraste componentes da barra lateral para a área de edição. Clique em um componente para editar suas propriedades.
+          </p>
+        </div>
 
-          <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
-            {puckData && (
-              <Puck
-                config={config}
-                data={puckData}
-                onPublish={handleSave}
-                onChange={handlePuckChange}
-                renderHeader={() => (
-                  <div className="p-4 bg-amber-50 border-b">
-                    <h2 className="font-bold text-amber-800">Editor de Página</h2>
-                    <p className="text-sm text-amber-700">
-                      Arraste componentes da barra lateral para a área de edição
-                    </p>
-                  </div>
-                )}
-              />
-            )}
-          </div>
+        <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
+          <Puck
+            config={config}
+            data={puckData}
+            onPublish={handleSave}
+            onChange={handlePuckChange}
+          />
+        </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button onClick={handleSave} className="flex items-center gap-2">
-              <SaveIcon className="w-4 h-4" />
-              Salvar Alterações
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="preview" className="mt-0">
-          <div className="border rounded-md p-4 bg-gray-50 h-[800px] overflow-auto">
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">Prévia:</h3>
+          <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
             {puckData && puckData.content ? (
               <PuckRenderer data={puckData.content} />
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground">Nenhum conteúdo para visualizar.</p>
-              </div>
+              <p className="text-muted-foreground text-center py-10">Nenhum conteúdo para visualizar.</p>
             )}
           </div>
-        </TabsContent>
+        </div>
       </CardContent>
     </Card>
   );
