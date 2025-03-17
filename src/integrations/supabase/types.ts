@@ -114,6 +114,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      user_belongs_to_company: {
+        Args: {
+          user_id: string
+          company_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_type: "admin" | "company"

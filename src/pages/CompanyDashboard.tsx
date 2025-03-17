@@ -42,6 +42,9 @@ const CompanyDashboard = () => {
 
       // Obtenha o email do usuário da sessão - não consulte diretamente a tabela auth.users
       const userEmail = session.user.email;
+      const userId = session.user.id;
+      
+      console.log("Session user:", session.user);
       
       // Caso especial para admin
       if (userEmail === 'admin@barberbliss.com') {
@@ -53,7 +56,7 @@ const CompanyDashboard = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', userId)
         .single();
 
       if (profileError) {
@@ -66,6 +69,8 @@ const CompanyDashboard = () => {
         navigate('/auth');
         return;
       }
+
+      console.log("Profile data:", profileData);
 
       // Se o usuário for administrador por user_type, redirecione para o painel de administração
       if (profileData.user_type === 'admin') {
@@ -102,13 +107,16 @@ const CompanyDashboard = () => {
         });
       } else {
         setCompany(companyData);
+        console.log("Company data:", companyData);
         
-        // Buscar conteúdo Puck
+        // Buscar conteúdo Puck com RLS aplicado
         const { data: puckContent, error: puckError } = await supabase
           .from('puck_content')
           .select('*')
           .eq('company_id', companyData.id)
           .maybeSingle();
+
+        console.log("Puck content query:", `company_id = ${companyData.id}`);
 
         if (puckError) {
           console.error("Erro ao buscar conteúdo puck:", puckError);
@@ -303,7 +311,7 @@ const CompanyDashboard = () => {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto py-4 px-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Dashboard da Empresa: {company.name}</h1>
+          <h1 className="text-xl font-bold">Dashboard da Empresa: {company?.name}</h1>
           <div className="flex gap-2">
             <Button variant="outline" onClick={viewSite}>
               <Home className="mr-2 h-4 w-4" /> Ver Site

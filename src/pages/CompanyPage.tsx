@@ -53,11 +53,14 @@ const CompanyPage = () => {
       console.log("Fetching Puck content for company:", company.id);
       
       // Buscar conteúdo puck para esta empresa
+      // Não precisamos de autenticação para acessar o conteúdo público (graças à nova política RLS)
       const { data: puckContent, error: puckError } = await supabase
         .from('puck_content')
         .select('content')
         .eq('company_id', company.id)
         .maybeSingle();
+      
+      console.log("Puck content query result:", puckContent, puckError);
       
       if (puckError) {
         console.error("Error fetching puck content:", puckError);

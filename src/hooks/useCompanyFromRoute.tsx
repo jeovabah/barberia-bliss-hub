@@ -33,11 +33,15 @@ export function useCompanyFromRoute() {
         // Primeiro, limpe qualquer cache do localStorage
         localStorage.removeItem('puckData');
         
+        console.log("Fetching company data for slug:", slug);
+        
         const { data, error } = await supabase
           .from('companies')
           .select('*')
           .eq('slug', slug)
           .single();
+        
+        console.log("Company data query result:", data, error);
         
         if (error) {
           throw new Error(error.message);
