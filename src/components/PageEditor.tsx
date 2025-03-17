@@ -26,44 +26,44 @@ const PageEditor: React.FC<EditorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   
-  console.log("PageEditor renderizando com initialSections:", initialSections);
+  console.log("PageEditor rendering with initialSections:", initialSections);
   
-  // Carregar dados do Puck ao inicializar
+  // Load Puck data when initialized
   useEffect(() => {
     setIsLoading(true);
     setHasError(false);
     
     try {
-      // Verificar se há dados salvos do Puck
+      // Check if there's saved Puck data
       const savedPuckData = localStorage.getItem('puckData');
-      console.log("Buscando dados do Puck:", savedPuckData ? "Dados encontrados" : "Nenhum dado");
+      console.log("Fetching Puck data:", savedPuckData ? "Data found" : "No data");
       
       if (savedPuckData) {
         try {
           const parsedData = JSON.parse(savedPuckData);
-          console.log("Dados do Puck analisados com sucesso:", parsedData);
+          console.log("Puck data parsed successfully:", parsedData);
           setPuckData(parsedData);
         } catch (e) {
-          console.error("Erro ao analisar dados do Puck:", e);
+          console.error("Error parsing Puck data:", e);
           createDefaultPuckData();
         }
       } else {
-        console.log("Nenhum dado do Puck encontrado, criando dados padrão");
+        console.log("No Puck data found, creating default data");
         createDefaultPuckData();
       }
     } catch (e) {
-      console.error("Erro ao carregar o editor:", e);
+      console.error("Error loading editor:", e);
       setHasError(true);
     } finally {
       setIsLoading(false);
     }
   }, [initialSections]);
 
-  // Função para criar dados padrão do Puck com base nas seções iniciais
+  // Function to create default Puck data based on initial sections
   const createDefaultPuckData = () => {
-    console.log("Criando dados padrão do Puck com seções:", initialSections);
+    console.log("Creating default Puck data with sections:", initialSections);
     
-    // Mapear tipos de seção para componentes do Puck
+    // Map section types to Puck components
     const children = initialSections.map(sectionType => {
       switch(sectionType) {
         case 'hero':
@@ -99,44 +99,46 @@ const PageEditor: React.FC<EditorProps> = ({
       }
     }).filter(Boolean);
     
-    // Estrutura de dados para o Puck
-    const defaultData = {
+    // Data structure for Puck
+    const defaultData: Data = {
+      root: {
+        props: {},
+        type: "page"
+      },
       content: {
-        root: {
-          children: children
-        }
+        children: children
       }
     };
     
-    console.log("Dados padrão do Puck criados:", defaultData);
+    console.log("Default Puck data created:", defaultData);
     setPuckData(defaultData);
     localStorage.setItem('puckData', JSON.stringify(defaultData));
   };
 
-  // Quando o usuário faz alterações no editor
+  // When the user makes changes in the editor
   const handlePuckChange = (data: Data) => {
-    console.log("Dados do Puck alterados:", data);
+    console.log("Puck data changed:", data);
     setPuckData(data);
   };
 
-  // Salvar alterações
+  // Save changes
   const handleSave = () => {
-    console.log("Salvando alterações, dados atuais:", puckData);
+    console.log("Saving changes, current data:", puckData);
     
-    if (!puckData || !puckData.content || !puckData.content.root || !puckData.content.root.children) {
+    if (!puckData || !puckData.content || !puckData.content.children) {
       toast({
-        title: "Erro ao salvar",
-        description: "Dados inválidos. Tente recarregar a página.",
+        title: "Error saving",
+        description: "Invalid data. Try reloading the page.",
         variant: "destructive",
       });
       return;
     }
     
-    // Salvar dados do Puck no localStorage
+    // Save Puck data to localStorage
     localStorage.setItem('puckData', JSON.stringify(puckData));
     
-    // Extrair tipos de seção dos dados do Puck
-    const sections: SectionType[] = puckData.content.root.children
+    // Extract section types from Puck data
+    const sections: SectionType[] = puckData.content.children
       .map((child: any) => {
         switch(child.type) {
           case 'HeroSection': return 'hero';
@@ -148,28 +150,28 @@ const PageEditor: React.FC<EditorProps> = ({
       })
       .filter(Boolean) as SectionType[];
     
-    console.log("Seções extraídas para salvar:", sections);
+    console.log("Extracted sections to save:", sections);
     onSave(sections);
     
     toast({
-      title: "Alterações salvas",
-      description: "As alterações na página inicial foram salvas com sucesso.",
+      title: "Changes saved",
+      description: "Homepage changes have been saved successfully.",
     });
   };
 
-  // Restaurar para o padrão
+  // Reset to default
   const handleReset = () => {
-    console.log("Restaurando para o padrão");
+    console.log("Resetting to default");
     createDefaultPuckData();
     onReset();
     
     toast({
-      title: "Página restaurada",
-      description: "A página inicial foi restaurada para o padrão.",
+      title: "Page reset",
+      description: "The homepage has been reset to default.",
     });
   };
 
-  // Componente de carregamento
+  // Loading component
   if (isLoading) {
     return (
       <Card className="w-full">
@@ -177,7 +179,7 @@ const PageEditor: React.FC<EditorProps> = ({
           <div className="flex items-center justify-center h-[600px]">
             <div className="text-center">
               <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
-              <p className="text-muted-foreground">Carregando editor...</p>
+              <p className="text-muted-foreground">Loading editor...</p>
             </div>
           </div>
         </CardContent>
@@ -185,15 +187,15 @@ const PageEditor: React.FC<EditorProps> = ({
     );
   }
 
-  // Componente de erro
+  // Error component
   if (hasError || !puckData) {
     return (
       <Card className="w-full">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center justify-center h-[600px]">
-            <p className="text-red-500 mb-4">Erro ao carregar editor. Por favor, tente novamente.</p>
+            <p className="text-red-500 mb-4">Error loading editor. Please try again.</p>
             <Button onClick={createDefaultPuckData}>
-              Tentar novamente
+              Try again
             </Button>
           </div>
         </CardContent>
@@ -205,23 +207,23 @@ const PageEditor: React.FC<EditorProps> = ({
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Editor da Página Inicial</CardTitle>
+          <CardTitle>Homepage Editor</CardTitle>
           <CardDescription>
-            Use o editor abaixo para personalizar a página inicial do seu site
+            Use the editor below to customize your website's homepage
           </CardDescription>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onPreview}>
             <Eye className="w-4 h-4 mr-2" />
-            Ver Site
+            View Site
           </Button>
           <Button variant="destructive" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
-            Restaurar
+            Reset
           </Button>
           <Button onClick={handleSave}>
             <SaveIcon className="w-4 h-4 mr-2" />
-            Salvar
+            Save
           </Button>
         </div>
       </CardHeader>
@@ -229,7 +231,7 @@ const PageEditor: React.FC<EditorProps> = ({
       <CardContent>
         <div className="p-4 bg-amber-50 border rounded-md mb-4">
           <p className="text-amber-800">
-            Arraste componentes da barra lateral para a área de edição. Clique em um componente para editar suas propriedades.
+            Drag components from the sidebar to the editing area. Click on a component to edit its properties.
           </p>
         </div>
 
@@ -243,12 +245,12 @@ const PageEditor: React.FC<EditorProps> = ({
         </div>
 
         <div className="mt-6">
-          <h3 className="font-medium mb-2">Prévia:</h3>
+          <h3 className="font-medium mb-2">Preview:</h3>
           <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
             {puckData && puckData.content ? (
               <PuckRenderer data={puckData.content} />
             ) : (
-              <p className="text-muted-foreground text-center py-10">Nenhum conteúdo para visualizar.</p>
+              <p className="text-muted-foreground text-center py-10">No content to preview.</p>
             )}
           </div>
         </div>
