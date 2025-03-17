@@ -1,15 +1,21 @@
 
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLogin from "@/components/AdminLogin";
 import AdminDashboard from "@/components/AdminDashboard";
+import { Puck, PuckPreview } from "@measured/puck";
+import "@measured/puck/puck.css";
+import { config } from "@/lib/puck-config";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("adminAuthenticated") === "true"
   );
+  const [puckData, setPuckData] = useState(() => {
+    const savedData = localStorage.getItem("puckContent");
+    return savedData ? JSON.parse(savedData) : { root: { children: [] } };
+  });
 
   const handleLogin = (success: boolean) => {
     if (success) {
@@ -21,6 +27,11 @@ const Admin = () => {
   const handleLogout = () => {
     localStorage.removeItem("adminAuthenticated");
     setIsAuthenticated(false);
+  };
+
+  const handlePuckChange = (data: any) => {
+    setPuckData(data);
+    localStorage.setItem("puckContent", JSON.stringify(data));
   };
 
   if (!isAuthenticated) {
@@ -40,10 +51,11 @@ const Admin = () => {
       </div>
       
       <Tabs defaultValue="agendamentos" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
+        <TabsList className="grid grid-cols-4 mb-8">
           <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
           <TabsTrigger value="servicos">Serviços</TabsTrigger>
           <TabsTrigger value="barbeiros">Barbeiros</TabsTrigger>
+          <TabsTrigger value="editor">Editor Visual</TabsTrigger>
         </TabsList>
         
         <TabsContent value="agendamentos">
@@ -70,6 +82,24 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">Funcionalidade a ser implementada.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="editor" className="min-h-[600px]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Editor Visual</CardTitle>
+              <CardDescription>Modifique o conteúdo da página principal.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[600px]">
+                <Puck
+                  config={config}
+                  data={puckData}
+                  onPublish={handlePuckChange}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
