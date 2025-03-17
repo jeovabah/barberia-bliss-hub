@@ -1,4 +1,3 @@
-
 import { Config } from "@measured/puck";
 import { ComponentProps } from "react";
 
@@ -717,7 +716,8 @@ export const config: Config = {
               type: "array",
               label: "Especialidades",
               arrayFields: {
-                type: "text"
+                type: "text",
+                label: "Especialidade"
               }
             },
             image: {
