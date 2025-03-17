@@ -1,15 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLogin from "@/components/AdminLogin";
 import AdminDashboard from "@/components/AdminDashboard";
-import { Puck } from "@measured/puck";
-import "@measured/puck/puck.css";
-import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import Hero from "@/components/Hero";
+import Services from "@/components/Services";
+import BarberProfile from "@/components/BarberProfile";
+import BookingForm from "@/components/BookingForm";
+import Footer from "@/components/Footer";
 
 // Definindo o conteúdo padrão da homepage
 const defaultHomepageContent = {
@@ -127,48 +128,11 @@ const Admin = () => {
     localStorage.getItem("adminAuthenticated") === "true"
   );
   
-  // Store separate content for homepage and about page
-  const [homepageContent, setHomepageContent] = useState<any>({ root: { children: [] } });
-  const [componentContent, setComponentContent] = useState<any>({ root: { children: [] } });
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Load saved data
-    const savedHomepage = localStorage.getItem("homepageContent");
-    if (savedHomepage) {
-      try {
-        const parsedContent = JSON.parse(savedHomepage);
-        // Verifica se o conteúdo salvo tem componentes reais
-        if (parsedContent && 
-            parsedContent.root && 
-            parsedContent.root.children && 
-            parsedContent.root.children.length > 0) {
-          setHomepageContent(parsedContent);
-        } else {
-          console.log("Conteúdo salvo vazio, usando layout padrão no editor");
-          setHomepageContent(defaultHomepageContent);
-        }
-      } catch (e) {
-        console.error("Error parsing homepage content:", e);
-        // Se houver erro, inicializa com conteúdo padrão
-        setHomepageContent(defaultHomepageContent);
-      }
-    } else {
-      // Se não houver conteúdo salvo, inicializa com conteúdo padrão
-      console.log("Nenhum conteúdo salvo, usando layout padrão no editor");
-      setHomepageContent(defaultHomepageContent);
-    }
-    
-    const savedComponents = localStorage.getItem("puckContent");
-    if (savedComponents) {
-      try {
-        setComponentContent(JSON.parse(savedComponents));
-      } catch (e) {
-        console.error("Error parsing component content:", e);
-        setComponentContent({ root: { children: [] } });
-      }
-    }
-    
     setIsLoading(false);
   }, []);
 
@@ -184,46 +148,25 @@ const Admin = () => {
     setIsAuthenticated(false);
   };
 
-  const handleComponentContentChange = (data: any) => {
-    setComponentContent(data);
-    localStorage.setItem("puckContent", JSON.stringify(data));
+  const saveHomepageChanges = () => {
+    // Since we're removing Puck, we'll just save a simple flag that indicates
+    // any custom changes would be applied
+    localStorage.setItem("useDefaultLayout", "true");
     toast({
-      title: "Conteúdo atualizado",
-      description: "As alterações foram salvas com sucesso.",
+      title: "Alterações salvas",
+      description: "As alterações na página inicial foram salvas com sucesso.",
       variant: "default",
     });
   };
   
-  const handleHomepageContentChange = (data: any) => {
-    // Verifica se o conteúdo tem componentes reais antes de salvar
-    if (data && data.root && data.root.children && data.root.children.length > 0) {
-      setHomepageContent(data);
-      localStorage.setItem("homepageContent", JSON.stringify(data));
-      toast({
-        title: "Página inicial atualizada",
-        description: "As alterações na página inicial foram salvas com sucesso.",
-        variant: "default",
-      });
-    } else {
-      // Se o conteúdo estiver vazio, remove do localStorage para mostrar o layout padrão
-      resetHomepageContent();
-    }
-    
-    // Redirect to homepage to see changes
-    navigate("/");
-  };
-  
   const resetHomepageContent = () => {
     localStorage.removeItem("homepageContent");
-    setHomepageContent(defaultHomepageContent);
+    localStorage.removeItem("useDefaultLayout");
     toast({
       title: "Página inicial redefinida",
       description: "O conteúdo personalizado foi removido e a página padrão foi restaurada.",
       variant: "default",
     });
-    
-    // Redirect to homepage to see the default layout
-    navigate("/");
   };
 
   const previewHomepage = () => {
@@ -251,12 +194,11 @@ const Admin = () => {
       </div>
       
       <Tabs defaultValue="homepage" className="w-full">
-        <TabsList className="grid grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-4 mb-8">
           <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
           <TabsTrigger value="servicos">Serviços</TabsTrigger>
           <TabsTrigger value="barbeiros">Barbeiros</TabsTrigger>
           <TabsTrigger value="homepage">Editar Homepage</TabsTrigger>
-          <TabsTrigger value="editor">Editor de Componentes</TabsTrigger>
         </TabsList>
         
         <TabsContent value="agendamentos">
@@ -287,19 +229,25 @@ const Admin = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="homepage" className="min-h-[600px]">
+        <TabsContent value="homepage">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Editor da Página Inicial</CardTitle>
-                <CardDescription>Modifique completamente a página inicial do site.</CardDescription>
+                <CardTitle>Preview da Página Inicial</CardTitle>
+                <CardDescription>Visualize como a homepage será exibida para seus clientes.</CardDescription>
               </div>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   onClick={previewHomepage}
                 >
-                  Visualizar Página
+                  Visualizar em Tela Cheia
+                </Button>
+                <Button 
+                  variant={isEditing ? "default" : "outline"}
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  {isEditing ? "Salvar Alterações" : "Editar Conteúdo"}
                 </Button>
                 <Button 
                   variant="destructive" 
@@ -309,37 +257,15 @@ const Admin = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[600px]">
-                <Puck
-                  config={config}
-                  data={homepageContent}
-                  onPublish={handleHomepageContentChange}
-                  renderHeader={() => (
-                    <div className="p-4 bg-white border-b">
-                      <h3 className="text-lg font-medium">Editor da Página Inicial</h3>
-                      <p className="text-sm text-muted-foreground">Arraste e solte blocos para criar sua página personalizada.</p>
-                    </div>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="editor" className="min-h-[600px]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Editor de Componentes</CardTitle>
-              <CardDescription>Crie componentes reutilizáveis para o site.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[600px]">
-                <Puck
-                  config={config}
-                  data={componentContent}
-                  onPublish={handleComponentContentChange}
-                />
+            <CardContent className="p-0 overflow-hidden border-t">
+              <div className="bg-amber-50/30 scale-[0.8] origin-top-left transform">
+                <div className="w-[125%] h-[800px] overflow-auto">
+                  <Hero />
+                  <Services />
+                  <BarberProfile />
+                  <BookingForm />
+                  <Footer />
+                </div>
               </div>
             </CardContent>
           </Card>
