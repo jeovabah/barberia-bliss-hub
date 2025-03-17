@@ -23,7 +23,7 @@ const Auth = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setUser(data.session.user);
-        redirectBasedOnUserRole(data.session.user.email);
+        redirectBasedOnUserRole(data.session.user);
       }
     };
     
@@ -34,7 +34,7 @@ const Auth = () => {
       async (event, session) => {
         if (session) {
           setUser(session.user);
-          redirectBasedOnUserRole(session.user.email);
+          redirectBasedOnUserRole(session.user);
         } else {
           setUser(null);
         }
@@ -46,30 +46,48 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const redirectBasedOnUserRole = async (email: string | undefined) => {
+  const redirectBasedOnUserRole = async (user: any) => {
     try {
-      if (email === 'admin@barberbliss.com') {
+      // Special case for admin
+      if (user.email === 'admin@barberbliss.com') {
         navigate('/admin');
         return;
       }
 
-      // For non-admin users, check their company association
-      const { data: companies, error: companyError } = await supabase
-        .from('companies')
-        .select('id, slug')
+      // For non-admin users, check their profile and company association
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id, user_type')
+        .eq('id', user.id)
         .single();
 
-      if (companyError) {
-        console.error("Error fetching company:", companyError);
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
         navigate('/company-dashboard');
         return;
       }
 
-      if (companies?.slug) {
-        navigate(`/${companies.slug}`);
-      } else {
-        navigate('/company-dashboard');
+      if (profile?.user_type === 'admin') {
+        navigate('/admin');
+        return;
       }
+
+      if (profile?.company_id) {
+        // Get company slug
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('slug')
+          .eq('id', profile.company_id)
+          .single();
+
+        if (!companyError && company?.slug) {
+          navigate(`/${company.slug}`);
+          return;
+        }
+      }
+      
+      // Default fallback
+      navigate('/company-dashboard');
     } catch (error) {
       console.error("Error in redirect:", error);
       navigate('/company-dashboard');

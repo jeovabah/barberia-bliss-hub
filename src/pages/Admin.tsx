@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -51,37 +50,45 @@ const Admin = () => {
         return;
       }
 
-      // Instead of querying profiles table directly (which causes the infinite recursion),
-      // we'll check if the user is admin by querying the auth.users metadata
-      const { data: userRoleData, error: userRoleError } = await supabase.rpc(
-        'get_user_type',
-        { user_id: session.user.id }
-      );
-      
-      if (userRoleError) {
-        console.error("Error checking user role:", userRoleError);
-        toast({
-          title: "Erro ao verificar permissões",
-          description: "Você não tem permissão para acessar esta página.",
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
+      // Modified approach to check for admin role without using RPC
+      // Check if the user is admin@barberbliss.com which is the admin account
+      if (session.user.email === 'admin@barberbliss.com') {
+        setIsAdmin(true);
+        fetchCompanies();
+        fetchUsers();
+      } else {
+        // Check in profiles table directly
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error("Error checking profile:", profileError);
+          toast({
+            title: "Erro ao verificar permissões",
+            description: "Você não tem permissão para acessar esta página.",
+            variant: "destructive"
+          });
+          navigate('/auth');
+          return;
+        }
+        
+        if (profileData?.user_type !== 'admin') {
+          toast({
+            title: "Acesso restrito",
+            description: "Apenas administradores podem acessar esta página.",
+            variant: "destructive"
+          });
+          navigate('/company-dashboard');
+          return;
+        }
+        
+        setIsAdmin(true);
+        fetchCompanies();
+        fetchUsers();
       }
-      
-      if (userRoleData !== 'admin') {
-        toast({
-          title: "Acesso restrito",
-          description: "Apenas administradores podem acessar esta página.",
-          variant: "destructive"
-        });
-        navigate('/company-dashboard');
-        return;
-      }
-
-      setIsAdmin(true);
-      fetchCompanies();
-      fetchUsers();
     } catch (error: any) {
       console.error("Unexpected error:", error);
       toast({
@@ -124,19 +131,44 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
-      // Use RPC function instead of directly querying the profiles table
-      const { data, error } = await supabase.rpc('get_users_with_companies');
-
-      if (error) {
-        console.error("Error fetching users:", error);
+      // Modified approach to fetch users without using RPC
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, user_type, company_id, created_at');
+      
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
         toast({
           title: "Erro ao carregar usuários",
-          description: error.message,
+          description: profilesError.message,
           variant: "destructive"
         });
-      } else {
-        setUsers(data || []);
+        return;
       }
+      
+      // Get company details for each profile with a company_id
+      const enhancedProfiles = await Promise.all(
+        profiles.map(async (profile) => {
+          if (profile.company_id) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('name')
+              .eq('id', profile.company_id)
+              .single();
+            
+            return {
+              ...profile,
+              companies: company
+            };
+          }
+          return {
+            ...profile,
+            companies: null
+          };
+        })
+      );
+      
+      setUsers(enhancedProfiles || []);
     } catch (error: any) {
       console.error("Unexpected error:", error);
       toast({
