@@ -45,6 +45,11 @@ const Auth = () => {
       }
     );
 
+    // Clear any stale session tokens on component mount
+    if (!localStorage.getItem('sb-fxdliwfsmavtagwnrjon-auth-token')) {
+      localStorage.removeItem('supabase.auth.token');
+    }
+
     return () => {
       authListener.subscription.unsubscribe();
     };

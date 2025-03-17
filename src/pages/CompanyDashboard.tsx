@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,15 +114,6 @@ const CompanyDashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   const savePuckData = async (data: any) => {
     if (!company) {
       toast({
@@ -190,6 +180,34 @@ const CompanyDashboard = () => {
         description: "URL da empresa não encontrada.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out:", error);
+        toast({
+          title: "Erro ao sair",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+      
+      // Regardless of error, clear local session and redirect
+      localStorage.removeItem('supabase.auth.token');
+      navigate('/auth');
+    } catch (error: any) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Erro ao sair",
+        description: error.message || "Ocorreu um erro ao sair",
+        variant: "destructive"
+      });
+      // Attempt to redirect anyway
+      navigate('/auth');
     }
   };
 

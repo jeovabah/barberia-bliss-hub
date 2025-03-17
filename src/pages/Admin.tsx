@@ -395,10 +395,29 @@ const Admin = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out:", error);
+        toast({
+          title: "Erro ao sair",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+      
+      // Regardless of error, clear local session and redirect
+      localStorage.removeItem('supabase.auth.token');
+      navigate('/auth');
+    } catch (error: any) {
       console.error("Error signing out:", error);
+      toast({
+        title: "Erro ao sair",
+        description: error.message || "Ocorreu um erro ao sair",
+        variant: "destructive"
+      });
+      // Attempt to redirect anyway
+      navigate('/auth');
     }
   };
 
