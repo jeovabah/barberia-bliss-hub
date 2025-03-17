@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import PageEditor from "@/components/PageEditor";
 import { LogOut, Home } from "lucide-react";
+import AppointmentsTable from "@/components/AppointmentsTable";
 
 const CompanyDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -327,7 +329,7 @@ const CompanyDashboard = () => {
       </header>
 
       <main className="container mx-auto py-8 px-6">
-        <Tabs defaultValue="editor">
+        <Tabs defaultValue="appointments">
           <TabsList className="mb-8">
             <TabsTrigger value="editor">Editor de Página</TabsTrigger>
             <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
@@ -351,7 +353,7 @@ const CompanyDashboard = () => {
                 <CardDescription>Veja e gerencie os agendamentos dos seus clientes.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Funcionalidade a ser implementada.</p>
+                {company && <AppointmentsTable companyId={company.id} />}
               </CardContent>
             </Card>
           </TabsContent>
