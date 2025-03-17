@@ -46,13 +46,12 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
           return;
         }
         
-        // For non-admin@barberbliss.com users, check admin status through a direct DB query
-        // This avoids the recursive RLS issue by calling a service specifically for this check
-        const { data: functionData, error: functionError } = await supabase.rpc('is_admin', {
+        // For non-admin@barberbliss.com users, check admin status through the optimized RPC function
+        const { data: isAdminResult, error: functionError } = await supabase.rpc('is_admin', {
           user_id: data.user.id
         });
         
-        console.log("Admin check result:", functionData);
+        console.log("Admin check result:", isAdminResult);
         
         if (functionError) {
           console.error("Error checking admin status:", functionError);
@@ -67,7 +66,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         }
         
         // Check if the user is an admin based on the function result
-        if (!functionData) {
+        if (!isAdminResult) {
           toast({
             title: "Acesso negado",
             description: "Você não tem permissões de administrador.",
