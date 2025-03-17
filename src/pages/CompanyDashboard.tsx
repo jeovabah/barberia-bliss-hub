@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,63 +156,56 @@ const CompanyDashboard = () => {
             // Make sure to clear any localStorage data to avoid loops
             localStorage.removeItem('puckData');
             
-            // Process the content based on its type
-            try {
-              // Default empty structure to use if data is malformed
-              const defaultContent: PuckContent = {
-                content: [],
-                root: { props: {} }
-              };
-              
-              // Handle different response formats
-              if (typeof puckContent === 'string') {
-                // Parse string content
-                console.log("Parsing string content");
-                try {
-                  const parsedContent = JSON.parse(puckContent);
-                  // Validate parsed content has the correct structure
-                  if (parsedContent && 
-                      Array.isArray(parsedContent.content) && 
-                      parsedContent.root && 
-                      typeof parsedContent.root.props === 'object') {
-                    setPuckData(parsedContent as PuckContent);
-                  } else {
-                    console.log("Parsed content missing required structure");
-                    setPuckData(defaultContent);
-                  }
-                } catch (parseError) {
-                  console.error("Error parsing string content:", parseError);
-                  setPuckData(defaultContent);
+            // Default empty structure to use if data is malformed
+            const defaultContent: PuckContent = {
+              content: [],
+              root: { props: {} }
+            };
+            
+            // Process the content based on its structure
+            let validPuckData: PuckContent;
+            
+            // Check if puckContent is an object with both content and root properties
+            if (typeof puckContent === 'object' && puckContent !== null && 
+                'content' in puckContent && 'root' in puckContent && 
+                Array.isArray((puckContent as any).content)) {
+              // It has the right shape, validate deeper structure
+              const contentData = puckContent as any;
+              validPuckData = {
+                content: Array.isArray(contentData.content) ? contentData.content : [],
+                root: {
+                  props: contentData.root && typeof contentData.root === 'object' && 
+                         contentData.root.props ? contentData.root.props : {}
                 }
-              } else if (typeof puckContent === 'object' && puckContent !== null) {
-                // Handle object content
-                console.log("Processing object content");
-                
-                if (puckContent.content && Array.isArray(puckContent.content) && 
-                    puckContent.root && typeof puckContent.root === 'object') {
-                  // Content has valid structure
-                  const structured: PuckContent = {
-                    content: puckContent.content,
+              };
+            } else if (typeof puckContent === 'string') {
+              // Try to parse string content
+              try {
+                const parsedContent = JSON.parse(puckContent);
+                if (parsedContent && 
+                    'content' in parsedContent && Array.isArray(parsedContent.content) && 
+                    'root' in parsedContent && typeof parsedContent.root === 'object') {
+                  validPuckData = {
+                    content: parsedContent.content,
                     root: {
-                      props: puckContent.root.props || {}
+                      props: parsedContent.root.props || {}
                     }
                   };
-                  setPuckData(structured);
                 } else {
-                  console.log("Object missing required structure");
-                  setPuckData(defaultContent);
+                  console.log("Parsed content missing required structure");
+                  validPuckData = defaultContent;
                 }
-              } else {
-                console.log("Unexpected content format or null content");
-                setPuckData(defaultContent);
+              } catch (parseError) {
+                console.error("Error parsing string content:", parseError);
+                validPuckData = defaultContent;
               }
-            } catch (parseError) {
-              console.error("Error processing puck content:", parseError);
-              setPuckData({
-                content: [],
-                root: { props: {} }
-              });
+            } else {
+              // Fallback to default content
+              console.log("Content has invalid structure:", puckContent);
+              validPuckData = defaultContent;
             }
+            
+            setPuckData(validPuckData);
           } else {
             console.log("No puck content found via function");
             localStorage.removeItem('puckData');
@@ -282,9 +276,12 @@ const CompanyDashboard = () => {
       }
 
       // Convert PuckContent to Json type for Supabase
+      // This ensures compatibility with the database schema
       const contentAsJson: Json = {
         content: data.content,
-        root: data.root
+        root: {
+          props: data.root.props
+        }
       };
 
       let result;
@@ -346,36 +343,50 @@ const CompanyDashboard = () => {
               root: { props: {} }
             };
             
-            // Process the refreshed content
-            if (typeof refreshedContent === 'string') {
+            // Process the refreshed content with type safety
+            let validPuckData: PuckContent;
+            
+            // Check if refreshedContent is an object with both content and root properties
+            if (typeof refreshedContent === 'object' && refreshedContent !== null && 
+                'content' in refreshedContent && 'root' in refreshedContent && 
+                Array.isArray((refreshedContent as any).content)) {
+              // It has the right shape, validate deeper structure
+              const contentData = refreshedContent as any;
+              validPuckData = {
+                content: Array.isArray(contentData.content) ? contentData.content : [],
+                root: {
+                  props: contentData.root && typeof contentData.root === 'object' && 
+                         contentData.root.props ? contentData.root.props : {}
+                }
+              };
+            } else if (typeof refreshedContent === 'string') {
+              // Try to parse string content
               try {
                 const parsedContent = JSON.parse(refreshedContent);
                 if (parsedContent && 
-                    Array.isArray(parsedContent.content) && 
-                    parsedContent.root && 
-                    typeof parsedContent.root.props === 'object') {
-                  setPuckData(parsedContent);
+                    'content' in parsedContent && Array.isArray(parsedContent.content) && 
+                    'root' in parsedContent && typeof parsedContent.root === 'object') {
+                  validPuckData = {
+                    content: parsedContent.content,
+                    root: {
+                      props: parsedContent.root.props || {}
+                    }
+                  };
                 } else {
-                  setPuckData(defaultContent);
+                  console.log("Parsed content missing required structure");
+                  validPuckData = defaultContent;
                 }
-              } catch {
-                setPuckData(defaultContent);
-              }
-            } else if (typeof refreshedContent === 'object' && refreshedContent !== null) {
-              if (refreshedContent.content && Array.isArray(refreshedContent.content) && 
-                  refreshedContent.root && typeof refreshedContent.root === 'object') {
-                setPuckData({
-                  content: refreshedContent.content,
-                  root: {
-                    props: refreshedContent.root.props || {}
-                  }
-                });
-              } else {
-                setPuckData(defaultContent);
+              } catch (parseError) {
+                console.error("Error parsing string content:", parseError);
+                validPuckData = defaultContent;
               }
             } else {
-              setPuckData(defaultContent);
+              // Fallback to default content
+              console.log("Content has invalid structure:", refreshedContent);
+              validPuckData = defaultContent;
             }
+            
+            setPuckData(validPuckData);
           } catch (error) {
             console.error("Error processing refreshed content:", error);
             // Keep using the data we just saved

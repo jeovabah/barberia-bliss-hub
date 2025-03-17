@@ -14,6 +14,7 @@ import { useCompanyFromRoute } from "@/hooks/useCompanyFromRoute";
 import "@measured/puck/puck.css";
 import { Json } from "@/integrations/supabase/types";
 
+// Define the PuckContent interface to ensure consistent data structure
 interface PuckContent {
   content: any[];
   root: {
@@ -83,54 +84,56 @@ const CompanyPage = () => {
           };
           
           // Process the content based on its structure
-          if (typeof puckContent === 'string') {
-            // Handle string format
-            console.log("Parsing string content");
+          let validPuckData: PuckContent;
+          
+          // Check if puckContent is an object with both content and root properties
+          if (typeof puckContent === 'object' && puckContent !== null && 
+              'content' in puckContent && 'root' in puckContent && 
+              Array.isArray((puckContent as any).content)) {
+            // It has the right shape, validate deeper structure
+            const contentData = puckContent as any;
+            validPuckData = {
+              content: Array.isArray(contentData.content) ? contentData.content : [],
+              root: {
+                props: contentData.root && typeof contentData.root === 'object' && 
+                       contentData.root.props ? contentData.root.props : {}
+              }
+            };
+          } else if (typeof puckContent === 'string') {
+            // Try to parse string content
             try {
               const parsedContent = JSON.parse(puckContent);
-              // Validate parsed content has the correct structure
               if (parsedContent && 
-                  Array.isArray(parsedContent.content) && 
-                  parsedContent.root && 
-                  typeof parsedContent.root.props === 'object') {
-                setPuckData(parsedContent);
-                setUsePuck(true);
+                  'content' in parsedContent && Array.isArray(parsedContent.content) && 
+                  'root' in parsedContent && typeof parsedContent.root === 'object') {
+                validPuckData = {
+                  content: parsedContent.content,
+                  root: {
+                    props: parsedContent.root.props || {}
+                  }
+                };
               } else {
                 console.log("Parsed content missing required structure");
-                setPuckData(defaultContent);
-                setUsePuck(false);
+                validPuckData = defaultContent;
               }
             } catch (parseError) {
               console.error("Error parsing string content:", parseError);
-              setPuckData(defaultContent);
-              setUsePuck(false);
-            }
-          } else if (typeof puckContent === 'object' && puckContent !== null) {
-            // Handle object content
-            console.log("Processing object content");
-            
-            if (puckContent.content && Array.isArray(puckContent.content) && 
-                puckContent.root && typeof puckContent.root === 'object') {
-              // Content has valid structure
-              setPuckData({
-                content: puckContent.content,
-                root: {
-                  props: puckContent.root.props || {}
-                }
-              });
-              setUsePuck(true);
-            } else {
-              console.log("Object missing required structure");
-              setPuckData(defaultContent);
-              setUsePuck(false);
+              validPuckData = defaultContent;
             }
           } else {
-            console.log("Unexpected content format or null content");
-            setPuckData(defaultContent);
-            setUsePuck(false);
+            // Fallback to default content
+            console.log("Content has invalid structure:", puckContent);
+            validPuckData = defaultContent;
           }
+          
+          setPuckData(validPuckData);
+          setUsePuck(true);
         } catch (e) {
           console.error("Error processing Puck data:", e);
+          setPuckData({
+            content: [],
+            root: { props: {} }
+          });
           setUsePuck(false);
         }
       } else {
