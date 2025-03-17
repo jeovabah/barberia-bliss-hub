@@ -183,12 +183,13 @@ const ServicesGrid = ({
   subtitle?: string;
   description?: string;
   services: Array<{
-    id: string;
-    title: string;
+    id?: string;
+    title?: string;
+    name?: string;
     price: string;
-    description: string;
+    description?: string;
     duration: string;
-    image: string;
+    image?: string;
   }>;
 }) => {
   return (
@@ -209,30 +210,37 @@ const ServicesGrid = ({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services && services.map((service) => (
-            <div key={service.id || `service-${service.title}`} className="bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10"></div>
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${service.image})` }}
-              ></div>
-              
-              <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-white">{service.title}</h3>
-                  <span className="text-white font-medium">{service.price}</span>
-                </div>
+          {services && services.map((service, index) => {
+            // Use id if available, otherwise generate a unique key
+            const serviceKey = service.id || `service-${index}-${Date.now()}`;
+            // Use title or name property as fallback for each other
+            const serviceTitle = service.title || service.name || `Service ${index + 1}`;
+            
+            return (
+              <div key={serviceKey} className="bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md relative">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10"></div>
+                <div 
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${service.image || 'https://via.placeholder.com/400x300'})` }}
+                ></div>
                 
-                <p className="text-white/80 mb-4 text-sm">{service.description}</p>
-                
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1">
-                    <span className="text-white/70 text-sm">{service.duration}</span>
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-white">{serviceTitle}</h3>
+                    <span className="text-white font-medium">{service.price}</span>
+                  </div>
+                  
+                  <p className="text-white/80 mb-4 text-sm">{service.description || ''}</p>
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-1">
+                      <span className="text-white/70 text-sm">{service.duration}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -561,7 +569,7 @@ export const config: Config = {
         description: "Serviços premium personalizados para realçar seu estilo pessoal com precisão e cuidado.",
         services: [
           {
-            id: "1",
+            id: "service-1",
             title: "Corte Clássico",
             description: "Corte preciso adaptado ao formato do seu rosto e preferências de estilo.",
             price: "R$70",
@@ -569,7 +577,7 @@ export const config: Config = {
             image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=2070"
           },
           {
-            id: "2",
+            id: "service-2",
             title: "Aparar & Modelar Barba",
             description: "Esculpir e detalhar com expertise para aperfeiçoar seus pelos faciais.",
             price: "R$50",
@@ -577,7 +585,7 @@ export const config: Config = {
             image: "https://images.unsplash.com/photo-1622296089780-290d715192af?q=80&w=1974"
           },
           {
-            id: "3",
+            id: "service-3",
             title: "Barbear Premium",
             description: "Tratamento tradicional com toalha quente e precisão de navalha.",
             price: "R$90",
@@ -585,7 +593,7 @@ export const config: Config = {
             image: "https://images.unsplash.com/photo-1493256338651-d82f7272f427?q=80&w=2070"
           },
           {
-            id: "4",
+            id: "service-4",
             title: "Tratamento Completo",
             description: "Pacote completo incluindo corte de cabelo, modelagem de barba e tratamento facial.",
             price: "R$170",

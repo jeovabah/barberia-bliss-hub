@@ -43,14 +43,27 @@ const PageEditor: React.FC<EditorProps> = ({
         if (initialData) {
           console.log("Using provided initial data from database", initialData);
           
-          // Handle data from Supabase direct table query which has nested content
+          // Direct format from Supabase query where we have puck_content[0].content
+          if (Array.isArray(initialData) && initialData.length > 0) {
+            console.log("Found array format from Supabase query");
+            
+            const firstItem = initialData[0];
+            if (firstItem && firstItem.content) {
+              console.log("Using content from first item in array:", firstItem.content);
+              setPuckData(firstItem.content);
+              hasInitialized.current = true;
+              setIsLoading(false);
+              return;
+            }
+          }
+          
+          // Handle case where we have a nested content field from Supabase
           if (initialData.content && typeof initialData.content === 'object') {
-            // Look for table structure where content is a field with nested structure
             console.log("Found content field in initialData", initialData.content);
             
-            // If content field itself contains root and content fields, use it directly
+            // If content field contains well-structured Puck data
             if (initialData.content.root && initialData.content.content && Array.isArray(initialData.content.content)) {
-              console.log("Found properly structured Puck data inside content field");
+              console.log("Found well-structured Puck data inside content field");
               
               const puckContent: Data = {
                 root: initialData.content.root,
@@ -64,45 +77,16 @@ const PageEditor: React.FC<EditorProps> = ({
             }
           }
           
-          // Check if initialData is already in the correct Puck format
+          // Directly use initialData if it has the correct Puck format
           if (typeof initialData === 'object' && 
               'content' in initialData && 
               'root' in initialData &&
               Array.isArray(initialData.content)) {
-            console.log("Direct Puck data structure found");
+            console.log("Using data in direct Puck format");
             setPuckData(initialData as Data);
             hasInitialized.current = true;
             setIsLoading(false);
             return;
-          }
-          
-          // If we have a direct array of content items without the root structure
-          if (Array.isArray(initialData)) {
-            console.log("Found array of content items, constructing proper Puck structure");
-            setPuckData({
-              root: { props: {} },
-              content: initialData
-            });
-            hasInitialized.current = true;
-            setIsLoading(false);
-            return;
-          }
-          
-          // Handle case where initialData is from the Supabase direct table query array
-          if (Array.isArray(initialData) && initialData.length > 0 && initialData[0]?.content) {
-            console.log("Found array from direct table query with content field", initialData[0].content);
-            
-            const firstItem = initialData[0];
-            if (firstItem.content && 
-                typeof firstItem.content === 'object' &&
-                'content' in firstItem.content && 
-                'root' in firstItem.content) {
-              console.log("Using content from first item in array");
-              setPuckData(firstItem.content as Data);
-              hasInitialized.current = true;
-              setIsLoading(false);
-              return;
-            }
           }
           
           console.log("Provided data doesn't match expected Puck structure, creating default");
@@ -129,12 +113,15 @@ const PageEditor: React.FC<EditorProps> = ({
     
     // Map section types to Puck components
     const contentItems = initialSections.map((sectionType, index) => {
+      const uniqueId = `${sectionType}-${index}-${Date.now()}`;
+      
       switch(sectionType) {
         case 'hero':
           return {
             type: "HeroSection",
             props: {
-              ...config.components.HeroSection.defaultProps
+              ...config.components.HeroSection.defaultProps,
+              id: uniqueId
             }
           };
         case 'services':
@@ -142,9 +129,10 @@ const PageEditor: React.FC<EditorProps> = ({
             type: "ServicesGrid",
             props: {
               ...config.components.ServicesGrid.defaultProps,
-              services: (config.components.ServicesGrid.defaultProps.services || []).map(service => ({
+              id: uniqueId,
+              services: (config.components.ServicesGrid.defaultProps.services || []).map((service, serviceIndex) => ({
                 ...service,
-                id: service.id || `service-${index}-${Math.random().toString(36).substr(2, 9)}`
+                id: service.id || `service-${uniqueId}-${serviceIndex}`
               }))
             }
           };
@@ -152,14 +140,16 @@ const PageEditor: React.FC<EditorProps> = ({
           return {
             type: "BarbersTeam",
             props: {
-              ...config.components.BarbersTeam.defaultProps
+              ...config.components.BarbersTeam.defaultProps,
+              id: uniqueId
             }
           };
         case 'booking':
           return {
             type: "BookingSection",
             props: {
-              ...config.components.BookingSection.defaultProps
+              ...config.components.BookingSection.defaultProps,
+              id: uniqueId
             }
           };
         default:
