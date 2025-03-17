@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,41 +39,16 @@ const Admin = () => {
         try {
           const puckData = JSON.parse(puckDataString);
           
-          if (puckData && puckData.content && Array.isArray(puckData.content)) {
-            const sectionsFromPuck: SectionType[] = puckData.content
-              .map((child: any) => {
-                switch(child.type) {
-                  case 'HeroSection': return 'hero';
-                  case 'ServicesGrid': return 'services';
-                  case 'BarbersTeam': return 'barbers';
-                  case 'BookingSection': return 'booking';
-                  default: return null;
-                }
-              })
-              .filter(Boolean) as SectionType[];
+          if (puckData && puckData.content) {
+            // Garantir que content é uma array
+            const contentArray = Array.isArray(puckData.content) 
+              ? puckData.content 
+              : puckData.content.root && Array.isArray(puckData.content.root.children)
+                ? puckData.content.root.children
+                : [];
             
-            if (sectionsFromPuck.length > 0) {
-              console.log("Using sections from Puck data:", sectionsFromPuck);
-              setHomepageSections(sectionsFromPuck);
-              // Save the sections for future reference
-              localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
-            } else {
-              console.log("Puck data doesn't contain valid sections, loading from homepageSections");
-              loadFromHomepageSections(defaultSections);
-            }
-          } else if (puckData && puckData.content && typeof puckData.content === 'object') {
-            // Try to extract from nested structure
-            let sectionsArray = null;
-            
-            if (puckData.content.root && puckData.content.root.children && 
-                Array.isArray(puckData.content.root.children)) {
-              sectionsArray = puckData.content.root.children;
-            } else if (puckData.content.children && Array.isArray(puckData.content.children)) {
-              sectionsArray = puckData.content.children;
-            }
-            
-            if (sectionsArray) {
-              const sectionsFromPuck: SectionType[] = sectionsArray
+            if (contentArray.length > 0) {
+              const sectionsFromPuck: SectionType[] = contentArray
                 .map((child: any) => {
                   switch(child.type) {
                     case 'HeroSection': return 'hero';
@@ -85,18 +59,23 @@ const Admin = () => {
                   }
                 })
                 .filter(Boolean) as SectionType[];
-                
+              
               if (sectionsFromPuck.length > 0) {
-                console.log("Using sections from nested Puck data:", sectionsFromPuck);
+                console.log("Using sections from Puck data:", sectionsFromPuck);
                 setHomepageSections(sectionsFromPuck);
+                // Save the sections for future reference
                 localStorage.setItem('homepageSections', JSON.stringify(sectionsFromPuck));
                 
-                // Also fix the Puck data structure in localStorage
-                const fixedData = {
-                  root: { props: {} },
-                  content: sectionsArray
-                };
-                localStorage.setItem('puckData', JSON.stringify(fixedData));
+                // Also fix the Puck data structure in localStorage if needed
+                if (!Array.isArray(puckData.content)) {
+                  const fixedData = {
+                    root: { props: {} },
+                    content: contentArray
+                  };
+                  localStorage.setItem('puckData', JSON.stringify(fixedData));
+                }
+                
+                setIsLoading(false);
                 return;
               }
             }
@@ -119,7 +98,6 @@ const Admin = () => {
       console.error("Error loading homepage data:", e);
       // Use default values in case of error
       setHomepageSections(['hero', 'services', 'barbers', 'booking']);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -175,8 +153,8 @@ const Admin = () => {
     localStorage.setItem('homepageSections', JSON.stringify(sections));
     
     toast({
-      title: "Changes saved",
-      description: "The homepage has been updated successfully.",
+      title: "Alterações salvas",
+      description: "A página inicial foi atualizada com sucesso.",
     });
   };
   
@@ -190,8 +168,8 @@ const Admin = () => {
     localStorage.removeItem('puckData');
     
     toast({
-      title: "Homepage reset",
-      description: "The homepage has been restored to default.",
+      title: "Página inicial redefinida",
+      description: "A página inicial foi restaurada para o padrão.",
     });
   };
 
@@ -208,7 +186,7 @@ const Admin = () => {
       <div className="container mx-auto py-10 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
-          <p>Loading admin panel...</p>
+          <p>Carregando painel administrativo...</p>
         </div>
       </div>
     );

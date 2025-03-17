@@ -45,11 +45,11 @@ const PageEditor: React.FC<EditorProps> = ({
           
           // Check if the parsed data has the correct structure
           if (parsedData && typeof parsedData === 'object') {
-            if (Array.isArray(parsedData.content)) {
+            if (parsedData.root && Array.isArray(parsedData.content)) {
               // Data structure is already correct
               setPuckData(parsedData);
-            } else if (parsedData.content && typeof parsedData.content === 'object') {
-              // Need to transform the data structure to match Puck's expectations
+            } else {
+              // Create a properly structured Puck data object
               const transformedData: Data = {
                 root: {
                   props: {}
@@ -57,11 +57,13 @@ const PageEditor: React.FC<EditorProps> = ({
                 content: []
               };
               
-              // Convert content object to array if needed
-              if (parsedData.content.root && parsedData.content.root.children && 
-                  Array.isArray(parsedData.content.root.children)) {
+              // Try to extract components from different possible structures
+              if (Array.isArray(parsedData.content)) {
+                transformedData.content = parsedData.content;
+              } else if (parsedData.content && parsedData.content.root && 
+                          Array.isArray(parsedData.content.root.children)) {
                 transformedData.content = parsedData.content.root.children;
-              } else if (parsedData.content.children && Array.isArray(parsedData.content.children)) {
+              } else if (parsedData.content && Array.isArray(parsedData.content.children)) {
                 transformedData.content = parsedData.content.children;
               } else {
                 // If we can't extract components, create default data
@@ -72,10 +74,6 @@ const PageEditor: React.FC<EditorProps> = ({
               
               setPuckData(transformedData);
               localStorage.setItem('puckData', JSON.stringify(transformedData));
-            } else {
-              // Invalid structure, create default
-              console.log("Invalid Puck data structure, creating default");
-              createDefaultPuckData();
             }
           } else {
             console.log("Parsed data is not a valid object, creating default");
@@ -102,7 +100,7 @@ const PageEditor: React.FC<EditorProps> = ({
     console.log("Creating default Puck data with sections:", initialSections);
     
     // Map section types to Puck components
-    const rootChildren = initialSections.map(sectionType => {
+    const contentItems = initialSections.map(sectionType => {
       switch(sectionType) {
         case 'hero':
           return {
@@ -142,7 +140,7 @@ const PageEditor: React.FC<EditorProps> = ({
       root: {
         props: {}
       },
-      content: rootChildren
+      content: contentItems
     };
     
     console.log("Default Puck data created:", defaultData);
@@ -162,8 +160,8 @@ const PageEditor: React.FC<EditorProps> = ({
     
     if (!puckData || !puckData.content || !Array.isArray(puckData.content)) {
       toast({
-        title: "Error saving",
-        description: "Invalid data structure. Try reloading the page.",
+        title: "Erro ao salvar",
+        description: "Estrutura de dados inválida. Tente recarregar a página.",
         variant: "destructive",
       });
       return;
@@ -189,8 +187,8 @@ const PageEditor: React.FC<EditorProps> = ({
     onSave(sections);
     
     toast({
-      title: "Changes saved",
-      description: "Homepage changes have been saved successfully.",
+      title: "Alterações salvas",
+      description: "As alterações na página inicial foram salvas com sucesso.",
     });
   };
 
@@ -201,8 +199,8 @@ const PageEditor: React.FC<EditorProps> = ({
     onReset();
     
     toast({
-      title: "Page reset",
-      description: "The homepage has been reset to default.",
+      title: "Página redefinida",
+      description: "A página inicial foi redefinida para o padrão.",
     });
   };
 
@@ -214,7 +212,7 @@ const PageEditor: React.FC<EditorProps> = ({
           <div className="flex items-center justify-center h-[600px]">
             <div className="text-center">
               <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mx-auto"></div>
-              <p className="text-muted-foreground">Loading editor...</p>
+              <p className="text-muted-foreground">Carregando editor...</p>
             </div>
           </div>
         </CardContent>
@@ -228,9 +226,9 @@ const PageEditor: React.FC<EditorProps> = ({
       <Card className="w-full">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center justify-center h-[600px]">
-            <p className="text-red-500 mb-4">Error loading editor. Please try again.</p>
+            <p className="text-red-500 mb-4">Erro ao carregar o editor. Por favor, tente novamente.</p>
             <Button onClick={createDefaultPuckData}>
-              Try again
+              Tentar novamente
             </Button>
           </div>
         </CardContent>
@@ -242,23 +240,23 @@ const PageEditor: React.FC<EditorProps> = ({
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Homepage Editor</CardTitle>
+          <CardTitle>Editor da Página Inicial</CardTitle>
           <CardDescription>
-            Use the editor below to customize your website's homepage
+            Use o editor abaixo para personalizar a página inicial do seu site
           </CardDescription>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onPreview}>
             <Eye className="w-4 h-4 mr-2" />
-            View Site
+            Ver Site
           </Button>
           <Button variant="destructive" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
-            Reset
+            Redefinir
           </Button>
           <Button onClick={handleSave}>
             <SaveIcon className="w-4 h-4 mr-2" />
-            Save
+            Salvar
           </Button>
         </div>
       </CardHeader>
@@ -266,7 +264,7 @@ const PageEditor: React.FC<EditorProps> = ({
       <CardContent>
         <div className="p-4 bg-amber-50 border rounded-md mb-4">
           <p className="text-amber-800">
-            Drag components from the sidebar to the editing area. Click on a component to edit its properties.
+            Arraste componentes da barra lateral para a área de edição. Clique em um componente para editar suas propriedades.
           </p>
         </div>
 
@@ -280,12 +278,10 @@ const PageEditor: React.FC<EditorProps> = ({
         </div>
 
         <div className="mt-6">
-          <h3 className="font-medium mb-2">Preview:</h3>
+          <h3 className="font-medium mb-2">Visualização:</h3>
           <div className="border rounded-md p-4 bg-gray-50 max-h-[400px] overflow-auto">
-            {puckData && Array.isArray(puckData.content) ? (
+            {puckData && (
               <PuckRenderer data={puckData} />
-            ) : (
-              <p className="text-muted-foreground text-center py-10">No content to preview.</p>
             )}
           </div>
         </div>

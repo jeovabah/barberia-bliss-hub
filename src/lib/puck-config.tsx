@@ -773,13 +773,20 @@ export const config: Config = {
 
 // Component for rendering Puck content on the front-end
 export const PuckRenderer = ({ data }: { data: any }) => {
-  if (!data || !data.content || !Array.isArray(data.content)) {
+  if (!data || !data.content) {
     return null;
   }
   
+  // Garantir que content é uma array
+  const contentArray = Array.isArray(data.content) 
+    ? data.content 
+    : data.content.root && Array.isArray(data.content.root.children)
+      ? data.content.root.children
+      : [];
+  
   return (
     <div className="puck-renderer">
-      {data.content.map((child: any, index: number) => {
+      {contentArray.map((child: any, index: number) => {
         const Component = config.components[child.type]?.render;
         return Component ? <Component key={index} {...child.props} /> : null;
       })}
