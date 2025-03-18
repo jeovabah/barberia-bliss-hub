@@ -22,10 +22,22 @@ interface PuckContent {
   };
 }
 
+// Define the Specialist interface based on the database schema
+interface Specialist {
+  id: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  experience: string | null;
+  image: string | null;
+  specialties: string[];
+}
+
 const CompanyPage = () => {
   const navigate = useNavigate();
   const { company, isLoading: isCompanyLoading, error: companyError } = useCompanyFromRoute();
   const [puckData, setPuckData] = useState<PuckContent | null>(null);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [usePuck, setUsePuck] = useState(false);
   
@@ -42,8 +54,28 @@ const CompanyPage = () => {
     if (!isCompanyLoading && company) {
       document.title = `${company.name} | BarberBliss`;
       fetchPuckContent();
+      fetchSpecialists();
     }
   }, [company, companyError, isCompanyLoading, navigate]);
+  
+  const fetchSpecialists = async () => {
+    if (!company) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('specialists')
+        .select('*')
+        .eq('company_id', company.id);
+        
+      if (error) {
+        console.error("Error fetching specialists:", error);
+      } else {
+        setSpecialists(data || []);
+      }
+    } catch (error) {
+      console.error("Unexpected error fetching specialists:", error);
+    }
+  };
   
   const fetchPuckContent = async () => {
     if (!company) return;
@@ -175,14 +207,6 @@ const CompanyPage = () => {
       setIsLoading(false);
     }
   };
-  
-  // Mapping of section types to components
-  const sectionComponents = {
-    hero: <Hero />,
-    services: <Services />,
-    barbers: <BarberProfile />,
-    booking: <BookingForm />
-  };
 
   if (isCompanyLoading || isLoading) {
     return (
@@ -203,11 +227,15 @@ const CompanyPage = () => {
           <PuckRenderer data={puckData} />
         </div>
       ) : (
-        defaultSections.map((section) => (
-          <div key={section}>
-            {sectionComponents[section as keyof typeof sectionComponents]}
-          </div>
-        ))
+        <>
+          <Hero />
+          <Services />
+          <BarberProfile specialists={specialists} />
+          <BookingForm 
+            specialists={specialists}
+            companyId={company?.id}
+          />
+        </>
       )}
       
       <Footer />

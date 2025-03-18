@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, MoreHorizontal, Calendar, PlusCircle } from "lucide-react";
+import { Eye, MoreHorizontal, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,46 +32,25 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Mock data for appointments - we'll replace with real data later
-const mockAppointments = [
-  {
-    id: "1",
-    clientName: "João Silva",
-    service: "Corte de Cabelo",
-    barber: "Carlos",
-    date: "2025-03-20",
-    time: "14:00",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    clientName: "Maria Oliveira",
-    service: "Barba",
-    barber: "André",
-    date: "2025-03-21",
-    time: "10:30",
-    status: "pending",
-  },
-  {
-    id: "3",
-    clientName: "Pedro Santos",
-    service: "Corte e Barba",
-    barber: "Carlos",
-    date: "2025-03-22",
-    time: "15:45",
-    status: "completed",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 interface Appointment {
   id: string;
-  clientName: string;
+  client_name: string;
   service: string;
-  barber: string;
+  specialist_id: string | null;
+  specialist_name?: string;
   date: string;
   time: string;
   status: string;
+  client_email?: string | null;
+  client_phone?: string | null;
+  notes?: string | null;
+}
+
+interface Specialist {
+  id: string;
+  name: string;
 }
 
 interface AppointmentTableProps {
@@ -79,46 +58,95 @@ interface AppointmentTableProps {
 }
 
 const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAppointment, setNewAppointment] = useState<Partial<Appointment>>({
-    clientName: "",
+    client_name: "",
     service: "",
-    barber: "",
+    specialist_id: null,
     date: new Date().toISOString().split('T')[0],
     time: "10:00",
-    status: "pending"
+    status: "pending",
+    client_email: "",
+    client_phone: "",
+    notes: ""
   });
   const { toast } = useToast();
 
-  // In a real implementation, we would fetch appointments from Supabase here
   useEffect(() => {
-    const fetchAppointments = async () => {
-      setIsLoading(true);
-      try {
-        // This is where we'd fetch real data:
-        // const { data, error } = await supabase
-        //   .from('appointments')
-        //   .select('*')
-        //   .eq('company_id', companyId);
-        
-        // For now, we'll use mock data
-        setAppointments(mockAppointments);
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast({
-          title: "Erro ao carregar agendamentos",
-          description: "Não foi possível carregar os agendamentos.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAppointments();
-  }, [companyId, toast]);
+    fetchSpecialists();
+  }, [companyId]);
+
+  const fetchSpecialists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('specialists')
+        .select('id, name')
+        .eq('company_id', companyId);
+
+      if (error) {
+        throw error;
+      }
+
+      setSpecialists(data || []);
+    } catch (error: any) {
+      console.error("Error fetching specialists:", error.message);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('date', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+
+      // Fetch specialist names for each appointment
+      if (data && data.length > 0) {
+        const enhancedAppointments = await Promise.all(
+          data.map(async (appointment) => {
+            if (!appointment.specialist_id) {
+              return { ...appointment, specialist_name: 'Não especificado' };
+            }
+            
+            const { data: specialistData, error: specialistError } = await supabase
+              .from('specialists')
+              .select('name')
+              .eq('id', appointment.specialist_id)
+              .maybeSingle();
+              
+            if (specialistError || !specialistData) {
+              return { ...appointment, specialist_name: 'Desconhecido' };
+            }
+            
+            return { ...appointment, specialist_name: specialistData.name };
+          })
+        );
+        
+        setAppointments(enhancedAppointments);
+      } else {
+        setAppointments([]);
+      }
+    } catch (error: any) {
+      console.error("Error fetching appointments:", error);
+      toast({
+        title: "Erro ao carregar agendamentos",
+        description: "Não foi possível carregar os agendamentos: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -155,27 +183,58 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   const handleViewDetails = (id: string) => {
+    const appointment = appointments.find(a => a.id === id);
+    if (!appointment) return;
+    
     toast({
-      title: "Ver detalhes",
-      description: `Visualizando detalhes do agendamento ${id}`,
+      title: "Detalhes do agendamento",
+      description: `Cliente: ${appointment.client_name}
+                    Serviço: ${appointment.service}
+                    Data: ${formatDate(appointment.date)} às ${appointment.time}
+                    Contato: ${appointment.client_phone || 'Não informado'}`,
     });
   };
 
-  const handleUpdateStatus = (id: string, newStatus: string) => {
-    // In a real implementation, we would update the status in Supabase
-    setAppointments(
-      appointments.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, status: newStatus }
-          : appointment
-      )
-    );
-    
-    toast({
-      title: "Status atualizado",
-      description: `Status atualizado para ${newStatus}`,
-    });
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: newStatus })
+        .eq('id', id);
+        
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Status atualizado",
+        description: `Status atualizado para ${newStatus}`,
+      });
+      
+      // Refresh appointments list
+      fetchAppointments();
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message || "Ocorreu um erro ao atualizar o status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,9 +246,9 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
     setNewAppointment(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAddAppointment = () => {
+  const handleAddAppointment = async () => {
     // Validate form
-    if (!newAppointment.clientName || !newAppointment.service || !newAppointment.barber || !newAppointment.date || !newAppointment.time) {
+    if (!newAppointment.client_name || !newAppointment.service || !newAppointment.date || !newAppointment.time) {
       toast({
         title: "Erro ao adicionar",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -198,37 +257,100 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
       return;
     }
 
-    // In a real implementation, we would add the appointment to Supabase
-    const appointment: Appointment = {
-      id: `${Date.now()}`, // Generate a temporary ID
-      clientName: newAppointment.clientName!,
-      service: newAppointment.service!,
-      barber: newAppointment.barber!,
-      date: newAppointment.date!,
-      time: newAppointment.time!,
-      status: newAppointment.status || "pending",
-    };
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('appointments')
+        .insert({
+          company_id: companyId,
+          client_name: newAppointment.client_name,
+          service: newAppointment.service,
+          specialist_id: newAppointment.specialist_id || null,
+          date: newAppointment.date,
+          time: newAppointment.time,
+          status: newAppointment.status || 'pending',
+          client_email: newAppointment.client_email || null,
+          client_phone: newAppointment.client_phone || null,
+          notes: newAppointment.notes || null
+        })
+        .select();
 
-    setAppointments([...appointments, appointment]);
-    setIsDialogOpen(false);
-    
-    // Reset form
-    setNewAppointment({
-      clientName: "",
-      service: "",
-      barber: "",
-      date: new Date().toISOString().split('T')[0],
-      time: "10:00",
-      status: "pending"
-    });
-    
-    toast({
-      title: "Agendamento adicionado",
-      description: "O agendamento foi adicionado com sucesso!",
-    });
+      if (error) {
+        throw error;
+      }
+      
+      setIsDialogOpen(false);
+      
+      // Reset form
+      setNewAppointment({
+        client_name: "",
+        service: "",
+        specialist_id: null,
+        date: new Date().toISOString().split('T')[0],
+        time: "10:00",
+        status: "pending",
+        client_email: "",
+        client_phone: "",
+        notes: ""
+      });
+      
+      toast({
+        title: "Agendamento adicionado",
+        description: "O agendamento foi adicionado com sucesso!",
+      });
+      
+      // Refresh appointments
+      fetchAppointments();
+    } catch (error: any) {
+      console.error("Error adding appointment:", error);
+      toast({
+        title: "Erro ao adicionar agendamento",
+        description: error.message || "Ocorreu um erro ao adicionar o agendamento.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (isLoading) {
+  const handleDeleteAppointment = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este agendamento?")) {
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Agendamento excluído",
+        description: "O agendamento foi excluído com sucesso.",
+      });
+      
+      // Refresh appointments list
+      fetchAppointments();
+    } catch (error: any) {
+      console.error("Error deleting appointment:", error);
+      toast({
+        title: "Erro ao excluir agendamento",
+        description: error.message || "Ocorreu um erro ao excluir o agendamento.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading && appointments.length === 0) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
@@ -256,13 +378,13 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="clientName" className="text-right">
+                <Label htmlFor="client_name" className="text-right">
                   Cliente
                 </Label>
                 <Input
-                  id="clientName"
-                  name="clientName"
-                  value={newAppointment.clientName}
+                  id="client_name"
+                  name="client_name"
+                  value={newAppointment.client_name}
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
@@ -280,16 +402,25 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="barber" className="text-right">
+                <Label htmlFor="specialist_id" className="text-right">
                   Barbeiro
                 </Label>
-                <Input
-                  id="barber"
-                  name="barber"
-                  value={newAppointment.barber}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
+                <Select 
+                  onValueChange={(value) => handleSelectChange("specialist_id", value)}
+                  value={newAppointment.specialist_id || ""}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecione o barbeiro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Não especificado</SelectItem>
+                    {specialists.map(specialist => (
+                      <SelectItem key={specialist.id} value={specialist.id}>
+                        {specialist.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="date" className="text-right">
@@ -313,6 +444,31 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
                   name="time"
                   type="time"
                   value={newAppointment.time}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client_phone" className="text-right">
+                  Telefone
+                </Label>
+                <Input
+                  id="client_phone"
+                  name="client_phone"
+                  value={newAppointment.client_phone || ""}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="client_email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="client_email"
+                  name="client_email"
+                  type="email"
+                  value={newAppointment.client_email || ""}
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
@@ -367,10 +523,10 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
           ) : (
             appointments.map((appointment) => (
               <TableRow key={appointment.id}>
-                <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                <TableCell className="font-medium">{appointment.client_name}</TableCell>
                 <TableCell>{appointment.service}</TableCell>
-                <TableCell>{appointment.barber}</TableCell>
-                <TableCell>{new Date(appointment.date).toLocaleDateString('pt-BR')}</TableCell>
+                <TableCell>{appointment.specialist_name || 'Não especificado'}</TableCell>
+                <TableCell>{formatDate(appointment.date)}</TableCell>
                 <TableCell>{appointment.time}</TableCell>
                 <TableCell>{getStatusBadge(appointment.status)}</TableCell>
                 <TableCell className="text-right">
@@ -386,6 +542,10 @@ const AppointmentsTable: React.FC<AppointmentTableProps> = ({ companyId }) => {
                       <DropdownMenuItem onClick={() => handleViewDetails(appointment.id)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Ver detalhes
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteAppointment(appointment.id)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Excluir
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuLabel>Atualizar status</DropdownMenuLabel>

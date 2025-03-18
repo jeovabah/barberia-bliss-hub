@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { SaveIcon, Eye, RotateCcw } from "lucide-react";
+import { SaveIcon, Eye, RotateCcw, Scissors } from "lucide-react";
 import { Puck, type Data } from "@measured/puck";
 import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
@@ -226,11 +226,17 @@ const PageEditor: React.FC<EditorProps> = ({
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Editor da Página</CardTitle>
-          <CardDescription>
-            Use o editor abaixo para personalizar a sua página
-          </CardDescription>
+        <div className="flex items-center">
+          <div className="bg-amber-500 text-white p-2 rounded-md mr-3 flex items-center justify-center">
+            <Scissors className="w-4 h-4" />
+            <span className="font-bold ml-1">BB</span>
+          </div>
+          <div>
+            <CardTitle>Editor da Página</CardTitle>
+            <CardDescription>
+              Use o editor abaixo para personalizar a sua página
+            </CardDescription>
+          </div>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onPreview}>

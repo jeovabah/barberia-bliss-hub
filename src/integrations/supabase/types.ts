@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          company_id: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          service: string
+          specialist_id: string | null
+          status: string
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          company_id: string
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          service: string
+          specialist_id?: string | null
+          status?: string
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          company_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          service?: string
+          specialist_id?: string | null
+          status?: string
+          time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string
@@ -98,6 +161,53 @@ export type Database = {
             foreignKeyName: "puck_content_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      specialists: {
+        Row: {
+          bio: string | null
+          company_id: string
+          created_at: string
+          experience: string | null
+          id: string
+          image: string | null
+          name: string
+          role: string | null
+          specialties: Json | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          company_id: string
+          created_at?: string
+          experience?: string | null
+          id?: string
+          image?: string | null
+          name: string
+          role?: string | null
+          specialties?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          company_id?: string
+          created_at?: string
+          experience?: string | null
+          id?: string
+          image?: string | null
+          name?: string
+          role?: string | null
+          specialties?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },

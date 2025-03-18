@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const horarios = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -18,25 +19,34 @@ const horarios = [
   "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
 ];
 
-const servicos = [
+const defaultServices = [
   { id: 1, nome: "Corte Clássico", duracao: "45 min", preco: "R$70" },
   { id: 2, nome: "Barba & Modelagem", duracao: "30 min", preco: "R$50" },
   { id: 3, nome: "Barbear Premium", duracao: "45 min", preco: "R$90" },
   { id: 4, nome: "Tratamento Completo", duracao: "90 min", preco: "R$170" },
 ];
 
-const barbeiros = [
-  { id: 1, nome: "Alexandre Silva" },
-  { id: 2, nome: "Miguel Rodrigues" },
-  { id: 3, nome: "Daniel Costa" },
-];
+interface Specialist {
+  id: string;
+  name: string;
+  role?: string | null;
+  bio?: string | null;
+  experience?: string | null;
+  image?: string | null;
+  specialties?: string[];
+}
 
-const BookingForm = () => {
+interface BookingFormProps {
+  specialists?: Specialist[];
+  companyId?: string;
+}
+
+const BookingForm = ({ specialists = [], companyId }: BookingFormProps) => {
   const { toast } = useToast();
   const [data, setData] = useState<Date | undefined>(undefined);
   const [horarioSelecionado, setHorarioSelecionado] = useState<string | null>(null);
   const [servicoSelecionado, setServicoSelecionado] = useState<number | null>(null);
-  const [barbeiroSelecionado, setBarbeiroSelecionado] = useState<number | null>(null);
+  const [barbeiroSelecionado, setBarbeiroSelecionado] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     telefone: "",
@@ -46,6 +56,7 @@ const BookingForm = () => {
   const [carregando, setCarregando] = useState(false);
   const [calendarioAberto, setCalendarioAberto] = useState(false);
   const [horariosAberto, setHorariosAberto] = useState(false);
+  const [servicos] = useState(defaultServices);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -97,7 +108,7 @@ const BookingForm = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validação final
@@ -113,15 +124,44 @@ const BookingForm = () => {
     
     setCarregando(true);
     
-    // Simulando um envio de dados
-    setTimeout(() => {
-      const servicoNome = servicos.find(s => s.id === servicoSelecionado)?.nome;
-      const barbeiroNome = barbeiros.find(b => b.id === barbeiroSelecionado)?.nome;
+    try {
+      // Get the service name
+      const servico = servicos.find(s => s.id === servicoSelecionado)?.nome;
+      
+      if (!companyId) {
+        throw new Error("ID da empresa não encontrado");
+      }
+      
+      // Format date to YYYY-MM-DD for Supabase
+      const formattedDate = format(data, 'yyyy-MM-dd');
+      
+      // Insert appointment in database
+      const { data: appointmentData, error } = await supabase
+        .from('appointments')
+        .insert({
+          company_id: companyId,
+          specialist_id: barbeiroSelecionado,
+          client_name: formData.nome,
+          client_email: formData.email,
+          client_phone: formData.telefone,
+          service: servico,
+          date: formattedDate,
+          time: horarioSelecionado,
+          status: 'pending'
+        })
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get specialist name
+      const especialista = specialists.find(s => s.id === barbeiroSelecionado)?.name;
       
       // Mensagem de sucesso
       toast({
         title: "Agendamento Confirmado!",
-        description: `${formData.nome}, seu agendamento para ${servicoNome} com ${barbeiroNome} em ${formatarData(data)} às ${horarioSelecionado} foi confirmado.`,
+        description: `${formData.nome}, seu agendamento para ${servico} com ${especialista} em ${formatarData(data)} às ${horarioSelecionado} foi confirmado.`,
       });
       
       // Reset do formulário
@@ -131,8 +171,16 @@ const BookingForm = () => {
       setBarbeiroSelecionado(null);
       setFormData({ nome: "", telefone: "", email: "" });
       setEtapa(1);
+    } catch (error: any) {
+      console.error("Erro ao agendar:", error);
+      toast({
+        title: "Erro ao realizar agendamento",
+        description: error.message || "Ocorreu um erro ao processar seu agendamento. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
       setCarregando(false);
-    }, 1500);
+    }
   };
 
   const renderEtapa = () => {
@@ -174,23 +222,53 @@ const BookingForm = () => {
           <div className="space-y-4">
             <h3 className="text-xl font-semibold mb-4">Escolha o Profissional</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {barbeiros.map((barbeiro) => (
-                <div
-                  key={barbeiro.id}
-                  className={cn(
-                    "border rounded-xl p-4 cursor-pointer transition-all duration-300 text-center",
-                    barbeiroSelecionado === barbeiro.id 
-                      ? "border-amber-500 bg-amber-50" 
-                      : "border-gray-200 hover:border-amber-200"
-                  )}
-                  onClick={() => setBarbeiroSelecionado(barbeiro.id)}
-                >
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-amber-100 flex items-center justify-center">
-                    <User className="w-8 h-8 text-amber-600" />
+              {specialists.length > 0 ? (
+                specialists.map((specialist) => (
+                  <div
+                    key={specialist.id}
+                    className={cn(
+                      "border rounded-xl p-4 cursor-pointer transition-all duration-300 text-center",
+                      barbeiroSelecionado === specialist.id 
+                        ? "border-amber-500 bg-amber-50" 
+                        : "border-gray-200 hover:border-amber-200"
+                    )}
+                    onClick={() => setBarbeiroSelecionado(specialist.id)}
+                  >
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-amber-100 flex items-center justify-center overflow-hidden">
+                      {specialist.image ? (
+                        <img 
+                          src={specialist.image} 
+                          alt={specialist.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-8 h-8 text-amber-600" />
+                      )}
+                    </div>
+                    <h4 className="font-medium">{specialist.name}</h4>
+                    {specialist.role && (
+                      <p className="text-xs text-amber-600">{specialist.role}</p>
+                    )}
                   </div>
-                  <h4 className="font-medium">{barbeiro.nome}</h4>
+                ))
+              ) : (
+                <div className="col-span-3 text-center p-6 border border-dashed rounded-xl">
+                  <User className="w-10 h-10 text-amber-300 mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    Nenhum especialista disponível. Por favor, continue para selecionar data e horário.
+                  </p>
+                  <Button 
+                    className="mt-3" 
+                    variant="outline" 
+                    onClick={() => {
+                      setBarbeiroSelecionado("default");
+                      setEtapa(prev => prev + 1);
+                    }}
+                  >
+                    Continuar sem selecionar especialista
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         );
@@ -335,7 +413,7 @@ const BookingForm = () => {
       
       case 5:
         const servicoInfo = servicos.find(s => s.id === servicoSelecionado);
-        const barbeiroInfo = barbeiros.find(b => b.id === barbeiroSelecionado);
+        const barbeiroInfo = specialists.find(s => s.id === barbeiroSelecionado);
         
         return (
           <div className="space-y-4">
@@ -352,7 +430,7 @@ const BookingForm = () => {
                 
                 <div className="flex justify-between">
                   <span className="text-gray-500">Barbeiro:</span>
-                  <span className="font-medium">{barbeiroInfo?.nome}</span>
+                  <span className="font-medium">{barbeiroInfo?.name || 'Qualquer profissional disponível'}</span>
                 </div>
                 
                 <div className="flex justify-between">

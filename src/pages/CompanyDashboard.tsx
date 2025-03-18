@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageEditor from "@/components/PageEditor";
 import { LogOut, Home } from "lucide-react";
 import AppointmentsTable from "@/components/AppointmentsTable";
+import SpecialistManagement from "@/components/SpecialistManagement";
 import { Json } from "@/integrations/supabase/types";
 
 // Define PuckContent interface to match the expected structure
@@ -488,7 +489,12 @@ const CompanyDashboard = () => {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto py-4 px-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Dashboard da Empresa: {company?.name}</h1>
+          <div className="flex items-center">
+            <div className="bg-amber-500 text-white p-2 rounded-md mr-3">
+              <span className="font-bold">BB</span>
+            </div>
+            <h1 className="text-xl font-bold">Dashboard: {company?.name}</h1>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={viewSite}>
               <Home className="mr-2 h-4 w-4" /> Ver Site
@@ -504,6 +510,7 @@ const CompanyDashboard = () => {
         <Tabs defaultValue="editor">
           <TabsList className="mb-8">
             <TabsTrigger value="editor">Editor de Página</TabsTrigger>
+            <TabsTrigger value="specialists">Especialistas</TabsTrigger>
             <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
@@ -516,6 +523,10 @@ const CompanyDashboard = () => {
                 onPreview={viewSite}
               />
             )}
+          </TabsContent>
+          
+          <TabsContent value="specialists">
+            {company && <SpecialistManagement companyId={company.id} />}
           </TabsContent>
 
           <TabsContent value="appointments">
