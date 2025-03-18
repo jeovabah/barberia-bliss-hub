@@ -249,7 +249,7 @@ const Landing = () => {
                   Começar Gratuitamente <ArrowRight size={16} />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-amber-400 text-amber-100 hover:bg-amber-700/20 hover:text-white hover:border-amber-300 text-lg">
+              <Button asChild size="lg" className="border-amber-400 text-amber-100 hover:bg-amber-700/20 hover:text-white hover:border-amber-300 text-lg">
                 <a href="#features" className="flex items-center gap-2">
                   Conhecer Recursos <ChevronsRight size={16} />
                 </a>
