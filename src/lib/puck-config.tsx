@@ -1,3 +1,4 @@
+
 import { Config } from "@measured/puck";
 import { Render } from "@measured/puck";
 
@@ -892,4 +893,114 @@ export const config: Config = {
         },
         variant: {
           type: "select",
-          label: "Est
+          label: "Estilo",
+          options: [
+            { label: "Primário", value: "primary" },
+            { label: "Secundário", value: "secondary" },
+          ],
+        },
+      },
+    },
+    ServiceCard: {
+      render: ServiceCard,
+      label: "Card de Serviço",
+      defaultProps: {
+        title: "Corte de Cabelo",
+        price: "R$ 35,00",
+        description: "Corte moderno e estiloso para todos os tipos de cabelo."
+      },
+      fields: {
+        title: {
+          type: "text",
+          label: "Título do Serviço"
+        },
+        price: {
+          type: "text",
+          label: "Preço"
+        },
+        description: {
+          type: "textarea",
+          label: "Descrição"
+        },
+        imageUrl: {
+          type: "text",
+          label: "URL da Imagem (opcional)"
+        }
+      }
+    },
+    CardBlock: {
+      render: CardBlock,
+      label: "Card Informativo",
+      defaultProps: {
+        title: "Título do Card",
+        content: "Conteúdo descritivo do card informativo.",
+        buttonLabel: "Saiba Mais",
+        buttonLink: "#"
+      },
+      fields: {
+        title: {
+          type: "text",
+          label: "Título"
+        },
+        content: {
+          type: "textarea",
+          label: "Conteúdo"
+        },
+        imageUrl: {
+          type: "text",
+          label: "URL da Imagem (opcional)"
+        },
+        buttonLabel: {
+          type: "text",
+          label: "Texto do Botão (opcional)"
+        },
+        buttonLink: {
+          type: "text",
+          label: "Link do Botão (opcional)"
+        }
+      }
+    },
+    ButtonGroup: {
+      render: ButtonGroup,
+      label: "Grupo de Botões",
+      defaultProps: {
+        buttons: [
+          {
+            label: "Botão Primário",
+            href: "#",
+            variant: "primary"
+          },
+          {
+            label: "Botão Secundário",
+            href: "#",
+            variant: "secondary"
+          }
+        ]
+      },
+      fields: {
+        buttons: {
+          type: "array",
+          label: "Botões",
+          arrayFields: {
+            label: {
+              type: "text",
+              label: "Texto"
+            },
+            href: {
+              type: "text",
+              label: "Link"
+            },
+            variant: {
+              type: "select",
+              label: "Estilo",
+              options: [
+                { label: "Primário", value: "primary" },
+                { label: "Secundário", value: "secondary" }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+};
