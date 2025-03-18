@@ -198,22 +198,11 @@ const CompanyPage = () => {
   return (
     <div className="min-h-screen overflow-x-hidden bg-amber-50/30">
       <Navbar />
-      
-      {company && (
-        <div className="py-20 bg-amber-600 text-white text-center">
-          <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-bold mb-4">{company.name}</h1>
-            <p className="text-xl max-w-2xl mx-auto">Bem-vindo à nossa barbearia. Oferecemos serviços premium para o homem moderno.</p>
-          </div>
-        </div>
-      )}
-      
       {usePuck && puckData ? (
         <div className="puck-renderer-container">
           <PuckRenderer data={puckData} />
         </div>
       ) : (
-        // Fallback to classic component rendering
         defaultSections.map((section) => (
           <div key={section}>
             {sectionComponents[section as keyof typeof sectionComponents]}
