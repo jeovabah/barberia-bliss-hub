@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -36,7 +37,7 @@ const PageEditor: React.FC<EditorProps> = ({
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode<'editor' | 'preview'>('editor');
+  const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor');
   const hasInitialized = useRef(false);
   
   console.log("PageEditor rendering with initialSections:", initialSections);

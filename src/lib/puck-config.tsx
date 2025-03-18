@@ -449,6 +449,16 @@ const buttonColorOptions = [
   { label: "Branco (#FFFFFF)", value: "bg-[#FFFFFF]" }
 ];
 
+const ButtonGroup = ({ buttons }: { buttons: { label: string; href: string; variant: "primary" | "secondary" }[] }) => {
+  return (
+    <div className="flex gap-4">
+      {buttons.map((button, index) => (
+        <Button key={index} label={button.label} href={button.href} variant={button.variant} />
+      ))}
+    </div>
+  );
+};
+
 export const config: Config = {
   components: {
     // Seções traduzidas para português e simplificadas
@@ -882,17 +892,4 @@ export const config: Config = {
         },
         variant: {
           type: "select",
-          label: "Estilo",
-          options: [
-            { label: "Primário", value: "primary" },
-            { label: "Secundário", value: "secondary" },
-          ],
-        },
-      },
-    },
-    ServiceCard: {
-      render: ServiceCard,
-      label: "Card de Serviço",
-      defaultProps: {
-        title: "Corte de Cabelo",
-        price: "R$ 35,00
+          label: "Est
