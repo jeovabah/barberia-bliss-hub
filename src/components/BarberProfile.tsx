@@ -9,7 +9,7 @@ interface Specialist {
   bio?: string | null;
   experience?: string | null;
   image?: string | null;
-  specialties?: string[];
+  specialties?: string[] | any; // Updated to accept any JSON type from Supabase
 }
 
 interface BarberProfileProps {
@@ -66,6 +66,23 @@ const BarberProfile = ({
     ${backgroundColor === "bg-white" ? "bg-amber-100" : "bg-white"} 
     ${accentColor} hover:opacity-80 transition-colors`;
 
+  // Utility function to ensure specialties is always an array
+  const getSpecialties = (specialist: Specialist): string[] => {
+    if (!specialist.specialties) return [];
+    if (Array.isArray(specialist.specialties)) return specialist.specialties;
+    // If it's a JSON string, parse it
+    if (typeof specialist.specialties === 'string') {
+      try {
+        const parsed = JSON.parse(specialist.specialties);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    // If it's already an object (from Supabase)
+    return Array.isArray(specialist.specialties) ? specialist.specialties : [];
+  };
+
   return (
     <section className={`py-24 px-4 ${sectionBgClass}`} id="barbers">
       <div className="container mx-auto">
@@ -110,11 +127,11 @@ const BarberProfile = ({
                 <p className={`${accentClass} mb-3`}>{barber.role || "Barbeiro"}</p>
                 <p className="text-muted-foreground text-sm mb-4">{barber.bio || "Profissional especializado em técnicas modernas de barbearia."}</p>
                 
-                {barber.specialties && barber.specialties.length > 0 && (
+                {getSpecialties(barber).length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-gray-500 mb-2">ESPECIALIDADES</p>
                     <div className="flex flex-wrap gap-1">
-                      {barber.specialties.map((specialty, idx) => (
+                      {getSpecialties(barber).map((specialty, idx) => (
                         <span 
                           key={idx} 
                           className={`text-xs bg-amber-100 ${accentClass.replace('text-', 'text-')} px-2 py-0.5 rounded-full`}

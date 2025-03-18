@@ -64,7 +64,13 @@ const SpecialistManagement: React.FC<SpecialistManagementProps> = ({ companyId }
         throw error;
       }
 
-      setSpecialists(data || []);
+      // Process data to ensure specialties is an array
+      const processedData = data?.map(specialist => ({
+        ...specialist,
+        specialties: processSpecialties(specialist.specialties)
+      })) || [];
+
+      setSpecialists(processedData);
     } catch (error: any) {
       console.error("Error fetching specialists:", error.message);
       toast({
@@ -75,6 +81,23 @@ const SpecialistManagement: React.FC<SpecialistManagementProps> = ({ companyId }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to process specialties from database
+  const processSpecialties = (specialtiesData: any): string[] => {
+    if (!specialtiesData) return [];
+    if (Array.isArray(specialtiesData)) return specialtiesData;
+    // If it's a JSON string, parse it
+    if (typeof specialtiesData === 'string') {
+      try {
+        const parsed = JSON.parse(specialtiesData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    // If it's already a JSON object from Supabase
+    return [];
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

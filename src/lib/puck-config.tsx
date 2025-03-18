@@ -1,7 +1,6 @@
 
 import { Config } from "@measured/puck";
 import { Render } from "@measured/puck";
-import { ComponentProps } from "react";
 
 // Components for Puck Editor
 const Heading = ({ text, size = "large" }: { text: string; size?: "small" | "medium" | "large" }) => {
@@ -411,7 +410,6 @@ export const config: Config = {
     HeroSection: {
       render: HeroSection,
       label: "Seção: Banner Principal",
-      category: "Seções",
       defaultProps: {
         title: "Eleve Seu Estilo Pessoal",
         subtitle: "Experiência Premium de Barbearia",
@@ -493,7 +491,6 @@ export const config: Config = {
     ServicesGrid: {
       render: ServicesGrid,
       label: "Seção: Serviços",
-      category: "Seções",
       defaultProps: {
         title: "Serviços de Barbearia Especializados",
         subtitle: "Nossas Especialidades",
@@ -613,7 +610,6 @@ export const config: Config = {
     BarbersTeam: {
       render: BarbersTeam,
       label: "Seção: Equipe de Barbeiros",
-      category: "Seções",
       defaultProps: {
         title: "Barbeiros Especialistas",
         subtitle: "Nossa Equipe",
@@ -695,7 +691,6 @@ export const config: Config = {
         barbers: {
           type: "array",
           label: "Barbeiros",
-          description: "Edite as informações dos barbeiros que aparecerão na seção. Seus especialistas cadastrados no sistema aparecerão automaticamente no site.",
           arrayFields: {
             id: {
               type: "text",
@@ -739,7 +734,6 @@ export const config: Config = {
     BookingSection: {
       render: BookingSection,
       label: "Seção: Agendamentos",
-      category: "Seções",
       defaultProps: {
         title: "Agende Seu Horário",
         subtitle: "Marque Agora",
@@ -822,7 +816,6 @@ export const config: Config = {
     Heading: {
       render: Heading,
       label: "Título",
-      category: "Componentes Básicos",
       defaultProps: {
         text: "Título da Seção",
         size: "large",
@@ -846,7 +839,6 @@ export const config: Config = {
     TextBlock: {
       render: TextBlock,
       label: "Bloco de Texto",
-      category: "Componentes Básicos",
       defaultProps: {
         content: "<p>Adicione seu conteúdo aqui...</p>",
       },
@@ -860,7 +852,6 @@ export const config: Config = {
     ImageBlock: {
       render: ImageBlock,
       label: "Imagem",
-      category: "Componentes Básicos",
       defaultProps: {
         src: "https://via.placeholder.com/800x400",
         alt: "Imagem",
@@ -883,7 +874,6 @@ export const config: Config = {
     Button: {
       render: Button,
       label: "Botão",
-      category: "Componentes Básicos",
       defaultProps: {
         label: "Clique Aqui",
         href: "#",
@@ -911,7 +901,6 @@ export const config: Config = {
     ServiceCard: {
       render: ServiceCard,
       label: "Card de Serviço",
-      category: "Componentes Básicos",
       defaultProps: {
         title: "Corte de Cabelo",
         price: "R$ 35,00",
@@ -940,7 +929,6 @@ export const config: Config = {
     CardBlock: {
       render: CardBlock,
       label: "Card",
-      category: "Componentes Básicos",
       defaultProps: {
         title: "Título do Card",
         content: "Conteúdo descritivo do card vai aqui.",

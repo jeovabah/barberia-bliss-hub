@@ -29,7 +29,7 @@ interface Specialist {
   bio: string | null;
   experience: string | null;
   image: string | null;
-  specialties: string[];
+  specialties: string[] | any; // Updated to handle JSON from Supabase
 }
 
 const CompanyPage = () => {
@@ -57,6 +57,23 @@ const CompanyPage = () => {
     }
   }, [company, companyError, isCompanyLoading, navigate]);
   
+  // Helper function to process specialties from database
+  const processSpecialties = (specialtiesData: any): string[] => {
+    if (!specialtiesData) return [];
+    if (Array.isArray(specialtiesData)) return specialtiesData;
+    // If it's a JSON string, parse it
+    if (typeof specialtiesData === 'string') {
+      try {
+        const parsed = JSON.parse(specialtiesData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    // If it's already a JSON object from Supabase
+    return [];
+  };
+  
   const fetchSpecialists = async () => {
     if (!company) return;
     
@@ -69,7 +86,13 @@ const CompanyPage = () => {
       if (error) {
         console.error("Error fetching specialists:", error);
       } else {
-        setSpecialists(data || []);
+        // Process the data to ensure specialties is properly formatted
+        const processedData = data?.map(specialist => ({
+          ...specialist,
+          specialties: processSpecialties(specialist.specialties)
+        })) || [];
+        
+        setSpecialists(processedData);
       }
     } catch (error) {
       console.error("Unexpected error fetching specialists:", error);
