@@ -2,10 +2,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { SaveIcon, Eye, RotateCcw, Scissors } from "lucide-react";
+import { 
+  SaveIcon, 
+  Eye, 
+  RotateCcw, 
+  Scissors, 
+  PanelLeft, 
+  PanelRight, 
+  Palette,
+  SlidersHorizontal 
+} from "lucide-react";
 import { Puck, type Data } from "@measured/puck";
 import { config } from "@/lib/puck-config";
 import { toast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import "@measured/puck/puck.css";
 
 interface EditorProps {
@@ -14,6 +24,7 @@ interface EditorProps {
   onReset?: () => void;
   initialData?: any;
   initialSections?: ('hero' | 'services' | 'barbers' | 'booking')[];
+  companyName?: string;
 }
 
 const PageEditor: React.FC<EditorProps> = ({ 
@@ -21,10 +32,12 @@ const PageEditor: React.FC<EditorProps> = ({
   onPreview, 
   onReset,
   initialData = null,
-  initialSections = ['hero', 'services', 'barbers', 'booking']
+  initialSections = ['hero', 'services', 'barbers', 'booking'],
+  companyName = "Barbearia"
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor');
   const hasInitialized = useRef(false);
   
   console.log("PageEditor rendering with initialSections:", initialSections);
@@ -207,6 +220,21 @@ const PageEditor: React.FC<EditorProps> = ({
     });
   };
 
+  // Toggle view mode
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'editor' ? 'preview' : 'editor');
+  };
+
+  // Get first letter of each word for the logo
+  const getLogoInitials = () => {
+    if (!companyName) return "BB";
+    
+    return companyName
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .join('').substring(0, 2);
+  };
+
   // Loading component
   if (isLoading) {
     return (
@@ -227,14 +255,13 @@ const PageEditor: React.FC<EditorProps> = ({
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center">
-          <div className="bg-amber-500 text-white p-2 rounded-md mr-3 flex items-center justify-center">
-            <Scissors className="w-4 h-4" />
-            <span className="font-bold ml-1">BB</span>
+          <div className="bg-amber-500 text-white p-2 rounded-md mr-3 flex items-center justify-center w-10 h-10">
+            <span className="font-bold">{getLogoInitials()}</span>
           </div>
           <div>
             <CardTitle>Editor da Página</CardTitle>
             <CardDescription>
-              Use o editor abaixo para personalizar a sua página
+              Personalize a aparência do seu site
             </CardDescription>
           </div>
         </div>
@@ -257,20 +284,97 @@ const PageEditor: React.FC<EditorProps> = ({
       <CardContent>
         <div className="p-4 bg-amber-50 border rounded-md mb-4">
           <p className="text-amber-800">
-            Arraste componentes da barra lateral para a área de edição. Clique em um componente para editar suas propriedades.
+            Organize as seções da sua página arrastando-as da barra lateral. Clique em uma seção para personalizar cores, textos e imagens.
           </p>
         </div>
 
-        <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
-          {puckData && (
-            <Puck
-              config={config}
-              data={puckData}
-              onPublish={handleSave}
-              onChange={handlePuckChange}
-            />
-          )}
-        </div>
+        <Tabs defaultValue="editor" className="mb-4">
+          <TabsList>
+            <TabsTrigger value="editor" className="flex items-center gap-2">
+              <PanelLeft className="w-4 h-4" />
+              Editor de Seções
+            </TabsTrigger>
+            <TabsTrigger value="design" className="flex items-center gap-2">
+              <Palette className="w-4 h-4" />
+              Design
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4" />
+              Configurações
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="editor">
+            <div className="border rounded-md overflow-hidden" style={{ height: "800px" }}>
+              {puckData && (
+                <Puck
+                  config={config}
+                  data={puckData}
+                  onPublish={handleSave}
+                  onChange={handlePuckChange}
+                />
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="design">
+            <div className="p-6 border rounded-md">
+              <h3 className="text-lg font-medium mb-4">Configurações de Design</h3>
+              <p className="text-muted-foreground mb-6">
+                Para personalizar as cores, fontes e estilos, clique em uma seção no editor e utilize as opções no painel lateral direito.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border p-4 rounded-md">
+                  <h4 className="font-medium mb-2 flex items-center">
+                    <Palette className="w-4 h-4 mr-2" /> 
+                    Cores
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Selecione uma seção para alterar suas cores de fundo, texto e destaque.
+                  </p>
+                </div>
+                
+                <div className="border p-4 rounded-md">
+                  <h4 className="font-medium mb-2 flex items-center">
+                    <SlidersHorizontal className="w-4 h-4 mr-2" /> 
+                    Configurações
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Altere o conteúdo, fontes e espaçamentos em cada seção.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="settings">
+            <div className="p-6 border rounded-md">
+              <h3 className="text-lg font-medium mb-4">Configurações da Página</h3>
+              <p className="text-muted-foreground mb-6">
+                Aqui você pode gerenciar as configurações gerais do seu site.
+              </p>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div className="border p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Ordem das Seções</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    No Editor, arraste as seções para reordenar a página como desejar.
+                  </p>
+                  <Button variant="outline" onClick={() => {
+                    toast({
+                      title: "Dica",
+                      description: "Volte ao Editor de Seções para reorganizar seu site.",
+                    });
+                  }}>
+                    <PanelLeft className="w-4 h-4 mr-2" />
+                    Organizar Seções
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

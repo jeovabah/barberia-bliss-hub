@@ -1,3 +1,4 @@
+
 import { Config } from "@measured/puck";
 import { Render } from "@measured/puck";
 import { ComponentProps } from "react";
@@ -112,7 +113,10 @@ const HeroSection = ({
   primaryButtonLabel, 
   primaryButtonLink, 
   secondaryButtonLabel, 
-  secondaryButtonLink 
+  secondaryButtonLink,
+  backgroundColor = "bg-black/40",
+  buttonColor = "bg-amber-600",
+  buttonTextColor = "text-white"
 }: { 
   title: string;
   subtitle?: string;
@@ -122,10 +126,18 @@ const HeroSection = ({
   primaryButtonLink?: string;
   secondaryButtonLabel?: string;
   secondaryButtonLink?: string;
+  backgroundColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
 }) => {
+  // Gerar classes de cores baseadas nos parâmetros
+  const overlayClass = backgroundColor;
+  const primaryBtnClass = `${buttonColor} hover:${buttonColor.replace('bg-', 'bg-')}/90 ${buttonTextColor} px-6 py-3 rounded-md font-medium inline-block transition-colors text-center`;
+  const secondaryBtnClass = `border-amber-400 bg-amber-400/10 text-amber-100 hover:bg-amber-500/30 hover:border-amber-300 hover:text-white font-medium rounded-md transition-all duration-300 px-6 py-3 text-center backdrop-blur-sm`;
+
   return (
     <section className="h-screen relative overflow-hidden flex items-center">
-      <div className="absolute inset-0 bg-black/40 z-10"></div>
+      <div className={`absolute inset-0 ${overlayClass} z-10`}></div>
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${imageUrl})` }}
@@ -151,7 +163,7 @@ const HeroSection = ({
             {primaryButtonLabel && primaryButtonLink && (
               <a 
                 href={primaryButtonLink} 
-                className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-medium inline-block transition-colors text-center"
+                className={primaryBtnClass}
               >
                 {primaryButtonLabel}
               </a>
@@ -160,7 +172,7 @@ const HeroSection = ({
             {secondaryButtonLabel && secondaryButtonLink && (
               <a 
                 href={secondaryButtonLink} 
-                className="border-amber-400 bg-amber-400/10 text-amber-100 hover:bg-amber-500/30 hover:border-amber-300 hover:text-white font-medium rounded-md transition-all duration-300 px-6 py-3 text-center backdrop-blur-sm"
+                className={secondaryBtnClass}
               >
                 {secondaryButtonLabel}
               </a>
@@ -177,7 +189,10 @@ const ServicesGrid = ({
   title, 
   subtitle, 
   description,
-  services
+  services,
+  backgroundColor = "bg-white",
+  textColor = "text-amber-950",
+  accentColor = "text-amber-600"
 }: { 
   title: string;
   subtitle?: string;
@@ -191,17 +206,20 @@ const ServicesGrid = ({
     duration: string;
     image?: string;
   }>;
+  backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
 }) => {
   return (
-    <section className="py-24 px-4 bg-white">
+    <section className={`py-24 px-4 ${backgroundColor}`}>
       <div className="container mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
           {subtitle && (
-            <span className="text-xs uppercase tracking-widest mb-2 inline-block text-amber-600">
+            <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
               {subtitle}
             </span>
           )}
-          <h2 className="text-3xl font-bold mb-4 text-amber-950">{title}</h2>
+          <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
           {description && (
             <p className="text-gray-600">
               {description}
@@ -252,7 +270,10 @@ const BarbersTeam = ({
   title, 
   subtitle, 
   description,
-  barbers
+  barbers,
+  backgroundColor = "bg-amber-50",
+  textColor = "text-amber-950",
+  accentColor = "text-amber-600"
 }: { 
   title: string;
   subtitle?: string;
@@ -266,17 +287,20 @@ const BarbersTeam = ({
     specialties: string[];
     image: string;
   }>;
+  backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
 }) => {
   return (
-    <section className="py-24 px-4 bg-amber-50">
+    <section className={`py-24 px-4 ${backgroundColor}`}>
       <div className="container mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
           {subtitle && (
-            <span className="text-xs uppercase tracking-widest mb-2 inline-block text-amber-600">
+            <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
               {subtitle}
             </span>
           )}
-          <h2 className="text-3xl font-bold mb-4 text-amber-950">{title}</h2>
+          <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
           {description && (
             <p className="text-gray-600">
               {description}
@@ -295,8 +319,8 @@ const BarbersTeam = ({
                 />
               </div>
               
-              <h3 className="text-xl font-bold mb-1 text-amber-950">{barber.name}</h3>
-              <p className="text-sm text-amber-600 mb-4">{barber.role}</p>
+              <h3 className={`text-xl font-bold mb-1 ${textColor}`}>{barber.name}</h3>
+              <p className={`text-sm ${accentColor} mb-4`}>{barber.role}</p>
               
               <p className="text-sm mb-4 text-amber-950/80">{barber.bio}</p>
               
@@ -312,7 +336,7 @@ const BarbersTeam = ({
                     {barber.specialties.map((specialty) => (
                       <span 
                         key={specialty} 
-                        className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full flex items-center gap-1"
+                        className={`text-xs bg-amber-100 ${accentColor.replace('text-', 'text-')} px-2 py-1 rounded-full flex items-center gap-1`}
                       >
                         {specialty}
                       </span>
@@ -334,23 +358,34 @@ const BookingSection = ({
   subtitle, 
   description,
   buttonLabel,
-  backgroundColor = "bg-amber-100"
+  backgroundColor = "bg-amber-100",
+  textColor = "text-amber-950",
+  accentColor = "text-amber-600",
+  buttonColor = "bg-amber-600",
+  buttonTextColor = "text-white"
 }: { 
   title: string;
   subtitle?: string;
   description?: string;
   buttonLabel?: string;
   backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
 }) => {
+  // Classes dinâmicas com base nas props
+  const buttonClass = `${buttonColor} hover:${buttonColor.replace('bg-', 'bg-')}/90 ${buttonTextColor} px-6 py-3 rounded-md font-medium inline-block transition-colors`;
+
   return (
     <section className={`py-24 px-4 ${backgroundColor}`} id="book-now">
       <div className="container mx-auto text-center">
         {subtitle && (
-          <span className="text-xs uppercase tracking-widest mb-2 inline-block text-amber-600">
+          <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
             {subtitle}
           </span>
         )}
-        <h2 className="text-3xl font-bold mb-4 text-amber-950">{title}</h2>
+        <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
         {description && (
           <p className="text-gray-600 max-w-2xl mx-auto mb-8">
             {description}
@@ -360,7 +395,7 @@ const BookingSection = ({
         {buttonLabel && (
           <a
             href="#contact"
-            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-medium inline-block transition-colors"
+            className={buttonClass}
           >
             {buttonLabel}
           </a>
@@ -372,149 +407,11 @@ const BookingSection = ({
 
 export const config: Config = {
   components: {
-    Heading: {
-      render: Heading,
-      defaultProps: {
-        text: "Título da Seção",
-        size: "large",
-      },
-      fields: {
-        text: {
-          type: "text",
-          label: "Texto",
-        },
-        size: {
-          type: "select",
-          label: "Tamanho",
-          options: [
-            { label: "Pequeno", value: "small" },
-            { label: "Médio", value: "medium" },
-            { label: "Grande", value: "large" },
-          ],
-        },
-      },
-    },
-    TextBlock: {
-      render: TextBlock,
-      defaultProps: {
-        content: "<p>Adicione seu conteúdo aqui...</p>",
-      },
-      fields: {
-        content: {
-          type: "textarea",
-          label: "Conteúdo",
-        },
-      },
-    },
-    ImageBlock: {
-      render: ImageBlock,
-      defaultProps: {
-        src: "https://via.placeholder.com/800x400",
-        alt: "Imagem",
-      },
-      fields: {
-        src: {
-          type: "text",
-          label: "URL da imagem",
-        },
-        alt: {
-          type: "text",
-          label: "Texto alternativo",
-        },
-        className: {
-          type: "text",
-          label: "Classes CSS (opcional)",
-        },
-      },
-    },
-    Button: {
-      render: Button,
-      defaultProps: {
-        label: "Clique Aqui",
-        href: "#",
-        variant: "primary",
-      },
-      fields: {
-        label: {
-          type: "text",
-          label: "Texto do botão",
-        },
-        href: {
-          type: "text",
-          label: "Link",
-        },
-        variant: {
-          type: "select",
-          label: "Estilo",
-          options: [
-            { label: "Primário", value: "primary" },
-            { label: "Secundário", value: "secondary" },
-          ],
-        },
-      },
-    },
-    ServiceCard: {
-      render: ServiceCard,
-      defaultProps: {
-        title: "Corte de Cabelo",
-        price: "R$ 35,00",
-        description: "Corte profissional com técnicas modernas.",
-        imageUrl: "https://via.placeholder.com/300x200",
-      },
-      fields: {
-        title: {
-          type: "text",
-          label: "Título",
-        },
-        price: {
-          type: "text",
-          label: "Preço",
-        },
-        description: {
-          type: "textarea",
-          label: "Descrição",
-        },
-        imageUrl: {
-          type: "text",
-          label: "URL da imagem (opcional)",
-        },
-      },
-    },
-    CardBlock: {
-      render: CardBlock,
-      defaultProps: {
-        title: "Título do Card",
-        content: "Conteúdo descritivo do card vai aqui.",
-        imageUrl: "https://via.placeholder.com/400x300",
-        buttonLabel: "Saiba Mais",
-        buttonLink: "#",
-      },
-      fields: {
-        title: {
-          type: "text",
-          label: "Título",
-        },
-        content: {
-          type: "textarea",
-          label: "Conteúdo",
-        },
-        imageUrl: {
-          type: "text",
-          label: "URL da imagem (opcional)",
-        },
-        buttonLabel: {
-          type: "text",
-          label: "Texto do botão (opcional)",
-        },
-        buttonLink: {
-          type: "text",
-          label: "Link do botão (opcional)",
-        },
-      },
-    },
-    // New component for Hero Section
+    // Seções traduzidas para português e simplificadas
     HeroSection: {
       render: HeroSection,
+      label: "Seção: Banner Principal",
+      category: "Seções",
       defaultProps: {
         title: "Eleve Seu Estilo Pessoal",
         subtitle: "Experiência Premium de Barbearia",
@@ -524,6 +421,9 @@ export const config: Config = {
         primaryButtonLink: "#book-now",
         secondaryButtonLabel: "Explorar Serviços",
         secondaryButtonLink: "#services",
+        backgroundColor: "bg-black/40",
+        buttonColor: "bg-amber-600",
+        buttonTextColor: "text-white"
       },
       fields: {
         title: {
@@ -544,29 +444,63 @@ export const config: Config = {
         },
         primaryButtonLabel: {
           type: "text",
-          label: "Texto do botão principal (opcional)",
+          label: "Texto do botão principal",
         },
         primaryButtonLink: {
           type: "text",
-          label: "Link do botão principal (opcional)",
+          label: "Link do botão principal",
         },
         secondaryButtonLabel: {
           type: "text",
-          label: "Texto do botão secundário (opcional)",
+          label: "Texto do botão secundário",
         },
         secondaryButtonLink: {
           type: "text",
-          label: "Link do botão secundário (opcional)",
+          label: "Link do botão secundário",
+        },
+        backgroundColor: {
+          type: "select",
+          label: "Cor do Overlay",
+          options: [
+            { label: "Preto (40%)", value: "bg-black/40" },
+            { label: "Preto (60%)", value: "bg-black/60" },
+            { label: "Âmbar Escuro", value: "bg-amber-900/40" },
+            { label: "Âmbar", value: "bg-amber-600/40" },
+          ],
+        },
+        buttonColor: {
+          type: "select",
+          label: "Cor do Botão Principal",
+          options: [
+            { label: "Âmbar", value: "bg-amber-600" },
+            { label: "Âmbar Escuro", value: "bg-amber-800" },
+            { label: "Preto", value: "bg-black" },
+            { label: "Branco", value: "bg-white" },
+          ],
+        },
+        buttonTextColor: {
+          type: "select",
+          label: "Cor do Texto do Botão",
+          options: [
+            { label: "Branco", value: "text-white" },
+            { label: "Âmbar", value: "text-amber-600" },
+            { label: "Preto", value: "text-black" },
+          ],
         },
       },
     },
-    // Services Grid Component
+    
     ServicesGrid: {
       render: ServicesGrid,
+      label: "Seção: Serviços",
+      category: "Seções",
       defaultProps: {
         title: "Serviços de Barbearia Especializados",
         subtitle: "Nossas Especialidades",
         description: "Serviços premium personalizados para realçar seu estilo pessoal com precisão e cuidado.",
+        backgroundColor: "bg-white",
+        textColor: "text-amber-950",
+        accentColor: "text-amber-600",
         services: [
           {
             id: "service-1",
@@ -609,11 +543,39 @@ export const config: Config = {
         },
         subtitle: {
           type: "text",
-          label: "Subtítulo (opcional)",
+          label: "Subtítulo",
         },
         description: {
           type: "textarea",
-          label: "Descrição (opcional)",
+          label: "Descrição",
+        },
+        backgroundColor: {
+          type: "select",
+          label: "Cor de Fundo",
+          options: [
+            { label: "Branco", value: "bg-white" },
+            { label: "Âmbar Claro", value: "bg-amber-50" },
+            { label: "Âmbar", value: "bg-amber-100" },
+            { label: "Cinza Claro", value: "bg-gray-50" },
+          ],
+        },
+        textColor: {
+          type: "select",
+          label: "Cor do Texto",
+          options: [
+            { label: "Âmbar Escuro", value: "text-amber-950" },
+            { label: "Preto", value: "text-black" },
+            { label: "Branco", value: "text-white" },
+          ],
+        },
+        accentColor: {
+          type: "select",
+          label: "Cor de Destaque",
+          options: [
+            { label: "Âmbar", value: "text-amber-600" },
+            { label: "Âmbar Escuro", value: "text-amber-800" },
+            { label: "Preto", value: "text-black" },
+          ],
         },
         services: {
           type: "array",
@@ -621,11 +583,11 @@ export const config: Config = {
           arrayFields: {
             id: {
               type: "text",
-              label: "ID"
+              label: "ID (não alterar)"
             },
             title: {
               type: "text",
-              label: "Título"
+              label: "Nome do Serviço"
             },
             description: {
               type: "textarea",
@@ -641,19 +603,24 @@ export const config: Config = {
             },
             image: {
               type: "text",
-              label: "URL da imagem"
+              label: "URL da Imagem"
             }
           }
         }
       },
     },
-    // Barbers Team Component
+    
     BarbersTeam: {
       render: BarbersTeam,
+      label: "Seção: Equipe de Barbeiros",
+      category: "Seções",
       defaultProps: {
         title: "Barbeiros Especialistas",
         subtitle: "Nossa Equipe",
         description: "Conheça nossa equipe de barbeiros especializados dedicados a aperfeiçoar seu estilo com habilidade e precisão.",
+        backgroundColor: "bg-amber-50",
+        textColor: "text-amber-950",
+        accentColor: "text-amber-600",
         barbers: [
           {
             id: "1",
@@ -691,19 +658,48 @@ export const config: Config = {
         },
         subtitle: {
           type: "text",
-          label: "Subtítulo (opcional)",
+          label: "Subtítulo",
         },
         description: {
           type: "textarea",
-          label: "Descrição (opcional)",
+          label: "Descrição",
+        },
+        backgroundColor: {
+          type: "select",
+          label: "Cor de Fundo",
+          options: [
+            { label: "Âmbar Claro", value: "bg-amber-50" },
+            { label: "Âmbar", value: "bg-amber-100" },
+            { label: "Branco", value: "bg-white" },
+            { label: "Cinza Claro", value: "bg-gray-50" },
+          ],
+        },
+        textColor: {
+          type: "select",
+          label: "Cor do Texto",
+          options: [
+            { label: "Âmbar Escuro", value: "text-amber-950" },
+            { label: "Preto", value: "text-black" },
+            { label: "Branco", value: "text-white" },
+          ],
+        },
+        accentColor: {
+          type: "select",
+          label: "Cor de Destaque",
+          options: [
+            { label: "Âmbar", value: "text-amber-600" },
+            { label: "Âmbar Escuro", value: "text-amber-800" },
+            { label: "Preto", value: "text-black" },
+          ],
         },
         barbers: {
           type: "array",
           label: "Barbeiros",
+          description: "Edite as informações dos barbeiros que aparecerão na seção. Seus especialistas cadastrados no sistema aparecerão automaticamente no site.",
           arrayFields: {
             id: {
               type: "text",
-              label: "ID"
+              label: "ID (não alterar)"
             },
             name: {
               type: "text",
@@ -739,15 +735,21 @@ export const config: Config = {
         }
       },
     },
-    // Booking Section
+    
     BookingSection: {
       render: BookingSection,
+      label: "Seção: Agendamentos",
+      category: "Seções",
       defaultProps: {
         title: "Agende Seu Horário",
         subtitle: "Marque Agora",
         description: "Reserve um horário com nossos barbeiros especializados e experimente um serviço de barbearia de alta qualidade.",
         buttonLabel: "Agendar",
-        backgroundColor: "bg-amber-100"
+        backgroundColor: "bg-amber-100",
+        textColor: "text-amber-950",
+        accentColor: "text-amber-600",
+        buttonColor: "bg-amber-600",
+        buttonTextColor: "text-white"
       },
       fields: {
         title: {
@@ -756,27 +758,219 @@ export const config: Config = {
         },
         subtitle: {
           type: "text",
-          label: "Subtítulo (opcional)",
+          label: "Subtítulo",
         },
         description: {
           type: "textarea",
-          label: "Descrição (opcional)",
+          label: "Descrição",
+        },
+        buttonLabel: {
+          type: "text",
+          label: "Texto do botão",
+        },
+        backgroundColor: {
+          type: "select",
+          label: "Cor de Fundo",
+          options: [
+            { label: "Âmbar Claro", value: "bg-amber-100" },
+            { label: "Âmbar Muito Claro", value: "bg-amber-50" },
+            { label: "Branco", value: "bg-white" },
+            { label: "Cinza Claro", value: "bg-gray-50" },
+          ],
+        },
+        textColor: {
+          type: "select",
+          label: "Cor do Texto",
+          options: [
+            { label: "Âmbar Escuro", value: "text-amber-950" },
+            { label: "Preto", value: "text-black" },
+            { label: "Branco", value: "text-white" },
+          ],
+        },
+        accentColor: {
+          type: "select",
+          label: "Cor de Destaque",
+          options: [
+            { label: "Âmbar", value: "text-amber-600" },
+            { label: "Âmbar Escuro", value: "text-amber-800" },
+            { label: "Preto", value: "text-black" },
+          ],
+        },
+        buttonColor: {
+          type: "select",
+          label: "Cor do Botão",
+          options: [
+            { label: "Âmbar", value: "bg-amber-600" },
+            { label: "Âmbar Escuro", value: "bg-amber-800" },
+            { label: "Preto", value: "bg-black" },
+            { label: "Branco", value: "bg-white" },
+          ],
+        },
+        buttonTextColor: {
+          type: "select",
+          label: "Cor do Texto do Botão",
+          options: [
+            { label: "Branco", value: "text-white" },
+            { label: "Âmbar", value: "text-amber-600" },
+            { label: "Preto", value: "text-black" },
+          ],
+        },
+      }
+    },
+    
+    // Componentes utilitários escondidos da categoria principal
+    Heading: {
+      render: Heading,
+      label: "Título",
+      category: "Componentes Básicos",
+      defaultProps: {
+        text: "Título da Seção",
+        size: "large",
+      },
+      fields: {
+        text: {
+          type: "text",
+          label: "Texto",
+        },
+        size: {
+          type: "select",
+          label: "Tamanho",
+          options: [
+            { label: "Pequeno", value: "small" },
+            { label: "Médio", value: "medium" },
+            { label: "Grande", value: "large" },
+          ],
+        },
+      },
+    },
+    TextBlock: {
+      render: TextBlock,
+      label: "Bloco de Texto",
+      category: "Componentes Básicos",
+      defaultProps: {
+        content: "<p>Adicione seu conteúdo aqui...</p>",
+      },
+      fields: {
+        content: {
+          type: "textarea",
+          label: "Conteúdo",
+        },
+      },
+    },
+    ImageBlock: {
+      render: ImageBlock,
+      label: "Imagem",
+      category: "Componentes Básicos",
+      defaultProps: {
+        src: "https://via.placeholder.com/800x400",
+        alt: "Imagem",
+      },
+      fields: {
+        src: {
+          type: "text",
+          label: "URL da imagem",
+        },
+        alt: {
+          type: "text",
+          label: "Texto alternativo",
+        },
+        className: {
+          type: "text",
+          label: "Classes CSS (opcional)",
+        },
+      },
+    },
+    Button: {
+      render: Button,
+      label: "Botão",
+      category: "Componentes Básicos",
+      defaultProps: {
+        label: "Clique Aqui",
+        href: "#",
+        variant: "primary",
+      },
+      fields: {
+        label: {
+          type: "text",
+          label: "Texto do botão",
+        },
+        href: {
+          type: "text",
+          label: "Link",
+        },
+        variant: {
+          type: "select",
+          label: "Estilo",
+          options: [
+            { label: "Primário", value: "primary" },
+            { label: "Secundário", value: "secondary" },
+          ],
+        },
+      },
+    },
+    ServiceCard: {
+      render: ServiceCard,
+      label: "Card de Serviço",
+      category: "Componentes Básicos",
+      defaultProps: {
+        title: "Corte de Cabelo",
+        price: "R$ 35,00",
+        description: "Corte profissional com técnicas modernas.",
+        imageUrl: "https://via.placeholder.com/300x200",
+      },
+      fields: {
+        title: {
+          type: "text",
+          label: "Título",
+        },
+        price: {
+          type: "text",
+          label: "Preço",
+        },
+        description: {
+          type: "textarea",
+          label: "Descrição",
+        },
+        imageUrl: {
+          type: "text",
+          label: "URL da imagem (opcional)",
+        },
+      },
+    },
+    CardBlock: {
+      render: CardBlock,
+      label: "Card",
+      category: "Componentes Básicos",
+      defaultProps: {
+        title: "Título do Card",
+        content: "Conteúdo descritivo do card vai aqui.",
+        imageUrl: "https://via.placeholder.com/400x300",
+        buttonLabel: "Saiba Mais",
+        buttonLink: "#",
+      },
+      fields: {
+        title: {
+          type: "text",
+          label: "Título",
+        },
+        content: {
+          type: "textarea",
+          label: "Conteúdo",
+        },
+        imageUrl: {
+          type: "text",
+          label: "URL da imagem (opcional)",
         },
         buttonLabel: {
           type: "text",
           label: "Texto do botão (opcional)",
         },
-        backgroundColor: {
-          type: "select",
-          label: "Cor de fundo",
-          options: [
-            { label: "Âmbar Claro", value: "bg-amber-100" },
-            { label: "Âmbar", value: "bg-amber-50" },
-            { label: "Branco", value: "bg-white" },
-          ],
+        buttonLink: {
+          type: "text",
+          label: "Link do botão (opcional)",
         },
-      }
-    }
+      },
+    },
   },
 };
 

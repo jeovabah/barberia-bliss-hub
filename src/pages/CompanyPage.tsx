@@ -12,7 +12,6 @@ import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
 import { useCompanyFromRoute } from "@/hooks/useCompanyFromRoute";
 import "@measured/puck/puck.css";
-import { Json } from "@/integrations/supabase/types";
 
 // Define the PuckContent interface to ensure consistent data structure
 interface PuckContent {
@@ -230,7 +229,12 @@ const CompanyPage = () => {
         <>
           <Hero />
           <Services />
-          <BarberProfile specialists={specialists} />
+          <BarberProfile 
+            specialists={specialists} 
+            backgroundColor="bg-amber-50/50"
+            textColor="text-amber-950"
+            accentColor="text-amber-600"
+          />
           <BookingForm 
             specialists={specialists}
             companyId={company?.id}
