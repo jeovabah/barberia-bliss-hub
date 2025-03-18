@@ -246,7 +246,7 @@ const CompanyPage = () => {
       <Navbar />
       {usePuck && puckData ? (
         <div className="puck-renderer-container">
-          <PuckRenderer data={puckData} />
+          <PuckRenderer data={puckData} config={config} />
         </div>
       ) : (
         <>

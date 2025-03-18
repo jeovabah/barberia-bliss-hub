@@ -103,7 +103,7 @@ const Index = () => {
       
       {usePuck && puckData ? (
         <div className="puck-renderer-container">
-          <PuckRenderer data={puckData} />
+          <PuckRenderer data={puckData} config={config} />
         </div>
       ) : (
         // Fallback to classic component rendering
