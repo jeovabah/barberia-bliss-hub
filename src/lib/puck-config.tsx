@@ -1,4 +1,3 @@
-
 import { Config } from "@measured/puck";
 import { Render } from "@measured/puck";
 
@@ -404,12 +403,58 @@ const BookingSection = ({
   );
 };
 
+// Cores em hexadecimal para as opções
+const colorOptions = [
+  // Backgrounds
+  { label: "Branco", value: "bg-white" },
+  { label: "Âmbar Claro", value: "bg-amber-50" },
+  { label: "Âmbar", value: "bg-amber-100" },
+  { label: "Cinza Claro", value: "bg-gray-50" },
+  { label: "Branco (#FFFFFF)", value: "bg-[#FFFFFF]" },
+  { label: "Âmbar Claro (#FFF8E1)", value: "bg-[#FFF8E1]" },
+  { label: "Âmbar (#FFECB3)", value: "bg-[#FFECB3]" },
+  { label: "Cinza Claro (#F5F5F5)", value: "bg-[#F5F5F5]" },
+  { label: "Personalizado", value: "custom" }
+];
+
+// Cores para texto
+const textColorOptions = [
+  { label: "Âmbar Escuro", value: "text-amber-950" },
+  { label: "Preto", value: "text-black" },
+  { label: "Branco", value: "text-white" },
+  { label: "Âmbar Escuro (#3E2723)", value: "text-[#3E2723]" },
+  { label: "Preto (#000000)", value: "text-[#000000]" },
+  { label: "Branco (#FFFFFF)", value: "text-[#FFFFFF]" }
+];
+
+// Cores de destaque
+const accentColorOptions = [
+  { label: "Âmbar", value: "text-amber-600" },
+  { label: "Âmbar Escuro", value: "text-amber-800" },
+  { label: "Preto", value: "text-black" },
+  { label: "Âmbar (#FFB300)", value: "text-[#FFB300]" },
+  { label: "Âmbar Escuro (#FF8F00)", value: "text-[#FF8F00]" },
+  { label: "Preto (#000000)", value: "text-[#000000]" }
+];
+
+// Cores de botões
+const buttonColorOptions = [
+  { label: "Âmbar", value: "bg-amber-600" },
+  { label: "Âmbar Escuro", value: "bg-amber-800" },
+  { label: "Preto", value: "bg-black" },
+  { label: "Branco", value: "bg-white" },
+  { label: "Âmbar (#FFB300)", value: "bg-[#FFB300]" },
+  { label: "Âmbar Escuro (#FF8F00)", value: "bg-[#FF8F00]" },
+  { label: "Preto (#000000)", value: "bg-[#000000]" },
+  { label: "Branco (#FFFFFF)", value: "bg-[#FFFFFF]" }
+];
+
 export const config: Config = {
   components: {
     // Seções traduzidas para português e simplificadas
     HeroSection: {
       render: HeroSection,
-      label: "Seção: Banner Principal",
+      label: "Banner Principal",
       defaultProps: {
         title: "Eleve Seu Estilo Pessoal",
         subtitle: "Experiência Premium de Barbearia",
@@ -464,33 +509,28 @@ export const config: Config = {
             { label: "Preto (60%)", value: "bg-black/60" },
             { label: "Âmbar Escuro", value: "bg-amber-900/40" },
             { label: "Âmbar", value: "bg-amber-600/40" },
+            { label: "Preto (#000000) 40%", value: "bg-[#000000]/40" },
+            { label: "Preto (#000000) 60%", value: "bg-[#000000]/60" },
+            { label: "Âmbar Escuro (#FF8F00) 40%", value: "bg-[#FF8F00]/40" },
+            { label: "Âmbar (#FFB300) 40%", value: "bg-[#FFB300]/40" },
           ],
         },
         buttonColor: {
           type: "select",
           label: "Cor do Botão Principal",
-          options: [
-            { label: "Âmbar", value: "bg-amber-600" },
-            { label: "Âmbar Escuro", value: "bg-amber-800" },
-            { label: "Preto", value: "bg-black" },
-            { label: "Branco", value: "bg-white" },
-          ],
+          options: buttonColorOptions,
         },
         buttonTextColor: {
           type: "select",
           label: "Cor do Texto do Botão",
-          options: [
-            { label: "Branco", value: "text-white" },
-            { label: "Âmbar", value: "text-amber-600" },
-            { label: "Preto", value: "text-black" },
-          ],
+          options: textColorOptions,
         },
       },
     },
     
     ServicesGrid: {
       render: ServicesGrid,
-      label: "Seção: Serviços",
+      label: "Serviços",
       defaultProps: {
         title: "Serviços de Barbearia Especializados",
         subtitle: "Nossas Especialidades",
@@ -549,30 +589,17 @@ export const config: Config = {
         backgroundColor: {
           type: "select",
           label: "Cor de Fundo",
-          options: [
-            { label: "Branco", value: "bg-white" },
-            { label: "Âmbar Claro", value: "bg-amber-50" },
-            { label: "Âmbar", value: "bg-amber-100" },
-            { label: "Cinza Claro", value: "bg-gray-50" },
-          ],
+          options: colorOptions,
         },
         textColor: {
           type: "select",
           label: "Cor do Texto",
-          options: [
-            { label: "Âmbar Escuro", value: "text-amber-950" },
-            { label: "Preto", value: "text-black" },
-            { label: "Branco", value: "text-white" },
-          ],
+          options: textColorOptions,
         },
         accentColor: {
           type: "select",
           label: "Cor de Destaque",
-          options: [
-            { label: "Âmbar", value: "text-amber-600" },
-            { label: "Âmbar Escuro", value: "text-amber-800" },
-            { label: "Preto", value: "text-black" },
-          ],
+          options: accentColorOptions,
         },
         services: {
           type: "array",
@@ -609,7 +636,7 @@ export const config: Config = {
     
     BarbersTeam: {
       render: BarbersTeam,
-      label: "Seção: Equipe de Barbeiros",
+      label: "Equipe de Barbeiros",
       defaultProps: {
         title: "Barbeiros Especialistas",
         subtitle: "Nossa Equipe",
@@ -663,30 +690,17 @@ export const config: Config = {
         backgroundColor: {
           type: "select",
           label: "Cor de Fundo",
-          options: [
-            { label: "Âmbar Claro", value: "bg-amber-50" },
-            { label: "Âmbar", value: "bg-amber-100" },
-            { label: "Branco", value: "bg-white" },
-            { label: "Cinza Claro", value: "bg-gray-50" },
-          ],
+          options: colorOptions,
         },
         textColor: {
           type: "select",
           label: "Cor do Texto",
-          options: [
-            { label: "Âmbar Escuro", value: "text-amber-950" },
-            { label: "Preto", value: "text-black" },
-            { label: "Branco", value: "text-white" },
-          ],
+          options: textColorOptions,
         },
         accentColor: {
           type: "select",
           label: "Cor de Destaque",
-          options: [
-            { label: "Âmbar", value: "text-amber-600" },
-            { label: "Âmbar Escuro", value: "text-amber-800" },
-            { label: "Preto", value: "text-black" },
-          ],
+          options: accentColorOptions,
         },
         barbers: {
           type: "array",
@@ -733,7 +747,7 @@ export const config: Config = {
     
     BookingSection: {
       render: BookingSection,
-      label: "Seção: Agendamentos",
+      label: "Agendamentos",
       defaultProps: {
         title: "Agende Seu Horário",
         subtitle: "Marque Agora",
@@ -765,49 +779,27 @@ export const config: Config = {
         backgroundColor: {
           type: "select",
           label: "Cor de Fundo",
-          options: [
-            { label: "Âmbar Claro", value: "bg-amber-100" },
-            { label: "Âmbar Muito Claro", value: "bg-amber-50" },
-            { label: "Branco", value: "bg-white" },
-            { label: "Cinza Claro", value: "bg-gray-50" },
-          ],
+          options: colorOptions,
         },
         textColor: {
           type: "select",
           label: "Cor do Texto",
-          options: [
-            { label: "Âmbar Escuro", value: "text-amber-950" },
-            { label: "Preto", value: "text-black" },
-            { label: "Branco", value: "text-white" },
-          ],
+          options: textColorOptions,
         },
         accentColor: {
           type: "select",
           label: "Cor de Destaque",
-          options: [
-            { label: "Âmbar", value: "text-amber-600" },
-            { label: "Âmbar Escuro", value: "text-amber-800" },
-            { label: "Preto", value: "text-black" },
-          ],
+          options: accentColorOptions,
         },
         buttonColor: {
           type: "select",
           label: "Cor do Botão",
-          options: [
-            { label: "Âmbar", value: "bg-amber-600" },
-            { label: "Âmbar Escuro", value: "bg-amber-800" },
-            { label: "Preto", value: "bg-black" },
-            { label: "Branco", value: "bg-white" },
-          ],
+          options: buttonColorOptions,
         },
         buttonTextColor: {
           type: "select",
           label: "Cor do Texto do Botão",
-          options: [
-            { label: "Branco", value: "text-white" },
-            { label: "Âmbar", value: "text-amber-600" },
-            { label: "Preto", value: "text-black" },
-          ],
+          options: textColorOptions,
         },
       }
     },
@@ -903,72 +895,4 @@ export const config: Config = {
       label: "Card de Serviço",
       defaultProps: {
         title: "Corte de Cabelo",
-        price: "R$ 35,00",
-        description: "Corte profissional com técnicas modernas.",
-        imageUrl: "https://via.placeholder.com/300x200",
-      },
-      fields: {
-        title: {
-          type: "text",
-          label: "Título",
-        },
-        price: {
-          type: "text",
-          label: "Preço",
-        },
-        description: {
-          type: "textarea",
-          label: "Descrição",
-        },
-        imageUrl: {
-          type: "text",
-          label: "URL da imagem (opcional)",
-        },
-      },
-    },
-    CardBlock: {
-      render: CardBlock,
-      label: "Card",
-      defaultProps: {
-        title: "Título do Card",
-        content: "Conteúdo descritivo do card vai aqui.",
-        imageUrl: "https://via.placeholder.com/400x300",
-        buttonLabel: "Saiba Mais",
-        buttonLink: "#",
-      },
-      fields: {
-        title: {
-          type: "text",
-          label: "Título",
-        },
-        content: {
-          type: "textarea",
-          label: "Conteúdo",
-        },
-        imageUrl: {
-          type: "text",
-          label: "URL da imagem (opcional)",
-        },
-        buttonLabel: {
-          type: "text",
-          label: "Texto do botão (opcional)",
-        },
-        buttonLink: {
-          type: "text",
-          label: "Link do botão (opcional)",
-        },
-      },
-    },
-  },
-};
-
-// Component for rendering Puck content on the front-end
-export const PuckRenderer = ({ data }: { data: any }) => {
-  if (!data) {
-    console.log("No data provided to PuckRenderer");
-    return null;
-  }
-  
-  // Using Puck's built-in Render component for proper rendering
-  return <Render config={config} data={data} />;
-};
+        price: "R$ 35,00
