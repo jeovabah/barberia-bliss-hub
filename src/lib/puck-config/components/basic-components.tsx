@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ComponentConfig } from "@measured/puck";
 
 // Heading component
 const Heading = ({ text, size = "large" }: { text: string; size?: "small" | "medium" | "large" }) => {
@@ -119,7 +120,7 @@ const CardBlock = ({
 };
 
 // Export basic components with their Puck configuration
-export const basicComponents = {
+export const basicComponents: Record<string, ComponentConfig> = {
   Heading: {
     render: Heading,
     label: "Título",
@@ -129,11 +130,11 @@ export const basicComponents = {
     },
     fields: {
       text: {
-        type: "text",
+        type: "text" as const,
         label: "Texto",
       },
       size: {
-        type: "select",
+        type: "select" as const,
         label: "Tamanho",
         options: [
           { label: "Pequeno", value: "small" },
@@ -151,7 +152,7 @@ export const basicComponents = {
     },
     fields: {
       content: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Conteúdo",
       },
     },
@@ -165,15 +166,15 @@ export const basicComponents = {
     },
     fields: {
       src: {
-        type: "text",
+        type: "text" as const,
         label: "URL da imagem",
       },
       alt: {
-        type: "text",
+        type: "text" as const,
         label: "Texto alternativo",
       },
       className: {
-        type: "text",
+        type: "text" as const,
         label: "Classes CSS (opcional)",
       },
     },
@@ -188,15 +189,15 @@ export const basicComponents = {
     },
     fields: {
       label: {
-        type: "text",
+        type: "text" as const,
         label: "Texto do botão",
       },
       href: {
-        type: "text",
+        type: "text" as const,
         label: "Link",
       },
       variant: {
-        type: "select",
+        type: "select" as const,
         label: "Estilo",
         options: [
           { label: "Primário", value: "primary" },
@@ -215,19 +216,19 @@ export const basicComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título do Serviço"
       },
       price: {
-        type: "text",
+        type: "text" as const,
         label: "Preço"
       },
       description: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Descrição"
       },
       imageUrl: {
-        type: "text",
+        type: "text" as const,
         label: "URL da Imagem (opcional)"
       }
     }
@@ -243,23 +244,23 @@ export const basicComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título"
       },
       content: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Conteúdo"
       },
       imageUrl: {
-        type: "text",
+        type: "text" as const,
         label: "URL da Imagem (opcional)"
       },
       buttonLabel: {
-        type: "text",
+        type: "text" as const,
         label: "Texto do Botão (opcional)"
       },
       buttonLink: {
-        type: "text",
+        type: "text" as const,
         label: "Link do Botão (opcional)"
       }
     }
@@ -283,19 +284,19 @@ export const basicComponents = {
     },
     fields: {
       buttons: {
-        type: "array",
+        type: "array" as const,
         label: "Botões",
         arrayFields: {
           label: {
-            type: "text",
+            type: "text" as const,
             label: "Texto"
           },
           href: {
-            type: "text",
+            type: "text" as const,
             label: "Link"
           },
           variant: {
-            type: "select",
+            type: "select" as const,
             label: "Estilo",
             options: [
               { label: "Primário", value: "primary" },

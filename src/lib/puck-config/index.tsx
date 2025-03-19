@@ -1,5 +1,5 @@
 
-import { Config } from "@measured/puck";
+import { Config, Data } from "@measured/puck";
 import { Render } from "@measured/puck";
 import { puckComponents } from "./components";
 import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from "./color-options";

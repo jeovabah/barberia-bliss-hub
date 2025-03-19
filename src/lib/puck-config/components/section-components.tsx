@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ComponentConfig } from "@measured/puck";
 import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from '../color-options';
 
 // Hero Section Component
@@ -304,7 +305,7 @@ const BookingSection = ({
 };
 
 // Export section components with their Puck configuration
-export const sectionComponents = {
+export const sectionComponents: Record<string, ComponentConfig> = {
   HeroSection: {
     render: HeroSection,
     label: "Banner Principal",
@@ -323,39 +324,39 @@ export const sectionComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título",
       },
       subtitle: {
-        type: "text",
+        type: "text" as const,
         label: "Subtítulo (opcional)",
       },
       description: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Descrição",
       },
       imageUrl: {
-        type: "text",
+        type: "text" as const,
         label: "URL da imagem de fundo",
       },
       primaryButtonLabel: {
-        type: "text",
+        type: "text" as const,
         label: "Texto do botão principal",
       },
       primaryButtonLink: {
-        type: "text",
+        type: "text" as const,
         label: "Link do botão principal",
       },
       secondaryButtonLabel: {
-        type: "text",
+        type: "text" as const,
         label: "Texto do botão secundário",
       },
       secondaryButtonLink: {
-        type: "text",
+        type: "text" as const,
         label: "Link do botão secundário",
       },
       backgroundColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Overlay",
         options: [
           { label: "Preto (40%)", value: "bg-black/40" },
@@ -369,12 +370,12 @@ export const sectionComponents = {
         ],
       },
       buttonColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Botão Principal",
         options: buttonColorOptions,
       },
       buttonTextColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Texto do Botão",
         options: textColorOptions,
       },
@@ -428,58 +429,58 @@ export const sectionComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título",
       },
       subtitle: {
-        type: "text",
+        type: "text" as const,
         label: "Subtítulo",
       },
       description: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Descrição",
       },
       backgroundColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Fundo",
         options: colorOptions,
       },
       textColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Texto",
         options: textColorOptions,
       },
       accentColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Destaque",
         options: accentColorOptions,
       },
       services: {
-        type: "array",
+        type: "array" as const,
         label: "Serviços",
         arrayFields: {
           id: {
-            type: "text",
+            type: "text" as const,
             label: "ID (não alterar)"
           },
           title: {
-            type: "text",
+            type: "text" as const,
             label: "Nome do Serviço"
           },
           description: {
-            type: "textarea",
+            type: "textarea" as const,
             label: "Descrição"
           },
           price: {
-            type: "text",
+            type: "text" as const,
             label: "Preço"
           },
           duration: {
-            type: "text",
+            type: "text" as const,
             label: "Duração"
           },
           image: {
-            type: "text",
+            type: "text" as const,
             label: "URL da Imagem"
           }
         }
@@ -529,68 +530,68 @@ export const sectionComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título",
       },
       subtitle: {
-        type: "text",
+        type: "text" as const,
         label: "Subtítulo",
       },
       description: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Descrição",
       },
       backgroundColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Fundo",
         options: colorOptions,
       },
       textColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Texto",
         options: textColorOptions,
       },
       accentColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Destaque",
         options: accentColorOptions,
       },
       barbers: {
-        type: "array",
+        type: "array" as const,
         label: "Barbeiros",
         arrayFields: {
           id: {
-            type: "text",
+            type: "text" as const,
             label: "ID (não alterar)"
           },
           name: {
-            type: "text",
+            type: "text" as const,
             label: "Nome"
           },
           role: {
-            type: "text",
+            type: "text" as const,
             label: "Cargo"
           },
           bio: {
-            type: "textarea",
+            type: "textarea" as const,
             label: "Biografia"
           },
           experience: {
-            type: "text",
+            type: "text" as const,
             label: "Experiência"
           },
           specialties: {
-            type: "array",
+            type: "array" as const,
             label: "Especialidades",
             arrayFields: {
               value: {
-                type: "text",
+                type: "text" as const,
                 label: "Especialidade"
               }
             }
           },
           image: {
-            type: "text",
+            type: "text" as const,
             label: "URL da imagem"
           }
         }
@@ -614,43 +615,43 @@ export const sectionComponents = {
     },
     fields: {
       title: {
-        type: "text",
+        type: "text" as const,
         label: "Título",
       },
       subtitle: {
-        type: "text",
+        type: "text" as const,
         label: "Subtítulo",
       },
       description: {
-        type: "textarea",
+        type: "textarea" as const,
         label: "Descrição",
       },
       buttonLabel: {
-        type: "text",
+        type: "text" as const,
         label: "Texto do botão",
       },
       backgroundColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Fundo",
         options: colorOptions,
       },
       textColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Texto",
         options: textColorOptions,
       },
       accentColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor de Destaque",
         options: accentColorOptions,
       },
       buttonColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Botão",
         options: buttonColorOptions,
       },
       buttonTextColor: {
-        type: "select",
+        type: "select" as const,
         label: "Cor do Texto do Botão",
         options: textColorOptions,
       },
