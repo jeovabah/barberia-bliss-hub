@@ -920,4 +920,4 @@ export const sectionComponents: Record<string, ComponentConfig> = {
       },
       customTextColor: {
         type: "custom" as const,
-        label: "Cor do Texto Personalizada",
+        label: "Cor do Texto Personalizada
