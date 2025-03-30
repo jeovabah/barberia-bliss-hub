@@ -1,137 +1,43 @@
-
 import React from 'react';
 import { ComponentConfig } from "@measured/puck";
+import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from "../color-options";
 
-// Heading component
-const Heading = ({ text, size = "large" }: { text: string; size?: "small" | "medium" | "large" }) => {
-  const className = 
-    size === "small" 
-      ? "text-xl font-bold mb-2" 
-      : size === "medium" 
-        ? "text-2xl font-bold mb-3" 
-        : "text-4xl font-bold mb-4";
-  
-  return <h2 className={className}>{text}</h2>;
-};
-
-// Text Block component
-const TextBlock = ({ content }: { content: string }) => {
-  return <div className="prose max-w-none mb-6" dangerouslySetInnerHTML={{ __html: content }} />;
-};
-
-// Image Block component
-const ImageBlock = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
-  return <img src={src} alt={alt} className={`rounded-lg ${className || "w-full h-auto"}`} />;
-};
-
-// Button component
-const Button = ({ 
-  label, 
-  href, 
-  variant = "primary" 
-}: { 
-  label: string; 
-  href: string; 
-  variant?: "primary" | "secondary" 
-}) => {
-  const className = variant === "primary" 
-    ? "bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md font-medium inline-block transition-colors" 
-    : "bg-white text-amber-800 border border-amber-800 hover:bg-amber-50 px-6 py-3 rounded-md font-medium inline-block transition-colors";
-  
-  return <a href={href} className={className}>{label}</a>;
-};
-
-// Button Group component
-const ButtonGroup = ({ buttons }: { buttons: { label: string; href: string; variant: "primary" | "secondary" }[] }) => {
-  return (
-    <div className="flex gap-4">
-      {buttons.map((button, index) => (
-        <Button key={index} label={button.label} href={button.href} variant={button.variant} />
-      ))}
-    </div>
-  );
-};
-
-// ServiceCard component
-const ServiceCard = ({ 
-  title, 
-  price, 
-  description, 
-  imageUrl 
-}: { 
-  title: string; 
-  price: string;
-  description: string;
-  imageUrl?: string;
-}) => {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {imageUrl && (
-        <div className="h-48 overflow-hidden">
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-        </div>
-      )}
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-xl font-bold">{title}</h3>
-          <span className="text-amber-600 font-bold">{price}</span>
-        </div>
-        <p className="text-gray-600">{description}</p>
-      </div>
-    </div>
-  );
-};
-
-// CardBlock component
-const CardBlock = ({ 
-  title, 
-  content, 
-  imageUrl, 
-  buttonLabel, 
-  buttonLink 
-}: { 
-  title: string; 
-  content: string;
-  imageUrl?: string;
-  buttonLabel?: string;
-  buttonLink?: string;
-}) => {
-  return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      {imageUrl && (
-        <div className="h-48 overflow-hidden">
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-        </div>
-      )}
-      <div className="p-6">
-        <h3 className="text-xl font-bold mb-3">{title}</h3>
-        <p className="text-gray-600 mb-4">{content}</p>
-        {buttonLabel && buttonLink && (
-          <a 
-            href={buttonLink} 
-            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded inline-block transition-colors"
-          >
-            {buttonLabel}
-          </a>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Export basic components with their Puck configuration
 export const basicComponents: Record<string, ComponentConfig> = {
   Heading: {
-    render: Heading,
     label: "Título",
+    render: ({ text, size, className, customColor }) => {
+      if (customColor && customColor.startsWith('#')) {
+        // Use custom color if specified
+        if (size === "large") {
+          return <h1 className={className} style={{ color: customColor }}>{text}</h1>;
+        }
+        if (size === "medium") {
+          return <h2 className={className} style={{ color: customColor }}>{text}</h2>;
+        }
+        return <h3 className={className} style={{ color: customColor }}>{text}</h3>;
+      } else {
+        // Use Tailwind classes otherwise
+        const baseClasses = `${className || ''}`;
+        
+        if (size === "large") {
+          return <h1 className={`text-3xl md:text-4xl lg:text-5xl font-bold ${baseClasses}`}>{text}</h1>;
+        }
+        if (size === "medium") {
+          return <h2 className={`text-2xl md:text-3xl font-bold ${baseClasses}`}>{text}</h2>;
+        }
+        return <h3 className={`text-xl md:text-2xl font-semibold ${baseClasses}`}>{text}</h3>;
+      }
+    },
     defaultProps: {
       text: "Título da Seção",
-      size: "large",
+      size: "medium",
+      className: "mb-4",
+      customColor: ""
     },
     fields: {
       text: {
         type: "text" as const,
-        label: "Texto",
+        label: "Texto"
       },
       size: {
         type: "select" as const,
@@ -139,172 +45,209 @@ export const basicComponents: Record<string, ComponentConfig> = {
         options: [
           { label: "Pequeno", value: "small" },
           { label: "Médio", value: "medium" },
-          { label: "Grande", value: "large" },
-        ],
+          { label: "Grande", value: "large" }
+        ]
       },
-    },
+      className: {
+        type: "text" as const,
+        label: "Classes CSS (opcional)"
+      },
+      customColor: {
+        type: "custom" as const,
+        label: "Cor personalizada (hex)",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#000000"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#000000"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar o estilo padrão</p>
+          </div>
+        )
+      }
+    }
   },
-  TextBlock: {
-    render: TextBlock,
-    label: "Bloco de Texto",
+  Paragraph: {
+    label: "Parágrafo",
+    render: ({ text, className, customColor }) => {
+      const paragraphStyle = customColor ? { color: customColor } : {};
+      return (
+        <p className={`${className || ''}`} style={paragraphStyle}>{text}</p>
+      );
+    },
     defaultProps: {
-      content: "<p>Adicione seu conteúdo aqui...</p>",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      className: "mb-4",
+      customColor: ""
     },
     fields: {
-      content: {
+      text: {
         type: "textarea" as const,
-        label: "Conteúdo",
+        label: "Texto"
       },
-    },
+      className: {
+        type: "text" as const,
+        label: "Classes CSS (opcional)"
+      },
+      customColor: {
+        type: "custom" as const,
+        label: "Cor personalizada (hex)",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#000000"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#000000"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar o estilo padrão</p>
+          </div>
+        )
+      }
+    }
   },
-  ImageBlock: {
-    render: ImageBlock,
-    label: "Imagem",
+  Button: {
+    label: "Botão",
+    render: ({ text, link, className, buttonColor, customButtonColor }) => {
+      const buttonStyle = customButtonColor ? { backgroundColor: customButtonColor, borderColor: customButtonColor } : {};
+      return (
+        <a
+          href={link || "#"}
+          className={`inline-block px-6 py-3 rounded-md font-medium ${buttonColor} ${className || ''}`}
+          style={buttonStyle}
+        >
+          {text}
+        </a>
+      );
+    },
     defaultProps: {
-      src: "https://via.placeholder.com/800x400",
+      text: "Saiba Mais",
+      link: "#",
+      className: "",
+      buttonColor: "bg-amber-500",
+      customButtonColor: ""
+    },
+    fields: {
+      text: {
+        type: "text" as const,
+        label: "Texto"
+      },
+      link: {
+        type: "text" as const,
+        label: "Link"
+      },
+      className: {
+        type: "text" as const,
+        label: "Classes CSS (opcional)"
+      },
+      buttonColor: {
+        type: "select" as const,
+        label: "Cor do Botão",
+        options: buttonColorOptions
+      },
+      customButtonColor: {
+        type: "custom" as const,
+        label: "Cor do Botão Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#000000"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#000000"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      }
+    }
+  },
+  Image: {
+    label: "Imagem",
+    render: ({ src, alt, className }) => (
+      <img src={src} alt={alt} className={className} />
+    ),
+    defaultProps: {
+      src: "https://via.placeholder.com/300",
       alt: "Imagem",
+      className: "w-full rounded-md"
     },
     fields: {
       src: {
         type: "text" as const,
-        label: "URL da imagem",
+        label: "URL da Imagem"
       },
       alt: {
         type: "text" as const,
-        label: "Texto alternativo",
+        label: "Texto Alternativo"
       },
       className: {
         type: "text" as const,
-        label: "Classes CSS (opcional)",
-      },
-    },
-  },
-  Button: {
-    render: Button,
-    label: "Botão",
-    defaultProps: {
-      label: "Clique Aqui",
-      href: "#",
-      variant: "primary",
-    },
-    fields: {
-      label: {
-        type: "text" as const,
-        label: "Texto do botão",
-      },
-      href: {
-        type: "text" as const,
-        label: "Link",
-      },
-      variant: {
-        type: "select" as const,
-        label: "Estilo",
-        options: [
-          { label: "Primário", value: "primary" },
-          { label: "Secundário", value: "secondary" },
-        ],
-      },
-    },
-  },
-  ServiceCard: {
-    render: ServiceCard,
-    label: "Card de Serviço",
-    defaultProps: {
-      title: "Corte de Cabelo",
-      price: "R$ 35,00",
-      description: "Corte moderno e estiloso para todos os tipos de cabelo."
-    },
-    fields: {
-      title: {
-        type: "text" as const,
-        label: "Título do Serviço"
-      },
-      price: {
-        type: "text" as const,
-        label: "Preço"
-      },
-      description: {
-        type: "textarea" as const,
-        label: "Descrição"
-      },
-      imageUrl: {
-        type: "text" as const,
-        label: "URL da Imagem (opcional)"
+        label: "Classes CSS (opcional)"
       }
     }
   },
-  CardBlock: {
-    render: CardBlock,
-    label: "Card Informativo",
+  ServiceCard: {
+    label: "Cartão de Serviço",
+    render: ({ title, description, icon, className }) => (
+      <div className={`bg-white rounded-lg shadow-md p-6 ${className || ''}`}>
+        <div className="text-amber-500 text-2xl mb-2">{icon}</div>
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
+        <p className="text-gray-600">{description}</p>
+      </div>
+    ),
     defaultProps: {
-      title: "Título do Card",
-      content: "Conteúdo descritivo do card informativo.",
-      buttonLabel: "Saiba Mais",
-      buttonLink: "#"
+      title: "Serviço",
+      description: "Descrição do serviço.",
+      icon: "✂️",
+      className: ""
     },
     fields: {
       title: {
         type: "text" as const,
         label: "Título"
       },
-      content: {
+      description: {
         type: "textarea" as const,
-        label: "Conteúdo"
+        label: "Descrição"
       },
-      imageUrl: {
+      icon: {
         type: "text" as const,
-        label: "URL da Imagem (opcional)"
+        label: "Ícone (emoji)"
       },
-      buttonLabel: {
+      className: {
         type: "text" as const,
-        label: "Texto do Botão (opcional)"
-      },
-      buttonLink: {
-        type: "text" as const,
-        label: "Link do Botão (opcional)"
+        label: "Classes CSS (opcional)"
       }
     }
   },
-  ButtonGroup: {
-    render: ButtonGroup,
-    label: "Grupo de Botões",
-    defaultProps: {
-      buttons: [
-        {
-          label: "Botão Primário",
-          href: "#",
-          variant: "primary"
-        },
-        {
-          label: "Botão Secundário",
-          href: "#",
-          variant: "secondary"
-        }
-      ]
-    },
-    fields: {
-      buttons: {
-        type: "array" as const,
-        label: "Botões",
-        arrayFields: {
-          label: {
-            type: "text" as const,
-            label: "Texto"
-          },
-          href: {
-            type: "text" as const,
-            label: "Link"
-          },
-          variant: {
-            type: "select" as const,
-            label: "Estilo",
-            options: [
-              { label: "Primário", value: "primary" },
-              { label: "Secundário", value: "secondary" }
-            ]
-          }
-        }
-      }
-    }
-  }
 };

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -261,6 +260,7 @@ const CompanyPage = () => {
           <BookingForm 
             specialists={specialists}
             companyId={company?.id}
+            companyName={company?.name}
           />
         </>
       )}

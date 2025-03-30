@@ -1,475 +1,418 @@
-
 import React from 'react';
 import { ComponentConfig } from "@measured/puck";
-import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from '../color-options';
+import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from "../color-options";
+import BookingForm from "@/components/BookingForm";
 
-// Hero Section Component
-const HeroSection = ({ 
-  title, 
-  subtitle, 
-  description, 
-  imageUrl, 
-  primaryButtonLabel, 
-  primaryButtonLink, 
-  secondaryButtonLabel, 
-  secondaryButtonLink,
-  backgroundColor = "bg-black/40",
-  buttonColor = "bg-amber-600",
-  buttonTextColor = "text-white"
-}: { 
-  title: string;
-  subtitle?: string;
-  description: string;
-  imageUrl: string;
-  primaryButtonLabel?: string;
-  primaryButtonLink?: string;
-  secondaryButtonLabel?: string;
-  secondaryButtonLink?: string;
-  backgroundColor?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
-}) => {
-  // Gerar classes de cores baseadas nos parâmetros
-  const overlayClass = backgroundColor;
-  const primaryBtnClass = `${buttonColor} hover:${buttonColor.replace('bg-', 'bg-')}/90 ${buttonTextColor} px-6 py-3 rounded-md font-medium inline-block transition-colors text-center`;
-  const secondaryBtnClass = `border-amber-400 bg-amber-400/10 text-amber-100 hover:bg-amber-500/30 hover:border-amber-300 hover:text-white font-medium rounded-md transition-all duration-300 px-6 py-3 text-center backdrop-blur-sm`;
-
-  return (
-    <section className="h-screen relative overflow-hidden flex items-center">
-      <div className={`absolute inset-0 ${overlayClass} z-10`}></div>
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${imageUrl})` }}
-      ></div>
-      
-      <div className="container mx-auto px-4 relative z-20">
-        <div className="max-w-2xl ml-0 md:ml-8 lg:ml-16">
-          {subtitle && (
-            <span className="inline-block uppercase text-xs tracking-widest mb-3 p-2 bg-amber-500/10 backdrop-blur-md border border-amber-500/20 rounded-full">
-              {subtitle}
-            </span>
-          )}
-          
-          <h1 className="text-5xl font-bold mb-6 text-white text-shadow-sm">
-            {title}
-          </h1>
-          
-          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-lg">
-            {description}
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            {primaryButtonLabel && primaryButtonLink && (
-              <a 
-                href={primaryButtonLink} 
-                className={primaryBtnClass}
-              >
-                {primaryButtonLabel}
-              </a>
-            )}
-            
-            {secondaryButtonLabel && secondaryButtonLink && (
-              <a 
-                href={secondaryButtonLink} 
-                className={secondaryBtnClass}
-              >
-                {secondaryButtonLabel}
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Services Grid Component
-const ServicesGrid = ({ 
-  title, 
-  subtitle, 
-  description,
-  services,
-  backgroundColor = "bg-white",
-  textColor = "text-amber-950",
-  accentColor = "text-amber-600"
-}: { 
-  title: string;
-  subtitle?: string;
-  description?: string;
-  services: Array<{
-    id?: string;
-    title?: string;
-    name?: string;
-    price: string;
-    description?: string;
-    duration: string;
-    image?: string;
-  }>;
-  backgroundColor?: string;
-  textColor?: string;
-  accentColor?: string;
-}) => {
-  return (
-    <section className={`py-24 px-4 ${backgroundColor}`}>
-      <div className="container mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          {subtitle && (
-            <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
-              {subtitle}
-            </span>
-          )}
-          <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
-          {description && (
-            <p className="text-gray-600">
-              {description}
-            </p>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services && services.map((service, index) => {
-            // Use id if available, otherwise generate a unique key
-            const serviceKey = service.id || `service-${index}-${Date.now()}`;
-            // Use title or name property as fallback for each other
-            const serviceTitle = service.title || service.name || `Service ${index + 1}`;
-            
-            return (
-              <div key={serviceKey} className="bg-amber-50 rounded-2xl overflow-hidden h-[400px] shadow-md relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10"></div>
-                <div 
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${service.image || 'https://via.placeholder.com/400x300'})` }}
-                ></div>
-                
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-white">{serviceTitle}</h3>
-                    <span className="text-white font-medium">{service.price}</span>
-                  </div>
-                  
-                  <p className="text-white/80 mb-4 text-sm">{service.description || ''}</p>
-                  
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-1">
-                      <span className="text-white/70 text-sm">{service.duration}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Barbers Team Component
-const BarbersTeam = ({ 
-  title, 
-  subtitle, 
-  description,
-  barbers,
-  backgroundColor = "bg-amber-50",
-  textColor = "text-amber-950",
-  accentColor = "text-amber-600"
-}: { 
-  title: string;
-  subtitle?: string;
-  description?: string;
-  barbers: Array<{
-    id: string;
-    name: string;
-    role: string;
-    bio: string;
-    experience: string;
-    specialties: string[];
-    image: string;
-  }>;
-  backgroundColor?: string;
-  textColor?: string;
-  accentColor?: string;
-}) => {
-  return (
-    <section className={`py-24 px-4 ${backgroundColor}`}>
-      <div className="container mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          {subtitle && (
-            <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
-              {subtitle}
-            </span>
-          )}
-          <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
-          {description && (
-            <p className="text-gray-600">
-              {description}
-            </p>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {barbers.map((barber) => (
-            <div key={barber.id} className="bg-white rounded-2xl p-6 shadow-md flex flex-col">
-              <div className="aspect-square overflow-hidden rounded-xl mb-6 relative">
-                <img 
-                  src={barber.image} 
-                  alt={barber.name} 
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
-              
-              <h3 className={`text-xl font-bold mb-1 ${textColor}`}>{barber.name}</h3>
-              <p className={`text-sm ${accentColor} mb-4`}>{barber.role}</p>
-              
-              <p className="text-sm mb-4 text-amber-950/80">{barber.bio}</p>
-              
-              <div className="mt-auto">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium text-amber-950">Experiência:</span>
-                  <span className="text-xs text-gray-600">{barber.experience}</span>
-                </div>
-                
-                <div>
-                  <span className="text-xs font-medium block mb-2 text-amber-950">Especialidades:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {barber.specialties.map((specialty) => (
-                      <span 
-                        key={specialty} 
-                        className={`text-xs bg-amber-100 ${accentColor.replace('text-', 'text-')} px-2 py-1 rounded-full flex items-center gap-1`}
-                      >
-                        {specialty}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Booking Section
-const BookingSection = ({ 
-  title, 
-  subtitle, 
-  description,
-  buttonLabel,
-  backgroundColor = "bg-amber-100",
-  textColor = "text-amber-950",
-  accentColor = "text-amber-600",
-  buttonColor = "bg-amber-600",
-  buttonTextColor = "text-white"
-}: { 
-  title: string;
-  subtitle?: string;
-  description?: string;
-  buttonLabel?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  accentColor?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
-}) => {
-  // Classes dinâmicas com base nas props
-  const buttonClass = `${buttonColor} hover:${buttonColor.replace('bg-', 'bg-')}/90 ${buttonTextColor} px-6 py-3 rounded-md font-medium inline-block transition-colors`;
-
-  return (
-    <section className={`py-24 px-4 ${backgroundColor}`} id="book-now">
-      <div className="container mx-auto text-center">
-        {subtitle && (
-          <span className={`text-xs uppercase tracking-widest mb-2 inline-block ${accentColor}`}>
-            {subtitle}
-          </span>
-        )}
-        <h2 className={`text-3xl font-bold mb-4 ${textColor}`}>{title}</h2>
-        {description && (
-          <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-            {description}
-          </p>
-        )}
-        
-        {buttonLabel && (
-          <a
-            href="#contact"
-            className={buttonClass}
-          >
-            {buttonLabel}
-          </a>
-        )}
-      </div>
-    </section>
-  );
-};
-
-// Export section components with their Puck configuration
 export const sectionComponents: Record<string, ComponentConfig> = {
   HeroSection: {
-    render: HeroSection,
-    label: "Banner Principal",
+    label: "Seção Hero",
+    render: ({ title, subtitle, buttonText, buttonLink, backgroundColor, textColor, accentColor, buttonColor, backgroundImage, customBgColor, customTextColor, customAccentColor, customButtonColor }) => {
+      // Use custom colors if provided (hex values)
+      const bgStyle = customBgColor ? { backgroundColor: customBgColor } : {};
+      const textStyle = customTextColor ? { color: customTextColor } : {};
+      const accentStyle = customAccentColor ? { color: customAccentColor } : {};
+      const buttonStyle = customButtonColor ? { backgroundColor: customButtonColor } : {};
+      
+      return (
+        <section 
+          className={`py-24 relative overflow-hidden ${!customBgColor ? backgroundColor : ''}`}
+          style={bgStyle}
+        >
+          {backgroundImage && (
+            <div 
+              className="absolute inset-0 z-0 opacity-20" 
+              style={{
+                backgroundImage: `url(${backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            ></div>
+          )}
+          <div className="container mx-auto relative z-10">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 
+                className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-6 ${!customTextColor ? textColor : ''}`}
+                style={textStyle}
+              >
+                {title}
+              </h1>
+              <p 
+                className={`text-xl mb-8 ${!customAccentColor ? accentColor : ''}`}
+                style={accentStyle}
+              >
+                {subtitle}
+              </p>
+              {buttonText && (
+                <a 
+                  href={buttonLink || "#book-now"} 
+                  className={`inline-block px-8 py-3 rounded-md text-white font-medium ${!customButtonColor ? buttonColor : ''}`}
+                  style={buttonStyle}
+                >
+                  {buttonText}
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    },
     defaultProps: {
-      title: "Eleve Seu Estilo Pessoal",
-      subtitle: "Experiência Premium de Barbearia",
-      description: "Cortes precisos e técnicas tradicionais para o homem moderno. Experimente o trabalho artesanal que define seu visual assinatura.",
-      imageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070",
-      primaryButtonLabel: "Agendar Horário",
-      primaryButtonLink: "#book-now",
-      secondaryButtonLabel: "Explorar Serviços",
-      secondaryButtonLink: "#services",
-      backgroundColor: "bg-black/40",
-      buttonColor: "bg-amber-600",
-      buttonTextColor: "text-white"
+      title: "BARBEARIA PREMIUM",
+      subtitle: "Cortes clássicos, ambiente moderno. Experiência exclusiva para cavalheiros.",
+      buttonText: "Agende Agora",
+      buttonLink: "#book-now",
+      backgroundColor: "bg-amber-950",
+      textColor: "text-white",
+      accentColor: "text-amber-400",
+      buttonColor: "bg-amber-500",
+      backgroundImage: "",
+      customBgColor: "",
+      customTextColor: "",
+      customAccentColor: "",
+      customButtonColor: ""
     },
     fields: {
       title: {
         type: "text" as const,
-        label: "Título",
+        label: "Título"
       },
       subtitle: {
-        type: "text" as const,
-        label: "Subtítulo (opcional)",
-      },
-      description: {
         type: "textarea" as const,
-        label: "Descrição",
+        label: "Subtítulo"
       },
-      imageUrl: {
+      buttonText: {
         type: "text" as const,
-        label: "URL da imagem de fundo",
+        label: "Texto do Botão"
       },
-      primaryButtonLabel: {
+      buttonLink: {
         type: "text" as const,
-        label: "Texto do botão principal",
+        label: "Link do Botão"
       },
-      primaryButtonLink: {
-        type: "text" as const,
-        label: "Link do botão principal",
-      },
-      secondaryButtonLabel: {
-        type: "text" as const,
-        label: "Texto do botão secundário",
-      },
-      secondaryButtonLink: {
-        type: "text" as const,
-        label: "Link do botão secundário",
+      backgroundImage: {
+        type: "custom" as const,
+        label: "Imagem de Fundo",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <div 
+                className="w-10 h-10 bg-gray-200 rounded overflow-hidden flex-shrink-0"
+                style={{
+                  backgroundImage: value ? `url(${value})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              ></div>
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="URL da imagem"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  // Open file input programmatically
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = async (e: any) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    try {
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `hero-backgrounds/${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                      
+                      const { data, error } = await window.supabase.storage
+                        .from('barbershop-images')
+                        .upload(fileName, file);
+                        
+                      if (error) throw error;
+                      
+                      const { data: { publicUrl } } = window.supabase.storage
+                        .from('barbershop-images')
+                        .getPublicUrl(fileName);
+                        
+                      onChange(publicUrl);
+                    } catch (error) {
+                      console.error('Error uploading image:', error);
+                      alert('Erro ao enviar imagem. Tente novamente.');
+                    }
+                  };
+                  input.click();
+                }}
+                className="px-3 py-1 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+              >
+                Enviar imagem
+              </button>
+            </div>
+          </div>
+        )
       },
       backgroundColor: {
         type: "select" as const,
-        label: "Cor do Overlay",
-        options: [
-          { label: "Preto (40%)", value: "bg-black/40" },
-          { label: "Preto (60%)", value: "bg-black/60" },
-          { label: "Âmbar Escuro", value: "bg-amber-900/40" },
-          { label: "Âmbar", value: "bg-amber-600/40" },
-          { label: "Preto (#000000) 40%", value: "bg-[#000000]/40" },
-          { label: "Preto (#000000) 60%", value: "bg-[#000000]/60" },
-          { label: "Âmbar Escuro (#FF8F00) 40%", value: "bg-[#FF8F00]/40" },
-          { label: "Âmbar (#FFB300) 40%", value: "bg-[#FFB300]/40" },
-        ],
+        label: "Cor de Fundo",
+        options: colorOptions
+      },
+      textColor: {
+        type: "select" as const,
+        label: "Cor do Texto",
+        options: textColorOptions
+      },
+      accentColor: {
+        type: "select" as const,
+        label: "Cor de Destaque",
+        options: accentColorOptions
       },
       buttonColor: {
         type: "select" as const,
-        label: "Cor do Botão Principal",
-        options: buttonColorOptions,
+        label: "Cor do Botão",
+        options: buttonColorOptions
       },
-      buttonTextColor: {
-        type: "select" as const,
-        label: "Cor do Texto do Botão",
-        options: textColorOptions,
+      customBgColor: {
+        type: "custom" as const,
+        label: "Cor de Fundo Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
       },
-    },
+      customTextColor: {
+        type: "custom" as const,
+        label: "Cor do Texto Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customAccentColor: {
+        type: "custom" as const,
+        label: "Cor de Destaque Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customButtonColor: {
+        type: "custom" as const,
+        label: "Cor do Botão Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      }
+    }
   },
   
   ServicesGrid: {
-    render: ServicesGrid,
-    label: "Serviços",
+    label: "Grade de Serviços",
+    render: ({ title, subtitle, services, columns, backgroundColor, textColor, accentColor, customBgColor, customTextColor, customAccentColor }) => {
+      // Custom colors if provided (hex values)
+      const bgStyle = customBgColor ? { backgroundColor: customBgColor } : {};
+      const textStyle = customTextColor ? { color: customTextColor } : {};
+      const accentStyle = customAccentColor ? { color: customAccentColor } : {};
+      
+      return (
+        <section 
+          className={`py-24 ${!customBgColor ? backgroundColor : ''}`}
+          style={bgStyle}
+        >
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 
+                className={`text-3xl md:text-4xl font-bold mb-4 ${!customTextColor ? textColor : ''}`}
+                style={textStyle}
+              >
+                {title}
+              </h2>
+              <p 
+                className={`text-lg max-w-3xl mx-auto ${!customAccentColor ? accentColor : ''}`}
+                style={accentStyle}
+              >
+                {subtitle}
+              </p>
+            </div>
+            
+            <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-8`}>
+              {services.map((service, index) => (
+                <div 
+                  key={service.id || index} 
+                  className="bg-white rounded-xl shadow-sm p-6 border border-amber-100/50 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className={`text-xl font-semibold ${!customTextColor ? textColor : ''}`} style={textStyle}>
+                      {service.name}
+                    </h3>
+                    <span 
+                      className={`text-lg font-bold ${!customAccentColor ? accentColor : ''}`}
+                      style={accentStyle}
+                    >
+                      {service.price}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-4">{service.description}</p>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>{service.duration}</span>
+                    {service.popular && (
+                      <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
+                        Popular
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    },
     defaultProps: {
-      title: "Serviços de Barbearia Especializados",
-      subtitle: "Nossas Especialidades",
-      description: "Serviços premium personalizados para realçar seu estilo pessoal com precisão e cuidado.",
-      backgroundColor: "bg-white",
+      title: "Nossos Serviços",
+      subtitle: "Oferecemos uma variedade de serviços premium para atender às suas necessidades.",
+      columns: "2",
+      backgroundColor: "bg-amber-50",
       textColor: "text-amber-950",
       accentColor: "text-amber-600",
+      customBgColor: "",
+      customTextColor: "",
+      customAccentColor: "",
       services: [
         {
           id: "service-1",
-          title: "Corte Clássico",
-          description: "Corte preciso adaptado ao formato do seu rosto e preferências de estilo.",
+          name: "Corte Clássico",
           price: "R$70",
           duration: "45 min",
-          image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=2070"
+          description: "Corte tradicional com acabamento perfeito e toalha quente.",
+          popular: true
         },
         {
           id: "service-2",
-          title: "Aparar & Modelar Barba",
-          description: "Esculpir e detalhar com expertise para aperfeiçoar seus pelos faciais.",
+          name: "Barba Completa",
           price: "R$50",
           duration: "30 min",
-          image: "https://images.unsplash.com/photo-1622296089780-290d715192af?q=80&w=1974"
+          description: "Modelagem de barba com toalha quente e produtos premium.",
+          popular: false
         },
         {
           id: "service-3",
-          title: "Barbear Premium",
-          description: "Tratamento tradicional com toalha quente e precisão de navalha.",
-          price: "R$90",
-          duration: "45 min",
-          image: "https://images.unsplash.com/photo-1493256338651-d82f7272f427?q=80&w=2070"
+          name: "Combo Barba e Cabelo",
+          price: "R$110",
+          duration: "1h 15min",
+          description: "Serviço completo de corte e barba com tratamento especial.",
+          popular: true
         },
         {
           id: "service-4",
-          title: "Tratamento Completo",
-          description: "Pacote completo incluindo corte de cabelo, modelagem de barba e tratamento facial.",
-          price: "R$170",
-          duration: "90 min",
-          image: "https://images.unsplash.com/photo-1599351431613-18ef1fdd27e1?q=80&w=1974"
+          name: "Tratamento Capilar",
+          price: "R$90",
+          duration: "45 min",
+          description: "Hidratação profunda e tratamento para couro cabeludo.",
+          popular: false
         }
       ]
     },
     fields: {
       title: {
         type: "text" as const,
-        label: "Título",
+        label: "Título"
       },
       subtitle: {
-        type: "text" as const,
-        label: "Subtítulo",
-      },
-      description: {
         type: "textarea" as const,
-        label: "Descrição",
+        label: "Subtítulo"
       },
-      backgroundColor: {
+      columns: {
         type: "select" as const,
-        label: "Cor de Fundo",
-        options: colorOptions,
-      },
-      textColor: {
-        type: "select" as const,
-        label: "Cor do Texto",
-        options: textColorOptions,
-      },
-      accentColor: {
-        type: "select" as const,
-        label: "Cor de Destaque",
-        options: accentColorOptions,
+        label: "Colunas",
+        options: [
+          { label: "1 Coluna", value: "1" },
+          { label: "2 Colunas", value: "2" },
+          { label: "3 Colunas", value: "3" },
+          { label: "4 Colunas", value: "4" }
+        ]
       },
       services: {
         type: "array" as const,
         label: "Serviços",
+        itemLabel: (item) => item.name || "Serviço",
+        defaultItemProps: {
+          name: "Novo Serviço",
+          price: "R$0",
+          duration: "30 min",
+          description: "Descrição do serviço",
+          popular: false
+        },
         arrayFields: {
-          id: {
-            type: "text" as const,
-            label: "ID (não alterar)"
-          },
-          title: {
+          name: {
             type: "text" as const,
             label: "Nome do Serviço"
-          },
-          description: {
-            type: "textarea" as const,
-            label: "Descrição"
           },
           price: {
             type: "text" as const,
@@ -479,182 +422,569 @@ export const sectionComponents: Record<string, ComponentConfig> = {
             type: "text" as const,
             label: "Duração"
           },
-          image: {
-            type: "text" as const,
-            label: "URL da Imagem"
+          description: {
+            type: "textarea" as const,
+            label: "Descrição"
+          },
+          popular: {
+            type: "boolean" as const,
+            label: "Popular"
           }
         }
+      },
+      backgroundColor: {
+        type: "select" as const,
+        label: "Cor de Fundo",
+        options: colorOptions
+      },
+      textColor: {
+        type: "select" as const,
+        label: "Cor do Texto",
+        options: textColorOptions
+      },
+      accentColor: {
+        type: "select" as const,
+        label: "Cor de Destaque",
+        options: accentColorOptions
+      },
+      customBgColor: {
+        type: "custom" as const,
+        label: "Cor de Fundo Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customTextColor: {
+        type: "custom" as const,
+        label: "Cor do Texto Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customAccentColor: {
+        type: "custom" as const,
+        label: "Cor de Destaque Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
       }
-    },
+    }
   },
   
   BarbersTeam: {
-    render: BarbersTeam,
     label: "Equipe de Barbeiros",
+    render: ({ title, subtitle, barbers, backgroundColor, textColor, accentColor, customBgColor, customTextColor, customAccentColor }) => {
+      // Custom colors if provided (hex values)
+      const bgStyle = customBgColor ? { backgroundColor: customBgColor } : {};
+      const textStyle = customTextColor ? { color: customTextColor } : {};
+      const accentStyle = customAccentColor ? { color: customAccentColor } : {};
+      
+      return (
+        <section 
+          className={`py-24 ${!customBgColor ? backgroundColor : ''}`}
+          style={bgStyle}
+        >
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 
+                className={`text-3xl md:text-4xl font-bold mb-4 ${!customTextColor ? textColor : ''}`}
+                style={textStyle}
+              >
+                {title}
+              </h2>
+              <p 
+                className={`text-lg max-w-3xl mx-auto ${!customAccentColor ? accentColor : ''}`}
+                style={accentStyle}
+              >
+                {subtitle}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {barbers.map((barber, index) => (
+                <div 
+                  key={barber.id || index} 
+                  className="bg-white rounded-xl shadow-sm overflow-hidden border border-amber-100/50 hover:shadow-md transition-shadow"
+                >
+                  <div className="aspect-[4/3] overflow-hidden">
+                    {barber.image ? (
+                      <img 
+                        src={barber.image} 
+                        alt={barber.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-amber-100 flex items-center justify-center">
+                        <span className="text-amber-800">Imagem não disponível</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 
+                      className={`text-xl font-semibold mb-1 ${!customTextColor ? textColor : ''}`}
+                      style={textStyle}
+                    >
+                      {barber.name}
+                    </h3>
+                    <p 
+                      className={`mb-3 ${!customAccentColor ? accentColor : ''}`}
+                      style={accentStyle}
+                    >
+                      {barber.role}
+                    </p>
+                    <p className="text-gray-600 mb-4">{barber.bio}</p>
+                    {barber.specialties && barber.specialties.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {barber.specialties.map((specialty, i) => (
+                          <span 
+                            key={i} 
+                            className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs"
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    },
     defaultProps: {
-      title: "Barbeiros Especialistas",
-      subtitle: "Nossa Equipe",
-      description: "Conheça nossa equipe de barbeiros especializados dedicados a aperfeiçoar seu estilo com habilidade e precisão.",
-      backgroundColor: "bg-amber-50",
+      title: "Nossos Barbeiros",
+      subtitle: "Conheça nossa equipe de profissionais especializados.",
+      backgroundColor: "bg-white",
       textColor: "text-amber-950",
       accentColor: "text-amber-600",
+      customBgColor: "",
+      customTextColor: "",
+      customAccentColor: "",
       barbers: [
         {
-          id: "1",
-          name: "Alexandre Silva",
+          id: "barber-1",
+          name: "Carlos Silva",
           role: "Barbeiro Master",
-          bio: "Com mais de 15 anos de experiência, Alexandre traz precisão e arte para cada corte de cabelo.",
-          experience: "15+ anos",
-          specialties: ["Cortes Clássicos", "Estilização de Barba"],
-          image: "https://images.unsplash.com/photo-1567894340315-735d7c361db0?q=80&w=1974"
+          bio: "Com mais de 15 anos de experiência, Carlos é especialista em cortes clássicos e modernos.",
+          image: "",
+          specialties: ["Cortes Clássicos", "Barba"]
         },
         {
-          id: "2",
-          name: "Miguel Rodriguez",
-          role: "Especialista em Estilo",
-          bio: "Miguel é especializado em estilos contemporâneos e degradês de precisão que destacam suas características.",
-          experience: "8 anos",
-          specialties: ["Degradês", "Estilos Modernos"],
-          image: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=1974"
+          id: "barber-2",
+          name: "André Santos",
+          role: "Barbeiro Sênior",
+          bio: "André traz técnicas internacionais e é especialista em degradês e cortes modernos.",
+          image: "",
+          specialties: ["Degradê", "Cortes Modernos"]
         },
         {
-          id: "3",
-          name: "Daniel Costa",
-          role: "Experiente em Cuidados",
-          bio: "Daniel combina técnicas tradicionais com estética moderna para um visual atemporal.",
-          experience: "12 anos",
-          specialties: ["Design de Cabelo", "Barbear de Luxo"],
-          image: "https://images.unsplash.com/photo-1557053815-9e5f9c2a0e46?q=80&w=1974"
+          id: "barber-3",
+          name: "Marcos Oliveira",
+          role: "Barbeiro Especialista",
+          bio: "Especialista em barbas, Marcos cria estilos personalizados para cada cliente.",
+          image: "",
+          specialties: ["Barba Completa", "Tratamentos"]
         }
       ]
     },
     fields: {
       title: {
         type: "text" as const,
-        label: "Título",
+        label: "Título"
       },
       subtitle: {
-        type: "text" as const,
-        label: "Subtítulo",
-      },
-      description: {
         type: "textarea" as const,
-        label: "Descrição",
-      },
-      backgroundColor: {
-        type: "select" as const,
-        label: "Cor de Fundo",
-        options: colorOptions,
-      },
-      textColor: {
-        type: "select" as const,
-        label: "Cor do Texto",
-        options: textColorOptions,
-      },
-      accentColor: {
-        type: "select" as const,
-        label: "Cor de Destaque",
-        options: accentColorOptions,
+        label: "Subtítulo"
       },
       barbers: {
         type: "array" as const,
         label: "Barbeiros",
+        itemLabel: (item) => item.name || "Barbeiro",
+        defaultItemProps: {
+          name: "Nome do Barbeiro",
+          role: "Função",
+          bio: "Biografia do barbeiro",
+          image: "",
+          specialties: []
+        },
         arrayFields: {
-          id: {
-            type: "text" as const,
-            label: "ID (não alterar)"
-          },
           name: {
             type: "text" as const,
             label: "Nome"
           },
           role: {
             type: "text" as const,
-            label: "Cargo"
+            label: "Função"
           },
           bio: {
             type: "textarea" as const,
             label: "Biografia"
           },
-          experience: {
-            type: "text" as const,
-            label: "Experiência"
+          image: {
+            type: "custom" as const,
+            label: "Foto",
+            render: ({ value, onChange }) => (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-10 h-10 bg-gray-200 rounded overflow-hidden flex-shrink-0"
+                    style={{
+                      backgroundImage: value ? `url(${value})` : 'none',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  ></div>
+                  <input
+                    type="text"
+                    value={value || ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder="URL da imagem"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Open file input programmatically
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = async (e: any) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `barbers/${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                          
+                          const { data, error } = await window.supabase.storage
+                            .from('barbershop-images')
+                            .upload(fileName, file);
+                            
+                          if (error) throw error;
+                          
+                          const { data: { publicUrl } } = window.supabase.storage
+                            .from('barbershop-images')
+                            .getPublicUrl(fileName);
+                            
+                          onChange(publicUrl);
+                        } catch (error) {
+                          console.error('Error uploading image:', error);
+                          alert('Erro ao enviar imagem. Tente novamente.');
+                        }
+                      };
+                      input.click();
+                    }}
+                    className="px-3 py-1 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+                  >
+                    Enviar imagem
+                  </button>
+                </div>
+              </div>
+            )
           },
           specialties: {
             type: "array" as const,
             label: "Especialidades",
+            itemLabel: (item) => item || "Especialidade",
+            defaultItemProps: "",
             arrayFields: {
-              value: {
-                type: "text" as const,
-                label: "Especialidade"
-              }
+              type: "text" as const
             }
-          },
-          image: {
-            type: "text" as const,
-            label: "URL da imagem"
           }
         }
-      }
-    },
-  },
-  
-  BookingSection: {
-    render: BookingSection,
-    label: "Agendamentos",
-    defaultProps: {
-      title: "Agende Seu Horário",
-      subtitle: "Marque Agora",
-      description: "Reserve um horário com nossos barbeiros especializados e experimente um serviço de barbearia de alta qualidade.",
-      buttonLabel: "Agendar",
-      backgroundColor: "bg-amber-100",
-      textColor: "text-amber-950",
-      accentColor: "text-amber-600",
-      buttonColor: "bg-amber-600",
-      buttonTextColor: "text-white"
-    },
-    fields: {
-      title: {
-        type: "text" as const,
-        label: "Título",
-      },
-      subtitle: {
-        type: "text" as const,
-        label: "Subtítulo",
-      },
-      description: {
-        type: "textarea" as const,
-        label: "Descrição",
-      },
-      buttonLabel: {
-        type: "text" as const,
-        label: "Texto do botão",
       },
       backgroundColor: {
         type: "select" as const,
         label: "Cor de Fundo",
-        options: colorOptions,
+        options: colorOptions
       },
       textColor: {
         type: "select" as const,
         label: "Cor do Texto",
-        options: textColorOptions,
+        options: textColorOptions
       },
       accentColor: {
         type: "select" as const,
         label: "Cor de Destaque",
-        options: accentColorOptions,
+        options: accentColorOptions
       },
-      buttonColor: {
+      customBgColor: {
+        type: "custom" as const,
+        label: "Cor de Fundo Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customTextColor: {
+        type: "custom" as const,
+        label: "Cor do Texto Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customAccentColor: {
+        type: "custom" as const,
+        label: "Cor de Destaque Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      }
+    }
+  },
+  
+  BookingSection: {
+    label: "Seção de Agendamento",
+    render: ({ title, subtitle, backgroundColor, textColor, accentColor, customBgColor, customTextColor, customAccentColor }) => {
+      // Custom colors if provided (hex values)
+      const bgStyle = customBgColor ? { backgroundColor: customBgColor } : {};
+      const textStyle = customTextColor ? { color: customTextColor } : {};
+      const accentStyle = customAccentColor ? { color: customAccentColor } : {};
+      
+      return (
+        <div 
+          id="booking-section"
+          className={`w-full ${!customBgColor ? backgroundColor : ''}`}
+          style={bgStyle}
+        >
+          {(title || subtitle) && (
+            <div className="container mx-auto py-12 px-4">
+              <div className="text-center mb-10">
+                {title && (
+                  <h2 
+                    className={`text-3xl md:text-4xl font-bold mb-4 ${!customTextColor ? textColor : ''}`}
+                    style={textStyle}
+                  >
+                    {title}
+                  </h2>
+                )}
+                {subtitle && (
+                  <p 
+                    className={`text-lg max-w-3xl mx-auto ${!customAccentColor ? accentColor : ''}`}
+                    style={accentStyle}
+                  >
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <BookingForm />
+        </div>
+      );
+    },
+    defaultProps: {
+      title: "Agende Seu Horário",
+      subtitle: "Escolha o serviço, data e hora que desejar para uma experiência premium.",
+      backgroundColor: "bg-amber-50",
+      textColor: "text-amber-950",
+      accentColor: "text-amber-700",
+      customBgColor: "",
+      customTextColor: "",
+      customAccentColor: ""
+    },
+    fields: {
+      title: {
+        type: "text" as const,
+        label: "Título"
+      },
+      subtitle: {
+        type: "textarea" as const,
+        label: "Subtítulo"
+      },
+      backgroundColor: {
         type: "select" as const,
-        label: "Cor do Botão",
-        options: buttonColorOptions,
+        label: "Cor de Fundo",
+        options: colorOptions
       },
-      buttonTextColor: {
+      textColor: {
         type: "select" as const,
-        label: "Cor do Texto do Botão",
-        options: textColorOptions,
+        label: "Cor do Texto",
+        options: textColorOptions
       },
+      accentColor: {
+        type: "select" as const,
+        label: "Cor de Destaque",
+        options: accentColorOptions
+      },
+      customBgColor: {
+        type: "custom" as const,
+        label: "Cor de Fundo Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customTextColor: {
+        type: "custom" as const,
+        label: "Cor do Texto Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      },
+      customAccentColor: {
+        type: "custom" as const,
+        label: "Cor de Destaque Personalizada",
+        render: ({ value, onChange }) => (
+          <div className="space-y-2">
+            <div className="flex space-x-2 items-center">
+              <input
+                type="color"
+                value={value || "#FFFFFF"}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
+              />
+              <input
+                type="text"
+                value={value || ""}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="#FFFFFF"
+                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
+          </div>
+        )
+      }
     }
   }
 };
