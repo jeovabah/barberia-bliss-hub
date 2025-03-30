@@ -3,23 +3,43 @@ import React from 'react';
 import { ComponentConfig } from "@measured/puck";
 import { colorOptions, textColorOptions, accentColorOptions } from "../../color-options";
 
+type Service = {
+  id: string;
+  name: string;
+  price: string;
+  duration: string;
+  description: string;
+  popular: boolean;
+};
+
 export const ServicesGrid: ComponentConfig = {
-  label: "Grade de Serviços",
-  render: ({ title, subtitle, services, columns, backgroundColor, textColor, accentColor, customBgColor, customTextColor, customAccentColor }) => {
-    // Custom colors if provided (hex values)
+  label: "Serviços",
+  render: ({ 
+    title, 
+    subtitle, 
+    columns,
+    backgroundColor, 
+    textColor, 
+    accentColor, 
+    services,
+    customBgColor,
+    customTextColor,
+    customAccentColor
+  }) => {
+    // Use custom colors if provided (hex values)
     const bgStyle = customBgColor ? { backgroundColor: customBgColor } : {};
     const textStyle = customTextColor ? { color: customTextColor } : {};
     const accentStyle = customAccentColor ? { color: customAccentColor } : {};
     
     return (
       <section 
-        className={`py-24 ${!customBgColor ? backgroundColor : ''}`}
+        className={`py-16 ${!customBgColor ? backgroundColor : ''}`}
         style={bgStyle}
       >
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 
-              className={`text-3xl md:text-4xl font-bold mb-4 ${!customTextColor ? textColor : ''}`}
+              className={`text-3xl font-bold mb-4 ${!customTextColor ? textColor : ''}`}
               style={textStyle}
             >
               {title}
@@ -32,32 +52,31 @@ export const ServicesGrid: ComponentConfig = {
             </p>
           </div>
           
-          <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-8`}>
-            {services.map((service, index) => (
+          <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-6`}>
+            {services.map((service: Service) => (
               <div 
-                key={service.id || index} 
-                className="bg-white rounded-xl shadow-sm p-6 border border-amber-100/50 hover:shadow-md transition-shadow"
+                key={service.id} 
+                className={`bg-white p-6 rounded-lg shadow-md border ${service.popular ? 'border-amber-400 relative' : 'border-transparent'}`}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className={`text-xl font-semibold ${!customTextColor ? textColor : ''}`} style={textStyle}>
-                    {service.name}
-                  </h3>
-                  <span 
-                    className={`text-lg font-bold ${!customAccentColor ? accentColor : ''}`}
-                    style={accentStyle}
-                  >
+                {service.popular && (
+                  <div className="absolute top-0 right-0 bg-amber-400 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg">
+                    Popular
+                  </div>
+                )}
+                <h3 className={`text-xl font-bold mb-2 ${!customTextColor ? textColor : ''}`} style={textStyle}>
+                  {service.name}
+                </h3>
+                <div className="flex justify-between mb-3">
+                  <span className={`text-lg font-medium ${!customAccentColor ? accentColor : ''}`} style={accentStyle}>
                     {service.price}
                   </span>
+                  <span className="text-gray-500 text-sm">
+                    {service.duration}
+                  </span>
                 </div>
-                <p className="text-gray-600 mb-4">{service.description}</p>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>{service.duration}</span>
-                  {service.popular && (
-                    <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
-                      Popular
-                    </span>
-                  )}
-                </div>
+                <p className="text-gray-600">
+                  {service.description}
+                </p>
               </div>
             ))}
           </div>
@@ -116,7 +135,7 @@ export const ServicesGrid: ComponentConfig = {
       label: "Título"
     },
     subtitle: {
-      type: "textarea" as const,
+      type: "text" as const,
       label: "Subtítulo"
     },
     columns: {
@@ -128,40 +147,6 @@ export const ServicesGrid: ComponentConfig = {
         { label: "3 Colunas", value: "3" },
         { label: "4 Colunas", value: "4" }
       ]
-    },
-    services: {
-      type: "array" as const,
-      label: "Serviços",
-      itemLabel: (item) => item.name || "Serviço",
-      defaultItemProps: {
-        name: "Novo Serviço",
-        price: "R$0",
-        duration: "30 min",
-        description: "Descrição do serviço",
-        popular: false
-      },
-      arrayFields: {
-        name: {
-          type: "text" as const,
-          label: "Nome do Serviço"
-        },
-        price: {
-          type: "text" as const,
-          label: "Preço"
-        },
-        duration: {
-          type: "text" as const,
-          label: "Duração"
-        },
-        description: {
-          type: "textarea" as const,
-          label: "Descrição"
-        },
-        popular: {
-          type: "boolean" as const,
-          label: "Popular"
-        }
-      }
     },
     backgroundColor: {
       type: "select" as const,
@@ -180,75 +165,49 @@ export const ServicesGrid: ComponentConfig = {
     },
     customBgColor: {
       type: "custom" as const,
-      label: "Cor de Fundo Personalizada",
-      render: ({ value, onChange }) => (
-        <div className="space-y-2">
-          <div className="flex space-x-2 items-center">
-            <input
-              type="color"
-              value={value || "#FFFFFF"}
-              onChange={(e) => onChange(e.target.value)}
-              className="h-8 w-8 rounded cursor-pointer border border-gray-300"
-            />
-            <input
-              type="text"
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="#FFFFFF"
-              className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
-            />
-          </div>
-          <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
-        </div>
-      )
+      label: "Cor de Fundo Personalizada"
     },
     customTextColor: {
       type: "custom" as const,
-      label: "Cor do Texto Personalizada",
-      render: ({ value, onChange }) => (
-        <div className="space-y-2">
-          <div className="flex space-x-2 items-center">
-            <input
-              type="color"
-              value={value || "#FFFFFF"}
-              onChange={(e) => onChange(e.target.value)}
-              className="h-8 w-8 rounded cursor-pointer border border-gray-300"
-            />
-            <input
-              type="text"
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="#FFFFFF"
-              className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
-            />
-          </div>
-          <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
-        </div>
-      )
+      label: "Cor do Texto Personalizada"
     },
     customAccentColor: {
       type: "custom" as const,
-      label: "Cor de Destaque Personalizada",
-      render: ({ value, onChange }) => (
-        <div className="space-y-2">
-          <div className="flex space-x-2 items-center">
-            <input
-              type="color"
-              value={value || "#FFFFFF"}
-              onChange={(e) => onChange(e.target.value)}
-              className="h-8 w-8 rounded cursor-pointer border border-gray-300"
-            />
-            <input
-              type="text"
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="#FFFFFF"
-              className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
-            />
-          </div>
-          <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
-        </div>
-      )
+      label: "Cor de Destaque Personalizada"
+    },
+    services: {
+      type: "array" as const,
+      label: "Serviços",
+      arrayFields: {
+        id: {
+          type: "text" as const,
+          label: "ID"
+        },
+        name: {
+          type: "text" as const,
+          label: "Nome"
+        },
+        price: {
+          type: "text" as const,
+          label: "Preço"
+        },
+        duration: {
+          type: "text" as const,
+          label: "Duração"
+        },
+        description: {
+          type: "textarea" as const,
+          label: "Descrição"
+        },
+        popular: {
+          type: "radio" as const,
+          label: "Destacar como Popular",
+          options: [
+            { label: "Sim", value: true },
+            { label: "Não", value: false }
+          ]
+        }
+      }
     }
   }
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -305,7 +304,6 @@ const PageEditor: React.FC<EditorProps> = ({
 
   // Toggle view mode
   const toggleViewMode = () => {
-    setViewMode(viewMode === 'editor' ? 'preview' : 'editor');
   };
 
   // Get first letter of each word for the logo
