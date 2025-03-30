@@ -6,9 +6,7 @@ import {
   SaveIcon, 
   Eye, 
   RotateCcw, 
-  Scissors, 
   PanelLeft, 
-  PanelRight, 
   Palette,
   SlidersHorizontal 
 } from "lucide-react";
@@ -32,12 +30,11 @@ const PageEditor: React.FC<EditorProps> = ({
   onPreview, 
   onReset,
   initialData = null,
-  initialSections = ['hero', 'services', 'barbers', 'booking'], // 'booking' included by default
+  initialSections = ['hero', 'services', 'barbers', 'booking'],
   companyName = "Barbearia"
 }) => {
   const [puckData, setPuckData] = useState<Data | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor');
   const hasInitialized = useRef(false);
   
   console.log("PageEditor rendering with initialSections:", initialSections);
@@ -71,11 +68,14 @@ const PageEditor: React.FC<EditorProps> = ({
           }
           
           // Handle case where we have a nested content field from Supabase
-          if (initialData.content && typeof initialData.content === 'object') {
+          if (initialData.content) {
             console.log("Found content field in initialData", initialData.content);
             
             // If content field contains well-structured Puck data
-            if (initialData.content.root && initialData.content.content && Array.isArray(initialData.content.content)) {
+            if (typeof initialData.content === 'object' && 
+                initialData.content.root && 
+                initialData.content.content && 
+                Array.isArray(initialData.content.content)) {
               console.log("Found well-structured Puck data inside content field");
               
               const puckContent: Data = {
@@ -93,9 +93,16 @@ const PageEditor: React.FC<EditorProps> = ({
           // Directly use initialData if it has the correct Puck format
           if (typeof initialData === 'object' && 
               'content' in initialData && 
-              'root' in initialData &&
-              Array.isArray(initialData.content)) {
+              'root' in initialData) {
             console.log("Using data in direct Puck format");
+            
+            // If content is empty or not an array, create default data
+            if (!Array.isArray(initialData.content) || initialData.content.length === 0) {
+              console.log("Content is empty, creating default data");
+              await createDefaultPuckData();
+              return;
+            }
+            
             setPuckData(initialData as Data);
             hasInitialized.current = true;
             setIsLoading(false);
@@ -133,36 +140,112 @@ const PageEditor: React.FC<EditorProps> = ({
           return {
             type: "HeroSection",
             props: {
-              ...config.components.HeroSection.defaultProps,
-              id: uniqueId
+              id: uniqueId,
+              title: "BARBEARIA PREMIUM",
+              subtitle: "Cortes clássicos, ambiente moderno. Experiência exclusiva para cavalheiros.",
+              buttonText: "Agende Agora",
+              buttonLink: "#book-now",
+              backgroundColor: "bg-amber-950",
+              textColor: "text-white",
+              accentColor: "text-amber-400",
+              buttonColor: "bg-amber-500"
             }
           };
         case 'services':
           return {
             type: "ServicesGrid",
             props: {
-              ...config.components.ServicesGrid.defaultProps,
               id: uniqueId,
-              services: (config.components.ServicesGrid.defaultProps.services || []).map((service, serviceIndex) => ({
-                ...service,
-                id: service.id || `service-${uniqueId}-${serviceIndex}`
-              }))
+              title: "Nossos Serviços",
+              subtitle: "Oferecemos uma variedade de serviços premium para atender às suas necessidades.",
+              columns: "2",
+              backgroundColor: "bg-amber-50",
+              textColor: "text-amber-950",
+              accentColor: "text-amber-600",
+              services: [
+                {
+                  id: "service-1",
+                  name: "Corte Clássico",
+                  price: "R$70",
+                  duration: "45 min",
+                  description: "Corte tradicional com acabamento perfeito e toalha quente.",
+                  popular: true
+                },
+                {
+                  id: "service-2",
+                  name: "Barba Completa",
+                  price: "R$50",
+                  duration: "30 min",
+                  description: "Modelagem de barba com toalha quente e produtos premium.",
+                  popular: false
+                },
+                {
+                  id: "service-3",
+                  name: "Combo Barba e Cabelo",
+                  price: "R$110",
+                  duration: "1h 15min",
+                  description: "Serviço completo de corte e barba com tratamento especial.",
+                  popular: true
+                },
+                {
+                  id: "service-4",
+                  name: "Tratamento Capilar",
+                  price: "R$90",
+                  duration: "45 min",
+                  description: "Hidratação profunda e tratamento para couro cabeludo.",
+                  popular: false
+                }
+              ]
             }
           };
         case 'barbers':
           return {
             type: "BarbersTeam",
             props: {
-              ...config.components.BarbersTeam.defaultProps,
-              id: uniqueId
+              id: uniqueId,
+              title: "Nossos Barbeiros",
+              subtitle: "Conheça nossa equipe de profissionais especializados.",
+              backgroundColor: "bg-white",
+              textColor: "text-amber-950",
+              accentColor: "text-amber-600",
+              barbers: [
+                {
+                  id: "barber-1",
+                  name: "Carlos Silva",
+                  role: "Barbeiro Master",
+                  bio: "Com mais de 15 anos de experiência, Carlos é especialista em cortes clássicos e modernos.",
+                  image: "",
+                  specialties: ["Cortes Clássicos", "Barba"]
+                },
+                {
+                  id: "barber-2",
+                  name: "André Santos",
+                  role: "Barbeiro Sênior",
+                  bio: "André traz técnicas internacionais e é especialista em degradês e cortes modernos.",
+                  image: "",
+                  specialties: ["Degradê", "Cortes Modernos"]
+                },
+                {
+                  id: "barber-3",
+                  name: "Marcos Oliveira",
+                  role: "Barbeiro Especialista",
+                  bio: "Especialista em barbas, Marcos cria estilos personalizados para cada cliente.",
+                  image: "",
+                  specialties: ["Barba Completa", "Tratamentos"]
+                }
+              ]
             }
           };
         case 'booking':
           return {
             type: "BookingSection",
             props: {
-              ...config.components.BookingSection.defaultProps,
-              id: uniqueId
+              id: uniqueId,
+              title: "Agende Seu Horário",
+              subtitle: "Escolha o serviço, data e hora que desejar para uma experiência premium.",
+              backgroundColor: "bg-amber-50",
+              textColor: "text-amber-950",
+              accentColor: "text-amber-700"
             }
           };
         default:

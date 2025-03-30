@@ -2,6 +2,7 @@ import React from 'react';
 import { ComponentConfig } from "@measured/puck";
 import { colorOptions, textColorOptions, accentColorOptions, buttonColorOptions } from "../color-options";
 import BookingForm from "@/components/BookingForm";
+import { uploadImageToBucket } from "../helpers/image-upload";
 
 export const sectionComponents: Record<string, ComponentConfig> = {
   HeroSection: {
@@ -124,20 +125,10 @@ export const sectionComponents: Record<string, ComponentConfig> = {
                     if (!file) return;
                     
                     try {
-                      const fileExt = file.name.split('.').pop();
-                      const fileName = `hero-backgrounds/${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-                      
-                      const { data, error } = await window.supabase.storage
-                        .from('barbershop-images')
-                        .upload(fileName, file);
-                        
-                      if (error) throw error;
-                      
-                      const { data: { publicUrl } } = window.supabase.storage
-                        .from('barbershop-images')
-                        .getPublicUrl(fileName);
-                        
-                      onChange(publicUrl);
+                      const publicUrl = await uploadImageToBucket(file, "hero-backgrounds");
+                      if (publicUrl) {
+                        onChange(publicUrl);
+                      }
                     } catch (error) {
                       console.error('Error uploading image:', error);
                       alert('Erro ao enviar imagem. Tente novamente.');
@@ -709,20 +700,10 @@ export const sectionComponents: Record<string, ComponentConfig> = {
                         if (!file) return;
                         
                         try {
-                          const fileExt = file.name.split('.').pop();
-                          const fileName = `barbers/${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-                          
-                          const { data, error } = await window.supabase.storage
-                            .from('barbershop-images')
-                            .upload(fileName, file);
-                            
-                          if (error) throw error;
-                          
-                          const { data: { publicUrl } } = window.supabase.storage
-                            .from('barbershop-images')
-                            .getPublicUrl(fileName);
-                            
-                          onChange(publicUrl);
+                          const publicUrl = await uploadImageToBucket(file, "barbers");
+                          if (publicUrl) {
+                            onChange(publicUrl);
+                          }
                         } catch (error) {
                           console.error('Error uploading image:', error);
                           alert('Erro ao enviar imagem. Tente novamente.');
@@ -940,51 +921,3 @@ export const sectionComponents: Record<string, ComponentConfig> = {
       customTextColor: {
         type: "custom" as const,
         label: "Cor do Texto Personalizada",
-        render: ({ value, onChange }) => (
-          <div className="space-y-2">
-            <div className="flex space-x-2 items-center">
-              <input
-                type="color"
-                value={value || "#FFFFFF"}
-                onChange={(e) => onChange(e.target.value)}
-                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
-              />
-              <input
-                type="text"
-                value={value || ""}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="#FFFFFF"
-                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
-              />
-            </div>
-            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
-          </div>
-        )
-      },
-      customAccentColor: {
-        type: "custom" as const,
-        label: "Cor de Destaque Personalizada",
-        render: ({ value, onChange }) => (
-          <div className="space-y-2">
-            <div className="flex space-x-2 items-center">
-              <input
-                type="color"
-                value={value || "#FFFFFF"}
-                onChange={(e) => onChange(e.target.value)}
-                className="h-8 w-8 rounded cursor-pointer border border-gray-300"
-              />
-              <input
-                type="text"
-                value={value || ""}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="#FFFFFF"
-                className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm"
-              />
-            </div>
-            <p className="text-xs text-gray-500">Deixe em branco para usar as cores padrão</p>
-          </div>
-        )
-      }
-    }
-  }
-};
