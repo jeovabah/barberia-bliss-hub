@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Calendar as CalendarIcon, Clock, User, Phone, Mail, Scissors } from "lu
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const horarios = [
@@ -38,10 +39,9 @@ interface Specialist {
 interface BookingFormProps {
   specialists?: Specialist[];
   companyId?: string;
-  companyName?: string;
 }
 
-const BookingForm = ({ specialists = [], companyId, companyName = "Barbearia" }: BookingFormProps) => {
+const BookingForm = ({ specialists = [], companyId }: BookingFormProps) => {
   const { toast } = useToast();
   const [data, setData] = useState<Date | undefined>(undefined);
   const [horarioSelecionado, setHorarioSelecionado] = useState<string | null>(null);
@@ -156,34 +156,7 @@ const BookingForm = ({ specialists = [], companyId, companyName = "Barbearia" }:
       }
       
       // Get specialist name
-      const especialista = specialists.find(s => s.id === barbeiroSelecionado)?.name || 'Profissional selecionado';
-      
-      // Send confirmation email
-      try {
-        const formattedDisplayDate = formatarData(data);
-        
-        await fetch('https://fxdliwfsmavtagwnrjon.supabase.co/functions/v1/send-appointment-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY || ''}`
-          },
-          body: JSON.stringify({
-            clientName: formData.nome,
-            clientEmail: formData.email,
-            service: servico,
-            date: formattedDisplayDate,
-            time: horarioSelecionado,
-            specialistName: especialista,
-            companyName: companyName
-          })
-        });
-        
-        console.log("Email de confirmação enviado");
-      } catch (emailError) {
-        console.error("Erro ao enviar email de confirmação:", emailError);
-        // Continue with appointment process even if email fails
-      }
+      const especialista = specialists.find(s => s.id === barbeiroSelecionado)?.name;
       
       // Mensagem de sucesso
       toast({

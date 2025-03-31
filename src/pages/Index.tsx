@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -102,7 +103,7 @@ const Index = () => {
       
       {usePuck && puckData ? (
         <div className="puck-renderer-container">
-          <PuckRenderer data={puckData} config={config} />
+          <PuckRenderer data={puckData} />
         </div>
       ) : (
         // Fallback to classic component rendering

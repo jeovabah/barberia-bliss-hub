@@ -1,5 +1,1 @@
-
 project_id = "fxdliwfsmavtagwnrjon"
-
-[functions.send-appointment-email]
-verify_jwt = false
