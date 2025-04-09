@@ -57,6 +57,41 @@ const BookingForm = ({ specialists = [], companyId }: BookingFormProps) => {
   const [calendarioAberto, setCalendarioAberto] = useState(false);
   const [horariosAberto, setHorariosAberto] = useState(false);
   const [servicos] = useState(defaultServices);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+
+  useEffect(() => {
+    // Try to fetch company info
+    const getCompanyInfo = async () => {
+      try {
+        if (!companyId) {
+          // Try to get a default company
+          const { data, error } = await supabase
+            .from('companies')
+            .select('*')
+            .limit(1)
+            .single();
+            
+          if (data && !error) {
+            setCompanyInfo(data);
+          }
+        } else {
+          const { data, error } = await supabase
+            .from('companies')
+            .select('*')
+            .eq('id', companyId)
+            .single();
+            
+          if (data && !error) {
+            setCompanyInfo(data);
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao buscar informações da empresa:", err);
+      }
+    };
+    
+    getCompanyInfo();
+  }, [companyId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -128,7 +163,9 @@ const BookingForm = ({ specialists = [], companyId }: BookingFormProps) => {
       // Get the service name
       const servico = servicos.find(s => s.id === servicoSelecionado)?.nome;
       
-      if (!companyId) {
+      const targetCompanyId = companyInfo?.id || companyId;
+      
+      if (!targetCompanyId) {
         throw new Error("ID da empresa não encontrado");
       }
       
@@ -139,7 +176,7 @@ const BookingForm = ({ specialists = [], companyId }: BookingFormProps) => {
       const { data: appointmentData, error } = await supabase
         .from('appointments')
         .insert({
-          company_id: companyId,
+          company_id: targetCompanyId,
           specialist_id: barbeiroSelecionado,
           client_name: formData.nome,
           client_email: formData.email,

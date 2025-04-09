@@ -8,18 +8,41 @@ import Hero from "../components/Hero";
 import Services from "../components/Services";
 import BarberProfile from "../components/BarberProfile";
 import BookingForm from "../components/BookingForm";
+import { supabase } from "@/integrations/supabase/client";
 import "@measured/puck/puck.css";
 
 const Index = () => {
   const [puckData, setPuckData] = useState<any>(null);
   const [usePuck, setUsePuck] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [specialists, setSpecialists] = useState([]);
   
   // Default sections order
   const defaultSections = ["hero", "services", "barbers", "booking"];
   
   useEffect(() => {
     document.title = "BarberBliss | Experiência Premium de Barbearia";
+    
+    // Fetch specialists for services and booking components
+    const fetchSpecialists = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('specialists')
+          .select('*');
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setSpecialists(data);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar especialistas:", err);
+      }
+    };
+    
+    fetchSpecialists();
     
     // Check if we have Puck data
     const savedPuckData = localStorage.getItem('puckData');
@@ -81,9 +104,9 @@ const Index = () => {
   // Mapping of section types to components
   const sectionComponents = {
     hero: <Hero />,
-    services: <Services />,
-    barbers: <BarberProfile />,
-    booking: <BookingForm />
+    services: <Services specialists={specialists} />,
+    barbers: <BarberProfile specialists={specialists} />,
+    booking: <BookingForm specialists={specialists} />
   };
 
   if (isLoading) {

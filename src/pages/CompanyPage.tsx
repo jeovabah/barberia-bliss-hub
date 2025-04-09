@@ -229,7 +229,7 @@ const CompanyPage = () => {
       ) : (
         <>
           <Hero />
-          <Services />
+          <Services specialists={specialists} />
           <BarberProfile specialists={specialists} />
           <BookingForm 
             specialists={specialists}

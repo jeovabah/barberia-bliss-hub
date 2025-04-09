@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Scissors, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const services = [
+const defaultServices = [
   {
     id: 1,
     title: "Corte Clássico",
@@ -40,8 +40,26 @@ const services = [
   }
 ];
 
-const ServiceCard = ({ service, index }: { service: any, index: number }) => {
+interface Specialist {
+  id: string;
+  name: string;
+  role?: string | null;
+  experience?: string | null;
+  specialties?: string[];
+  image?: string | null;
+}
+
+interface ServicesProps {
+  specialists?: Specialist[];
+}
+
+const ServiceCard = ({ service, index, specialists }: { service: any, index: number, specialists: Specialist[] }) => {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Get a random specialist for this service
+  const randomSpecialist = specialists && specialists.length > 0 
+    ? specialists[Math.floor(Math.random() * specialists.length)]
+    : null;
   
   return (
     <motion.div
@@ -75,6 +93,12 @@ const ServiceCard = ({ service, index }: { service: any, index: number }) => {
             <Clock className="w-4 h-4 text-white/70" />
             <span className="text-white/70 text-sm">{service.duration}</span>
           </div>
+          
+          {randomSpecialist && (
+            <div className="text-white/70 text-sm">
+              Especialista: {randomSpecialist.name}
+            </div>
+          )}
         </div>
         
         <Button 
@@ -91,7 +115,7 @@ const ServiceCard = ({ service, index }: { service: any, index: number }) => {
   );
 };
 
-const Services = () => {
+const Services = ({ specialists = [] }: ServicesProps) => {
   return (
     <section className="py-24 px-4" id="services">
       <div className="container mx-auto">
@@ -106,8 +130,13 @@ const Services = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service, index) => (
-            <ServiceCard key={service.id} service={service} index={index} />
+          {defaultServices.map((service, index) => (
+            <ServiceCard 
+              key={service.id} 
+              service={service} 
+              index={index} 
+              specialists={specialists} 
+            />
           ))}
         </div>
       </div>
